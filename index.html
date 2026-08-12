@@ -3,11 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Başvuru Yönetim Sistemi</title>
+    <title>Başvuru Yönetim Sistemi (Firebase)</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <style>
-        /* --- TÜM STİLLER (Aynı, değişiklik yok) --- */
+        /* (Stiller aynı, değişiklik yok) */
         * { box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f5f7fa; margin: 20px; padding: 0; }
         .container { max-width: 1400px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
@@ -31,38 +34,15 @@
         .btn-secondary:hover { background: #4e5b69; }
         .btn-copy { background: #17a2b8; color: white; }
         .btn-copy:hover { background: #117a8b; }
-        .btn-google { background: #0f9d58; color: white; }
-        .btn-google:hover { background: #0b7e48; }
         .actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0 20px; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
         th { background: #e9ecf0; text-align: left; padding: 8px 6px; position: sticky; top: 0; z-index: 2; border-bottom: 2px solid #ccd7e6; }
         td { padding: 4px 6px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
         .table-wrapper { max-height: 450px; overflow: auto; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 30px; }
-        .editable-cell {
-            background: transparent;
-            border: none;
-            width: 100%;
-            font-family: inherit;
-            font-size: inherit;
-            padding: 4px 2px;
-            outline: none;
-            border-radius: 3px;
-        }
-        .editable-cell:focus {
-            background: #fffde7;
-            box-shadow: 0 0 0 2px #ffc107;
-        }
-        .editable-cell.checkbox-cell {
-            width: auto;
-            text-align: center;
-            cursor: pointer;
-        }
-        .editable-cell.readonly-cell {
-            background: #f0f2f5;
-            color: #1a3c5e;
-            font-weight: 600;
-            cursor: default;
-        }
+        .editable-cell { background: transparent; border: none; width: 100%; font-family: inherit; font-size: inherit; padding: 4px 2px; outline: none; border-radius: 3px; }
+        .editable-cell:focus { background: #fffde7; box-shadow: 0 0 0 2px #ffc107; }
+        .editable-cell.checkbox-cell { width: auto; text-align: center; cursor: pointer; }
+        .editable-cell.readonly-cell { background: #f0f2f5; color: #1a3c5e; font-weight: 600; cursor: default; }
         .summary-table { margin-top: 10px; width: 100%; border-collapse: collapse; font-size: 13px; }
         .summary-table th { background: #d4e2f0; }
         .summary-table td, .summary-table th { padding: 6px 12px; border: 1px solid #ccd7e6; }
@@ -77,7 +57,7 @@
 </head>
 <body>
 <div class="container">
-    <h1>📋 Başvuru Yönetim Sistemi</h1>
+    <h1>📋 Başvuru Yönetim Sistemi (Firebase)</h1>
 
     <!-- FORM -->
     <form id="basvuruForm" class="form-grid">
@@ -128,14 +108,13 @@
         <div class="form-group" style="grid-column: span 2; display: flex; gap: 10px; align-items: center;">
             <button type="button" class="btn btn-primary" id="ekleBtn">➕ Başvuru Ekle</button>
             <button type="reset" class="btn btn-secondary">🧹 Temizle</button>
-            <button type="button" class="btn btn-google" id="googleSenkronBtn">☁️ Google Sheets Senkron</button>
         </div>
     </form>
 
     <!-- AKSİYONLAR -->
     <div class="actions">
         <button class="btn btn-success" id="excelBtn">📊 Excel İndir (Renkli)</button>
-        <button class="btn btn-danger" id="temizleVeriBtn">🗑️ Tüm Verileri Sil</button>
+        <button class="btn btn-danger" id="temizleVeriBtn">🗑️ Tüm Verileri Sil (Firebase)</button>
         <span style="margin-left: auto; font-size: 14px; color: #555;">Toplam Başvuru: <strong id="toplamSayi">0</strong></span>
     </div>
 
@@ -185,12 +164,28 @@
         </table>
     </div>
 
-    <div class="footer">⚡ Veriler tarayıcı hafızasında (localStorage) saklanır. Google Sheets ile senkronize edebilirsiniz.</div>
+    <div class="footer">⚡ Veriler Firebase Firestore'da saklanır. Tüm kullanıcılar aynı veriyi görür.</div>
 </div>
 
 <script>
 // ================================================================
-// 1. MYK VERİLERİ (TAMAMI) – Buraya kendi verilerinizi ekleyin
+// 🔥 FIREBASE YAPILANDIRMASI (kendi config'inle değiştir)
+// ================================================================
+const firebaseConfig = {
+  apiKey: "AIzaSyCmHe1YXwRhz6twLkWNcMFYFPuEID6ZxQo",
+  authDomain: "mesembasvurutakip.firebaseapp.com",
+  databaseURL: "https://mesembasvurutakip-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "mesembasvurutakip",
+  storageBucket: "mesembasvurutakip.firebasestorage.app",
+  messagingSenderId: "34396574237",
+  appId: "1:34396574237:web:156fe8811c1429cb282cf4",
+  measurementId: "G-0RYZT680GG"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ================================================================
+// MYK VERİLERİ – BURAYA TÜM VERİ BLOĞUNU YAPIŞTIR
 // ================================================================
 const mykData = [
   { kod: "17UY0301‐3", ad: "Ahşap Mobilya İmalatçısı", alan: "Mobilya ve İç Mekan Tasarımı", dal: "İç Mekan ve Mobilya Teknolojisi" },
@@ -649,24 +644,10 @@ const mykData = [
 ];
 
 // ================================================================
-// 2. UYGULAMA STATE'İ
+// UYGULAMA STATE'İ
 // ================================================================
 let basvurular = [];
 
-function loadFromStorage() {
-    const stored = localStorage.getItem('basvuruListesi');
-    if (stored) {
-        try { basvurular = JSON.parse(stored); } catch(e) { basvurular = []; }
-    } else { basvurular = []; }
-}
-function saveToStorage() {
-    localStorage.setItem('basvuruListesi', JSON.stringify(basvurular));
-}
-function getNextSira() {
-    if (basvurular.length === 0) return 1;
-    const max = Math.max(...basvurular.map(b => b.sira || 0));
-    return max + 1;
-}
 function formatBasvuruNo(sira) {
     const now = new Date();
     const year = now.getFullYear();
@@ -675,70 +656,64 @@ function formatBasvuruNo(sira) {
 }
 
 // ================================================================
-// 3. GOOGLE SHEETS ENTEGRASYONU (Apps Script URL'si ile)
+// FIREBASE VERİ İŞLEMLERİ
 // ================================================================
-// 🔴 BU URL'Yİ KENDİ APPS SCRIPT WEB APP URL'NİZLE DEĞİŞTİRİN
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzybqqN0QWLUVNPYxcI4xWlz429a30KI070POj10hCz-h7GuGtNH7jV4pfe9jQr1guw/exec';
-
-// Google Sheets'ten veri çek
-async function googleSheetsOku() {
+async function firebaseVerileriOku() {
     try {
-        const response = await fetch(GOOGLE_SCRIPT_URL);
-        const data = await response.json();
-        if (data && data.length > 0) {
-            // Verileri basvurular dizisine dönüştür
-            const yeniListe = data.map((row, index) => ({
-                sira: index + 1,
-                denklikNo: row['Yapılan Denklik İşleminin Numarası'] || '',
-                tc: row['TC Kimlik No'] || '',
-                ad: row['Adı'] || '',
-                soyad: row['Soyadı'] || '',
-                mezuniyet: row['Mezuniyet'] || '',
-                alan: row['Alan'] || '',
-                dal: row['Dal'] || '',
-                kalfalik: row['Belge Türü KALFALIK'] === 'X',
-                ustalik: row['Belge Türü USTALIK'] === 'X',
-                sinavli: row['Belge Türü SINAVLI'] === 'X',
-                sinavsiz: row['Belge Türü SINAVSIZ'] === 'X',
-                esinav: row['Teorik Sınav Türü E-SINAV'] === 'X',
-                beceri: row['BECERİ SINAVI'] === 'X',
-                sinavMaddesi: row['SINAV MADDESİ'] || '',
-                telefon: row['TELEFON NO'] || '',
-                aciklama: row['Açıklama'] || '',
-                eskiKimlik: row['Eski Kimlik'] || ''
-            }));
-            basvurular = yeniListe;
-            saveToStorage();
-            renderAll();
-            alert('Google Sheets verileri başarıyla içe aktarıldı!');
-        }
-    } catch (e) {
-        console.error('Google Sheets okuma hatası:', e);
-        alert('Google Sheets verileri okunamadı. URL\'yi kontrol edin.');
-    }
-}
-
-// Google Sheets'e veri ekle (tek bir başvuru)
-async function googleSheetsEkle(data) {
-    try {
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+        const snapshot = await db.collection('basvurular').orderBy('sira').get();
+        const data = [];
+        snapshot.forEach(doc => {
+            data.push({ id: doc.id, ...doc.data() });
         });
-        const result = await response.json();
-        if (result.success) {
-            alert('Başvuru Google Sheets\'e eklendi!');
-        } else {
-            alert('Google Sheets\'e ekleme hatası: ' + (result.error || 'Bilinmeyen hata'));
-        }
-    } catch (e) {
-        alert('Bağlantı hatası: ' + e.message);
+        return data;
+    } catch (error) {
+        console.error('Firebase okuma hatası:', error);
+        alert('Veriler okunamadı. Lütfen sayfayı yenileyin.');
+        return [];
+    }
+}
+
+async function firebaseVeriEkle(basvuru) {
+    try {
+        const docRef = await db.collection('basvurular').add(basvuru);
+        return docRef.id;
+    } catch (error) {
+        console.error('Firebase ekleme hatası:', error);
+        alert('Başvuru eklenirken hata oluştu.');
+        return null;
+    }
+}
+
+async function firebaseVeriGuncelle(id, yeniVeri) {
+    try {
+        await db.collection('basvurular').doc(id).update(yeniVeri);
+        return true;
+    } catch (error) {
+        console.error('Firebase güncelleme hatası:', error);
+        return false;
+    }
+}
+
+async function firebaseVeriSil(id) {
+    try {
+        await db.collection('basvurular').doc(id).delete();
+        return true;
+    } catch (error) {
+        console.error('Firebase silme hatası:', error);
+        return false;
     }
 }
 
 // ================================================================
-// 4. FORM İŞLEMLERİ
+// YÜKLEME VE KAYDETME (Firebase ile)
+// ================================================================
+async function loadData() {
+    basvurular = await firebaseVerileriOku();
+    renderAll();
+}
+
+// ================================================================
+// FORM İŞLEMLERİ
 // ================================================================
 const adInput = document.getElementById('ad');
 const soyadInput = document.getElementById('soyad');
@@ -800,7 +775,7 @@ document.addEventListener('click', (e) => {
 });
 
 // Ekle butonu
-document.getElementById('ekleBtn').addEventListener('click', function() {
+document.getElementById('ekleBtn').addEventListener('click', async function() {
     if (!adInput.value || !soyadInput.value || !tcInput.value || !telefonInput.value || !mezuniyetSelect.value) {
         alert('Lütfen Adı, Soyadı, TC, TELEFON NO ve Mezuniyet alanlarını doldurun.');
         return;
@@ -810,7 +785,7 @@ document.getElementById('ekleBtn').addEventListener('click', function() {
         return;
     }
     const kod = yeterlilikKoduInput.value.trim();
-    const sira = getNextSira();
+    const sira = basvurular.length > 0 ? Math.max(...basvurular.map(b => b.sira || 0)) + 1 : 1;
     const basvuruNo = formatBasvuruNo(sira);
 
     const yeniBasvuru = {
@@ -832,37 +807,24 @@ document.getElementById('ekleBtn').addEventListener('click', function() {
         sinavMaddesi: sinavMaddesiInput.value.trim(),
         aciklama: aciklamaInput.value.trim(),
         eskiKimlik: eskiKimlikInput.value.trim(),
-        telefon: telefonInput.value.trim(),
-        basvuruNo: basvuruNo // formatlı başvuru no
+        telefon: telefonInput.value.trim()
     };
-    basvurular.push(yeniBasvuru);
-    saveToStorage();
-    renderAll();
-    document.getElementById('basvuruForm').reset();
-    alanInput.value = '';
-    dalInput.value = '';
-    yeterlilikKoduInput.value = '';
-    document.querySelectorAll('.checkbox-group input').forEach(cb => cb.checked = false);
-});
 
-// Google Sheets Senkron butonu
-document.getElementById('googleSenkronBtn').addEventListener('click', function() {
-    if (confirm('Mevcut verileri Google Sheets\'e göndermek istiyor musunuz?')) {
-        // Tüm verileri sırayla gönder
-        basvurular.forEach(async (b, index) => {
-            // Biraz bekleyerek sırayla gönder
-            setTimeout(() => {
-                googleSheetsEkle(b);
-            }, index * 500);
-        });
-    } else {
-        // Yoksa sadece oku
-        googleSheetsOku();
+    const id = await firebaseVeriEkle(yeniBasvuru);
+    if (id) {
+        yeniBasvuru.id = id;
+        basvurular.push(yeniBasvuru);
+        renderAll();
+        document.getElementById('basvuruForm').reset();
+        alanInput.value = '';
+        dalInput.value = '';
+        yeterlilikKoduInput.value = '';
+        document.querySelectorAll('.checkbox-group input').forEach(cb => cb.checked = false);
     }
 });
 
 // ================================================================
-// 5. RENDER FONKSİYONLARI
+// RENDER FONKSİYONLARI
 // ================================================================
 function renderTable() {
     const tbody = document.getElementById('tabloBody');
@@ -903,16 +865,21 @@ function renderTable() {
         `;
         tbody.appendChild(tr);
     });
-    // Değişiklikleri otomatik kaydet
+
+    // Değişiklikleri Firebase'e otomatik kaydet
     tbody.querySelectorAll('.editable-cell').forEach(el => {
         if (el.tagName === 'INPUT' || el.tagName === 'SELECT') {
-            el.addEventListener('change', function() {
+            el.addEventListener('change', async function() {
                 const tr = this.closest('tr');
                 const index = parseInt(tr.dataset.index);
                 const field = this.dataset.field;
                 let value = this.type === 'checkbox' ? this.checked : this.value;
-                basvurular[index][field] = value;
-                saveToStorage();
+                const b = basvurular[index];
+                b[field] = value;
+                // Firebase'e güncelle
+                if (b.id) {
+                    await firebaseVeriGuncelle(b.id, { [field]: value });
+                }
                 renderOzet();
             });
         }
@@ -951,7 +918,9 @@ function renderOzet() {
 
 function renderAll() { renderTable(); renderOzet(); }
 
-// Kopyala butonu
+// ================================================================
+// KOPYALA VE SİL FONKSİYONLARI
+// ================================================================
 function kopyalaBasvuru(index) {
     const b = basvurular[index];
     if (b) {
@@ -977,23 +946,39 @@ function kopyalaBasvuru(index) {
     }
 }
 
-function silBasvuru(index) {
+async function silBasvuru(index) {
     if (confirm('Silmek istediğinize emin misiniz?')) {
-        basvurular.splice(index, 1);
-        saveToStorage();
-        renderAll();
+        const b = basvurular[index];
+        if (b.id) {
+            const sonuc = await firebaseVeriSil(b.id);
+            if (sonuc) {
+                basvurular.splice(index, 1);
+                renderAll();
+            }
+        } else {
+            basvurular.splice(index, 1);
+            renderAll();
+        }
     }
 }
-document.getElementById('temizleVeriBtn').addEventListener('click', function() {
-    if (confirm('Tüm veriler kalıcı olarak silinecek. Devam etmek istiyor musunuz?')) {
+
+// ================================================================
+// TÜM VERİLERİ SİL (Firebase'den)
+// ================================================================
+document.getElementById('temizleVeriBtn').addEventListener('click', async function() {
+    if (confirm('Tüm veriler Firebase\'den kalıcı olarak silinecek. Devam etmek istiyor musunuz?')) {
+        for (const b of basvurular) {
+            if (b.id) {
+                await firebaseVeriSil(b.id);
+            }
+        }
         basvurular = [];
-        saveToStorage();
         renderAll();
     }
 });
 
 // ================================================================
-// 6. EXCEL İNDİRME (Tam kod, kısaltılmadı)
+// EXCEL İNDİRME (Aynı, sadece basvurular üzerinden çalışır)
 // ================================================================
 document.getElementById('excelBtn').addEventListener('click', async function() {
     if (basvurular.length === 0) {
@@ -1005,9 +990,8 @@ document.getElementById('excelBtn').addEventListener('click', async function() {
     workbook.creator = 'Başvuru Sistemi';
     workbook.created = new Date();
 
-    // ---------- SAYFA 1: BAŞVURU LİSTESİ ----------
+    // Sayfa 1: Başvuru Listesi
     const ws1 = workbook.addWorksheet('Başvuru Listesi', { views: [{ state: 'frozen', ySplit: 1 }] });
-
     const basliklar = [
         'Başvuru Sıra No',
         'Yapılan Denklik İşleminin Numarası',
@@ -1085,7 +1069,7 @@ document.getElementById('excelBtn').addEventListener('click', async function() {
         { width: 25 }, { width: 16 }
     ];
 
-    // ---------- SAYFA 2: MESLEK ÖZETİ ----------
+    // Sayfa 2: Meslek Özeti
     const ws2 = workbook.addWorksheet('Meslekler');
     const ozetBaslik = ['Alan Adı', 'Dal Adı', 'Sınava Girecek Kişi Sayısı', 'Öğrenci Sayısı KALFALIK', 'Öğrenci Sayısı USTALIK', 'Sınav Sayısı KALFALIK', 'Sınav Sayısı USTALIK'];
     const headerRow2 = ws2.addRow(ozetBaslik);
@@ -1151,18 +1135,17 @@ document.getElementById('excelBtn').addEventListener('click', async function() {
         { width: 26 }, { width: 26 }, { width: 26 }, { width: 26 }
     ];
 
-    // ---------- DOSYAYI İNDİR ----------
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     saveAs(blob, 'Basvuru_Listesi_Renkli.xlsx');
 });
 
 // ================================================================
-// 7. BAŞLAT
+// BAŞLAT
 // ================================================================
-loadFromStorage();
-renderAll();
+loadData();
 
+// MYK verisi kontrolü
 if (mykData.length === 0) {
     console.warn('⚠️ MYK verisi yüklenmemiş! Lütfen mykData dizisini doldurun.');
 } else {
