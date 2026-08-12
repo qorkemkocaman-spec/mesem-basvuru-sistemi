@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Başvuru Yönetim Sistemi</title>
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        /* --- TÜM STİLLER (Aynı, değişiklik yok) --- */
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f5f7fa; margin: 20px; padding: 0; }
+        .container { max-width: 1400px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+        h1, h2 { color: #1a3c5e; margin-top: 0; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px 20px; background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-weight: 600; font-size: 13px; margin-bottom: 3px; color: #2c3e50; }
+        .form-group input, .form-group select { padding: 8px 10px; border: 1px solid #ccd7e6; border-radius: 6px; font-size: 14px; background: white; }
+        .form-group input:focus, .form-group select:focus { border-color: #2a7de1; outline: none; box-shadow: 0 0 0 3px rgba(42,125,225,0.15); }
+        .form-group input[readonly] { background: #eef2f7; color: #1a3c5e; }
+        .checkbox-group { display: flex; flex-wrap: wrap; gap: 8px 16px; padding-top: 6px; }
+        .checkbox-group label { font-weight: 400; font-size: 13px; display: flex; align-items: center; gap: 5px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; transition: background 0.2s; color: white; }
+        .btn-primary { background: #2a7de1; }
+        .btn-primary:hover { background: #1a5fb0; }
+        .btn-success { background: #28a745; }
+        .btn-success:hover { background: #1e7e34; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #b02a37; }
+        .btn-secondary { background: #6c7a8a; }
+        .btn-secondary:hover { background: #4e5b69; }
+        .btn-copy { background: #17a2b8; color: white; }
+        .btn-copy:hover { background: #117a8b; }
+        .btn-google { background: #0f9d58; color: white; }
+        .btn-google:hover { background: #0b7e48; }
+        .actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0 20px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+        th { background: #e9ecf0; text-align: left; padding: 8px 6px; position: sticky; top: 0; z-index: 2; border-bottom: 2px solid #ccd7e6; }
+        td { padding: 4px 6px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
+        .table-wrapper { max-height: 450px; overflow: auto; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 30px; }
+        .editable-cell {
+            background: transparent;
+            border: none;
+            width: 100%;
+            font-family: inherit;
+            font-size: inherit;
+            padding: 4px 2px;
+            outline: none;
+            border-radius: 3px;
+        }
+        .editable-cell:focus {
+            background: #fffde7;
+            box-shadow: 0 0 0 2px #ffc107;
+        }
+        .editable-cell.checkbox-cell {
+            width: auto;
+            text-align: center;
+            cursor: pointer;
+        }
+        .editable-cell.readonly-cell {
+            background: #f0f2f5;
+            color: #1a3c5e;
+            font-weight: 600;
+            cursor: default;
+        }
+        .summary-table { margin-top: 10px; width: 100%; border-collapse: collapse; font-size: 13px; }
+        .summary-table th { background: #d4e2f0; }
+        .summary-table td, .summary-table th { padding: 6px 12px; border: 1px solid #ccd7e6; }
+        .footer { margin-top: 30px; font-size: 13px; color: #888; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+        .search-wrapper { position: relative; }
+        #suggestions { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ccd7e6; border-top: none; border-radius: 0 0 6px 6px; max-height: 200px; overflow-y: auto; z-index: 1000; display: none; box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
+        #suggestions div { padding: 8px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid #f0f0f0; }
+        #suggestions div:hover { background: #e6f0ff; }
+        #suggestions div .highlight { font-weight: 700; color: #1a3c5e; }
+        @media (max-width: 700px) { .form-grid { grid-template-columns: 1fr; } .actions { flex-direction: column; } .btn { width: 100%; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>📋 Başvuru Yönetim Sistemi</h1>
+
+    <!-- FORM -->
+    <form id="basvuruForm" class="form-grid">
+        <div class="form-group"><label>Adı</label><input type="text" id="ad" placeholder="Ad" required></div>
+        <div class="form-group"><label>Soyadı</label><input type="text" id="soyad" placeholder="Soyad" required></div>
+        <div class="form-group"><label>TC Kimlik No</label><input type="text" id="tc" placeholder="11 haneli TC" pattern="[0-9]{11}" required></div>
+        <div class="form-group"><label>TELEFON NO</label><input type="text" id="telefon" placeholder="5xx xxx xx xx" required></div>
+        <div class="form-group">
+            <label>Mezuniyet</label>
+            <select id="mezuniyet">
+                <option value="">Seçiniz</option>
+                <option>TEKNİK LİSE (4Y)</option>
+                <option>MESLEKİ AÇIK ÖĞRETİM LİSESİ (4Y)</option>
+                <option>MESLEKİ TEKNİK ANADOLU LİSESİ (4Y)</option>
+                <option>MYO (2Y)</option>
+                <option>MESLEK LİSESİ (3Y)</option>
+                <option>ANADOLU TEKNİK (4Y)</option>
+                <option>ANADOLU MESLEK (4Y)</option>
+                <option>LİSE (3Y)</option>
+                <option>ÖZEL MESLEKİ TEKNİK ANADOLU LİSESİ (4Y)</option>
+                <option>ÖZEL TEMEL LİSE (4Y)</option>
+                <option>MESLEK LİSESİ (4Y)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Yeterlilik Kodu</label>
+            <div class="search-wrapper">
+                <input type="text" id="yeterlilikKodu" placeholder="Kod veya ad yazın" autocomplete="off">
+                <div id="suggestions"></div>
+            </div>
+        </div>
+        <div class="form-group"><label>Alan</label><input type="text" id="alan" readonly></div>
+        <div class="form-group"><label>Dal</label><input type="text" id="dal" readonly></div>
+        <div class="form-group" style="grid-column: span 2;">
+            <label>Belge Türleri</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" id="kalfalik"> Belge Türü KALFALIK</label>
+                <label><input type="checkbox" id="ustalik"> Belge Türü USTALIK</label>
+                <label><input type="checkbox" id="sinavli"> Belge Türü SINAVLI</label>
+                <label><input type="checkbox" id="sinavsiz"> Belge Türü SINAVSIZ</label>
+                <label><input type="checkbox" id="esinav"> Teorik Sınav Türü E-SINAV</label>
+                <label><input type="checkbox" id="beceri"> BECERİ SINAVI</label>
+            </div>
+        </div>
+        <div class="form-group"><label>SINAV MADDESİ</label><input type="text" id="sinavMaddesi" placeholder="örn. 35.Madde"></div>
+        <div class="form-group"><label>Açıklama</label><input type="text" id="aciklama" placeholder="Varsa not"></div>
+        <div class="form-group"><label>Eski Kimlik</label><input type="text" id="eskiKimlik" placeholder="X veya boş"></div>
+        <div class="form-group" style="grid-column: span 2; display: flex; gap: 10px; align-items: center;">
+            <button type="button" class="btn btn-primary" id="ekleBtn">➕ Başvuru Ekle</button>
+            <button type="reset" class="btn btn-secondary">🧹 Temizle</button>
+            <button type="button" class="btn btn-google" id="googleSenkronBtn">☁️ Google Sheets Senkron</button>
+        </div>
+    </form>
+
+    <!-- AKSİYONLAR -->
+    <div class="actions">
+        <button class="btn btn-success" id="excelBtn">📊 Excel İndir (Renkli)</button>
+        <button class="btn btn-danger" id="temizleVeriBtn">🗑️ Tüm Verileri Sil</button>
+        <span style="margin-left: auto; font-size: 14px; color: #555;">Toplam Başvuru: <strong id="toplamSayi">0</strong></span>
+    </div>
+
+    <!-- BAŞVURU LİSTESİ TABLOSU -->
+    <h2>Başvuru Listesi (Hücrelere tıklayıp düzenleyin)</h2>
+    <div class="table-wrapper">
+        <table id="basvuruTablosu">
+            <thead><tr>
+                <th style="min-width:140px;">Başvuru Sıra No</th>
+                <th style="min-width:150px;">Yapılan Denklik İşleminin Numarası</th>
+                <th style="min-width:120px;">TC Kimlik No</th>
+                <th style="min-width:100px;">Adı</th>
+                <th style="min-width:100px;">Soyadı</th>
+                <th style="min-width:200px;">Mezuniyet</th>
+                <th style="min-width:150px;">Alan</th>
+                <th style="min-width:200px;">Dal</th>
+                <th style="min-width:80px;">Belge Türü KALFALIK</th>
+                <th style="min-width:80px;">Belge Türü USTALIK</th>
+                <th style="min-width:80px;">Belge Türü SINAVLI</th>
+                <th style="min-width:80px;">Belge Türü SINAVSIZ</th>
+                <th style="min-width:100px;">Teorik Sınav Türü E-SINAV</th>
+                <th style="min-width:80px;">BECERİ SINAVI</th>
+                <th style="min-width:100px;">SINAV MADDESİ</th>
+                <th style="min-width:120px;">TELEFON NO</th>
+                <th style="min-width:150px;">Açıklama</th>
+                <th style="min-width:100px;">Eski Kimlik</th>
+                <th style="min-width:120px;">İşlem</th>
+            </tr></thead>
+            <tbody id="tabloBody"></tbody>
+        </table>
+    </div>
+
+    <!-- ÖZET TABLO -->
+    <h2>📊 Meslek Bazlı Özet</h2>
+    <div style="overflow-x: auto;">
+        <table class="summary-table" id="ozetTablo">
+            <thead><tr>
+                <th>Alan Adı</th>
+                <th>Dal Adı</th>
+                <th>Sınava Girecek Kişi Sayısı</th>
+                <th>Öğrenci Sayısı (Kalfalık)</th>
+                <th>Öğrenci Sayısı (Ustalık)</th>
+                <th>Sınav Sayısı Kalfalık</th>
+                <th>Sınav Sayısı Ustalık</th>
+            </tr></thead>
+            <tbody id="ozetBody"></tbody>
+        </table>
+    </div>
+
+    <div class="footer">⚡ Veriler tarayıcı hafızasında (localStorage) saklanır. Google Sheets ile senkronize edebilirsiniz.</div>
+</div>
+
+<script>
+// ================================================================
+// 1. MYK VERİLERİ (TAMAMI) – Buraya kendi verilerinizi ekleyin
+// ================================================================
+const mykData = [
+  { kod: "17UY0301‐3", ad: "Ahşap Mobilya İmalatçısı", alan: "Mobilya ve İç Mekan Tasarımı", dal: "İç Mekan ve Mobilya Teknolojisi" },
+  { kod: "17UY0301‐4", ad: "Ahşap Mobilya İmalatçısı", alan: "Mobilya ve İç Mekan Tasarımı", dal: "İç Mekan ve Mobilya Teknolojisi" },
+  { kod: "17UY0301‐5", ad: "Ahşap Mobilya İmalatçısı", alan: "Mobilya ve İç Mekan Tasarımı", dal: "İç Mekan ve Mobilya Teknolojisi" },
+  { kod: "17UY0282‐4", ad: "Alan Kılavuzu", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "17UY0300‐3", ad: "Mobilya Döşemecisi", alan: "Mobilya ve İç Mekan Tasarımı", dal: "Mobilya İskeleti ve Döşemesi" },
+  { kod: "17UY0300‐4", ad: "Mobilya Döşemecisi", alan: "Mobilya ve İç Mekan Tasarımı", dal: "Mobilya İskeleti ve Döşemesi" },
+  { kod: "17UY0300‐5", ad: "Mobilya Döşemecisi", alan: "Mobilya ve İç Mekan Tasarımı", dal: "Mobilya İskeleti ve Döşemesi" },
+  { kod: "17UY0284‐3", ad: "Odun Dışı Ürün Toplayıcısı (Yüksekten)", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "15UY0236‐3", ad: "Orman Üretim İşçisi", alan: "Tarım", dal: "Orman Yetiştiriciliği" },
+  { kod: "15UY0237‐3", ad: "Orman Yetiştirme ve Bakım İşçisi", alan: "Tarım", dal: "Orman Yetiştiriciliği" },
+  { kod: "12UY0046‐4", ad: "Ağ Teknolojileri Elemanı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "12UY0046‐5", ad: "Ağ Teknolojileri Elemanı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "12UY0106‐4", ad: "Bilgi İşlem Destek Elemanı", alan: "Bilişim Teknolojileri", dal: "Bilgisayar Teknik Servisi" },
+  { kod: "21UY0450‐5", ad: "Bilgi İşlem Teknik Destek Sorumlusu", alan: "Bilişim Teknolojileri", dal: "Bilgisayar Teknik Servisi" },
+  { kod: "12UY0045‐4", ad: "Bilgisayar Donanım Elemanı", alan: "Bilişim Teknolojileri", dal: "Bilgisayar Teknik Servisi" },
+  { kod: "12UY0045‐5", ad: "Bilgisayar Donanım Elemanı", alan: "Bilişim Teknolojileri", dal: "Bilgisayar Teknik Servisi" },
+  { kod: "22UY0505-5", ad: "Blok Zinciri Analisti", alan: "Bilişim Teknolojileri", dal: "Yazılım Geliştirme" },
+  { kod: "22UY0516‐5", ad: "BT İş Analizi Elemanı", alan: "Bilişim Teknolojileri", dal: "Bilgisayar Teknik Servisi" },
+  { kod: "12UY0107‐4", ad: "BT Satış Elemanı", alan: "Pazarlama ve Perakende", dal: "Satış Elemanlığı" },
+  { kod: "12UY0108‐5", ad: "BT Satış Sorumlusu", alan: "Pazarlama ve Perakende", dal: "Satış Elemanlığı" },
+  { kod: "22UY0506-5", ad: "Bulut Bilişim Analisti", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "22UY0515‐5", ad: "Etik Hacker", alan: "Siber Güvenlik", dal: "Siber Güvenlik" },
+  { kod: "22UY0507-5", ad: "Gömülü Sistem Geliştirici", alan: "Bilişim Teknolojileri", dal: "Yazılım Geliştirme" },
+  { kod: "23UY0544‐5", ad: "Siber Güvenlik Elemanı", alan: "Siber Güvenlik", dal: "Siber Güvenlik" },
+  { kod: "13UY0167‐4", ad: "Sistem İşletmeni", alan: "Siber Güvenlik", dal: "Siber Güvenlik" },
+  { kod: "13UY0167‐5", ad: "Sistem İşletmeni", alan: "Siber Güvenlik", dal: "Siber Güvenlik" },
+  { kod: "13UY0165‐5", ad: "Sistem Yöneticisi", alan: "Siber Güvenlik", dal: "Siber Güvenlik" },
+  { kod: "13UY0168‐4", ad: "Veri Giriş Elemanı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "22UY0509‐5", ad: "Veritabanı Yöneticisi", alan: "Bilişim Teknolojileri", dal: "Yazılım Geliştirme" },
+  { kod: "13UY0164‐4", ad: "Web ve Çoklu Ortam Geliştiricisi", alan: "Bilişim Teknolojileri", dal: "Yazılım Geliştirme" },
+  { kod: "22UY0513‐5", ad: "Yapay Zeka Programcısı", alan: "Bilişim Teknolojileri", dal: "Yazılım Geliştirme" },
+  { kod: "22UY0508-5", ad: "Yapay Zeka Sistem Analisti", alan: "Bilişim Teknolojileri", dal: "Yazılım Geliştirme" },
+  { kod: "22UY0510‐4", ad: "Yazılım Geliştirici", alan: "Bilişim Teknolojileri", dal: "Yazılım Geliştirme" },
+  { kod: "22UY0511‐5", ad: "Yazılım Geliştirici", alan: "Bilişim Teknolojileri", dal: "Yazılım Geliştirme" },
+  { kod: "22UY0518‐4", ad: "Yazılım Uygulamaları Destek Elemanı", alan: "Bilişim Teknolojileri", dal: "Yazılım Geliştirme" },
+  { kod: "22UY0519‐5", ad: "Yazılım Uygulamaları Destek Sorumlusu", alan: "Bilişim Teknolojileri", dal: "Bilgisayar Teknik Servisi" },
+  { kod: "18UY0355‐3", ad: "Cam Kesim Elemanı", alan: "Seramik ve Cam Teknolojisi", dal: "Dekoratif Cam / Endüstriyel Cam" },
+  { kod: "20UY0424‐5", ad: "Çimento Merkezi Kumanda Operatörü", alan: "Kimya Teknolojisi", dal: "Çimento ve Yapı Kimyasalları Üretimi" },
+  { kod: "12UY0109‐3", ad: "Çimento Üretim Elemanı", alan: "Kimya Teknolojisi", dal: "Çimento ve Yapı Kimyasalları Üretimi" },
+  { kod: "12UY0109‐4", ad: "Çimento Üretim Elemanı", alan: "Kimya Teknolojisi", dal: "Çimento ve Yapı Kimyasalları Üretimi" },
+  { kod: "18UY0356‐4", ad: "Endüstriyel Cam Isıl İşlem Elemanı", alan: "Seramik ve Cam Teknolojisi", dal: "Dekoratif Cam / Endüstriyel Cam" },
+  { kod: "18UY0357‐4", ad: "Endüstriyel Cam İşleme Elemanı", alan: "Seramik ve Cam Teknolojisi", dal: "Dekoratif Cam / Endüstriyel Cam" },
+  { kod: "18UY0358‐4", ad: "Endüstriyel Cam Kesim Elemanı", alan: "Seramik ve Cam Teknolojisi", dal: "Dekoratif Cam / Endüstriyel Cam" },
+  { kod: "18UY0359‐3", ad: "Endüstriyel Yalıtım Camı Üretim Elemanı", alan: "Seramik ve Cam Teknolojisi", dal: "Endüstriyel Cam" },
+  { kod: "22UY0501‐3", ad: "Atık Ayırma İşçisi", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "22UY0520‐4", ad: "Atık Kâğıt Geri Dönüşüm Elemanı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "17UY0311‐5", ad: "Atık Koordinatörü", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "17UY0312‐3", ad: "Endüstriyel Ambalaj Yeniden Kullanıma Hazırlama İşçisi", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "22UY0521‐3", ad: "Hafriyat Toprağı Döküm Sahası Elemanı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "17UY0314‐3", ad: "Sağlık Kuruluşları Kaynaklı Tehlikeli Atık Toplayıcısı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "17UY0313‐3", ad: "Sağlık Kuruluşları Kaynaklı Tıbbi Atık Toplayıcısı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "22UY0503‐3", ad: "Tehlikeli Atık Toplayıcısı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "22UY0504‐3", ad: "Tehlikesiz Atık Toplayıcısı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "23UY0553‐6", ad: "Kurumsal Eğitmen", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "12UY0092‐3", ad: "Asansör Bakım ve Onarımcısı", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Asansör Sistemleri" },
+  { kod: "12UY0092‐4", ad: "Asansör Bakım ve Onarımcısı", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Asansör Sistemleri" },
+  { kod: "12UY0091‐3", ad: "Asansör Montajcısı", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Asansör Sistemleri" },
+  { kod: "12UY0091‐4", ad: "Asansör Montajcısı", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Asansör Sistemleri" },
+  { kod: "16UY0263‐4", ad: "Bobinajcı", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Bobinaj" },
+  { kod: "19UY0402‐4", ad: "Cep Telefonu Tamir Bakım ve Onarımcısı", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Haberleşme Sistemleri" },
+  { kod: "12UY0075‐3", ad: "Elektrik Pano Montajcısı", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Elektrik Tesisatları ve Pano Montörlüğü" },
+  { kod: "12UY0075‐4", ad: "Elektrik Pano Montajcısı", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Elektrik Tesisatları ve Pano Montörlüğü" },
+  { kod: "12UY0075‐5", ad: "Elektrik Pano Montajcısı", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Elektrik Tesisatları ve Pano Montörlüğü" },
+  { kod: "15UY0241‐3", ad: "Elektrik Tesisatçısı", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Elektrik Tesisatları ve Pano Montörlüğü" },
+  { kod: "15UY0241‐4", ad: "Elektrik Tesisatçısı", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Elektrik Tesisatları ve Pano Montörlüğü" },
+  { kod: "17UY0288‐5", ad: "Elektrik Tesisatçısı", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Elektrik Tesisatları ve Pano Montörlüğü" },
+  { kod: "15UY0206‐3", ad: "Elektro‐Mekanik Montaj İşçisi", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Endüstriyel Bakım Onarım" },
+  { kod: "15UY0206‐4", ad: "Elektro‐Mekanik Montaj İşçisi", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Endüstriyel Bakım Onarım" },
+  { kod: "16UY0264‐4", ad: "Elektronik ve Elektrikli Ürünler Servisçisi", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Elektrikli Ev Aletleri Teknik Servisi" },
+  { kod: "17UY0287‐4", ad: "Görüntü ve Ses Sistemleri Elemanı", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Görüntü ve Ses Sistemleri" },
+  { kod: "22UY0495‐3", ad: "İşletme Elektrik Bakımcısı", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Endüstriyel Bakım Onarım" },
+  { kod: "22UY0496‐4", ad: "İşletme Elektrik Bakımcısı", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Endüstriyel Bakım Onarım" },
+  { kod: "13UY0121‐5", ad: "İşletme Elektrik Bakımcısı", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Endüstriyel Bakım Onarım" },
+  { kod: "13UY0169‐4", ad: "Mekatronik Sistem Operatörü", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Asansör Sistemleri" },
+  { kod: "13UY0169‐5", ad: "Mekatronik Sistem Operatörü", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Asansör Sistemleri" },
+  { kod: "13UY0151‐5", ad: "NC/CNC Takım Tezgâhları Elektrik/Elektronik Servis Görevlisi", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Endüstriyel Bakım Onarım" },
+  { kod: "12UY0076‐4", ad: "Otomasyon Sistemleri Montajcısı", alan: "Endüstriyel Otomasyon Teknolojileri / Elektrik ‐ Elektronik Teknolojisi", dal: "Endüstriyel Kontrol / Elektrik Tesisatları ve Pano Montörlüğü" },
+  { kod: "12UY0077‐5", ad: "Otomasyon Sistemleri Programcısı", alan: "Endüstriyel Otomasyon Teknolojileri", dal: "Endüstriyel Kontrol" },
+  { kod: "20UY0412‐5", ad: "Robotik Sistemler Operatörü (Hava Aracı Montajı)", alan: "Uçak Bakım", dal: "Hava Aracı Montajı" },
+  { kod: "22UY0497‐4", ad: "Trafo Bobin Sarma İşçisi", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Bobinaj" },
+  { kod: "12UY0089‐4", ad: "Yüksek Gerilim Kablo Aksesuarları Montajcısı", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Yüksek Gerilim Sistemleri" },
+  { kod: "12UY0090‐4", ad: "Yüksek Gerilim Teçhizatı Test Elemanı", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Yüksek Gerilim Sistemleri" },
+  { kod: "12UY0090‐5", ad: "Yüksek Gerilim Teçhizatı Test Elemanı", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Yüksek Gerilim Sistemleri" },
+  { kod: "10UY0003‐4", ad: "Baca Kontrol Personeli (Bacacı)", alan: "Tesisat Teknolojisi ve İklimlendirme", dal: "Gaz Yakıcı Cihazlar ve Servis / Kazan Yakma ve Bakımı" },
+  { kod: "10UY0003‐3", ad: "Baca Montaj Personeli (Bacacı)", alan: "Tesisat Teknolojisi ve İklimlendirme", dal: "Gaz Yakıcı Cihazlar ve Servis / Kazan Yakma ve Bakımı" },
+  { kod: "18UY0377‐4", ad: "Bireysel ve Ticari Klima Sistemleri Montaj ve Servis Elemanı", alan: "Tesisat Teknolojisi ve İklimlendirme", dal: "İklimlendirme Sistemleri" },
+  { kod: "18UY0376‐3", ad: "Bireysel ve Ticari Klima Sistemleri Montajcısı", alan: "Tesisat Teknolojisi ve İklimlendirme", dal: "İklimlendirme Sistemleri" },
+  { kod: "18UY0378‐5", ad: "Bireysel, Ticari ve Değişken Debili Klima Sistemleri Uzmanı", alan: "Tesisat Teknolojisi ve İklimlendirme", dal: "İklimlendirme Sistemleri" },
+  { kod: "15UY0207‐5", ad: "Biyogaz Sistemleri Personeli", alan: "Yenilenebilir Enerji Sistemleri / Elektrik ‐ Elektronik Teknolojisi", dal: "Yenilenebilir Enerji Sistemleri / Endüstriyel Bakım Onarım" },
+  { kod: "18UY0347‐4", ad: "Buhar Kazanı Operatörü", alan: "Tesisat Teknolojisi ve İklimlendirme", dal: "Kazan Yakma ve Bakımı" },
+  { kod: "12UY0040‐5", ad: "Coğrafi Bilgi Sistemleri Operatörü", alan: "Harita‐Tapu‐Kadastro", dal: "Harita Kadastro" },
+  { kod: "12UY0042‐4", ad: "Doğal Gaz Altyapı Yapım Kontrol Personeli", alan: "Tesisat Teknolojisi ve İklimlendirme", dal: "Gaz Tesisat Sistemleri" },
+  { kod: "11UY0032‐4", ad: "Doğal Gaz Isıtma ve Gaz Yakıcı Cihaz Servis Personeli", alan: "Tesisat Teknolojisi ve İklimlendirme", dal: "Gaz Yakıcı Cihazlar ve Servis / Kazan Yakma ve Bakımı" },
+  { kod: "11UY0030‐4", ad: "Doğal Gaz İşletme Bakım Operatörü", alan: "Tesisat Teknolojisi ve İklimlendirme", dal: "Gaz Tesisat Sistemleri" },
+  { kod: "11UY0034‐3", ad: "Doğal Gaz Polietilen Boru Kaynakçısı", alan: "Tesisat Teknolojisi ve İklimlendirme", dal: "Gaz Tesisat Sistemleri" },
+  { kod: "11UY0034‐4", ad: "Doğal Gaz Polietilen Boru Kaynakçısı", alan: "Tesisat Teknolojisi ve İklimlendirme", dal: "Gaz Tesisat Sistemleri" },
+  { kod: "18UY0342‐3", ad: "Doğalgaz Sayaç Sökme Takma Elemanı", alan: "Tesisat Teknolojisi ve İklimlendirme", dal: "Gaz Tesisat Sistemleri" },
+  { kod: "17UY0274‐4", ad: "Elektrik Dağıtım Şebekesi Hat Bakım Görevlisi", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Yüksek Gerilim Sistemleri" },
+  { kod: "17UY0275‐3", ad: "Elektrik Dağıtım Şebekesi İşletme Bakım Görevlisi", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Yüksek Gerilim Sistemleri" },
+  { kod: "15UY0211‐4", ad: "Elektrik Dağıtım Şebekesi İşletme Bakım Görevlisi", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Yüksek Gerilim Sistemleri" },
+  { kod: "17UY0276‐4", ad: "Elektrik Dağıtım Şebekesi Kayıp‐Kaçak ve Ölçü Kontrol Görevlisi", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Yüksek Gerilim Sistemleri" },
+  { kod: "17UY0278‐5", ad: "Elektrik Dağıtım Şebekesi Saha Koordinatörü", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Yüksek Gerilim Sistemleri" },
+  { kod: "17UY0277‐4", ad: "Elektrik Dağıtım Şebekesi Test Görevlisi", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Yüksek Gerilim Sistemleri" },
+  { kod: "15UY0214‐5", ad: "Elektrik Dağıtımı Scada Operatörü", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Elektrik Tesisatları ve Pano Montörlüğü" },
+  { kod: "17UY0279‐4", ad: "Elektrik Sayacı Sökme/Takma Elemanı", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Elektrik Tesisatları ve Pano Montörlüğü" },
+  { kod: "15UY0212‐3", ad: "Endeks Okuma Görevlisi", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "19UY0401‐5", ad: "Florlu Sera Gazlı Cihazlar Teknik Personeli", alan: "Tesisat Teknolojisi ve İklimlendirme", dal: "İklimlendirme Sistemleri" },
+  { kod: "15UY0208‐3", ad: "Fotovoltaik Güç Sistemleri Personeli", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Endüstriyel Bakım Onarım" },
+  { kod: "15UY0208‐4", ad: "Fotovoltaik Güç Sistemleri Personeli", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Endüstriyel Bakım Onarım" },
+  { kod: "15UY0208‐5", ad: "Fotovoltaik Güç Sistemleri Personeli", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Endüstriyel Bakım Onarım" },
+  { kod: "15UY0209‐4", ad: "Güneş‐Isıl Sistem Personeli", alan: "Tesisat Teknolojisi ve İklimlendirme", dal: "Güneş Enerjisi ve Tesisat Sistemleri" },
+  { kod: "15UY0209‐5", ad: "Güneş‐Isıl Sistem Personeli", alan: "Tesisat Teknolojisi ve İklimlendirme", dal: "Güneş Enerjisi ve Tesisat Sistemleri" },
+  { kod: "21UY0446‐3", ad: "Isıtma Tesisat Bakım Onarım ve Servis Elemanı", alan: "Tesisat Teknolojisi ve İklimlendirme", dal: "Isıtma ve Sıhhı Tesisat Sistemleri" },
+  { kod: "11UY0031‐3", ad: "Isıtma ve Doğal Gaz İç Tesisat Yapım Personeli", alan: "Tesisat Teknolojisi ve İklimlendirme", dal: "Gaz Tesisat Sistemleri" },
+  { kod: "18UY0348‐4", ad: "Kızgın Yağ Kazanı Operatörü", alan: "Tesisat Teknolojisi ve İklimlendirme", dal: "Kazan Yakma ve Bakımı" },
+  { kod: "09UY0001‐3", ad: "Plastik Kaynakçısı", alan: "Plastik Teknolojisi", dal: "Plastik İşleme" },
+  { kod: "15UY0213‐4", ad: "Röle Görevlisi", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Elektrik Tesisatları ve Pano Montörlüğü" },
+  { kod: "15UY0210‐4", ad: "Rüzgâr Güç Sistemi Personeli", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Endüstriyel Bakım Onarım" },
+  { kod: "15UY0210‐5", ad: "Rüzgâr Güç Sistemi Personeli", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Endüstriyel Bakım Onarım" },
+  { kod: "18UY0349‐3", ad: "Sıcak Su Kazanı Operatörü", alan: "Tesisat Teknolojisi ve İklimlendirme", dal: "Kazan Yakma ve Bakımı" },
+  { kod: "21UY0447‐4", ad: "Sıhhı Tesisat Bakım Onarım ve Servis Elemanı", alan: "Tesisat Teknolojisi ve İklimlendirme", dal: "Isıtma ve Sıhhı Tesisat Sistemleri" },
+  { kod: "21UY0448‐3", ad: "Sıhhi Tesisatçı", alan: "Tesisat Teknolojisi ve İklimlendirme", dal: "Isıtma ve Sıhhı Tesisat Sistemleri" },
+  { kod: "12UY0041‐4", ad: "Topoğraf", alan: "Harita‐Tapu‐Kadastro", dal: "Harita Kadastro" },
+  { kod: "17UY0338‐4", ad: "Baharat ve Toz Karışımlar Hazırlama Operatörü", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "18UY0352‐4", ad: "Bitkisel Yağ Üretim Operatörü", alan: "Gıda Teknolojisi", dal: "Bitkisel Yag Üretim" },
+  { kod: "20UY0406‐4", ad: "Çiğ Süt Depolama Sorumlusu", alan: "Gıda Teknolojisi", dal: "Süt İşleme" },
+  { kod: "20UY0405‐3", ad: "Çiğ Süt Toplama Elemanı", alan: "Gıda Teknolojisi", dal: "Süt İşleme" },
+  { kod: "17UY0303‐4", ad: "Çikolata Hamuru İşleme Operatörü", alan: "Gıda Teknolojisi", dal: "Şekerleme ve Çikolata Üretim" },
+  { kod: "17UY0304‐4", ad: "Çikolata ve Kakaolu Krema Hamuru Üretim Operatörü", alan: "Gıda Teknolojisi", dal: "Şekerleme ve Çikolata Üretim" },
+  { kod: "21UY0455-4", ad: "Et Ürünleri İşleme Operatörü", alan: "Gıda Teknolojisi", dal: "Endüstriyel Et işleme" },
+  { kod: "17UY0295‐4", ad: "Fermente Ürün Üretim Operatörü", alan: "Gıda Teknolojisi", dal: "Sebze ve Meyve İşleme" },
+  { kod: "17UY0302‐4", ad: "Fırın ve Unlu Mamuller Üretim Operatörü", alan: "Gıda Teknolojisi", dal: "Hububat İşleme" },
+  { kod: "17UY0339‐4", ad: "Kahvaltılık Gevrek Üretim Operatörü", alan: "Gıda Teknolojisi", dal: "Hububat İşleme" },
+  { kod: "17UY0340‐4", ad: "Sebze ve Meyve Konservesi Üretim Operatörü", alan: "Gıda Teknolojisi", dal: "Sebze ve Meyve İşleme" },
+  { kod: "17UY0341‐4", ad: "Sos Üretim Operatörü", alan: "Gıda Teknolojisi", dal: "Sebze ve Meyve İşleme" },
+  { kod: "17UY0293‐4", ad: "Tadımcı", alan: "Gıda Teknolojisi", dal: "Zeytin İşleme / Çay İşleme" },
+  { kod: "17UY0294‐4", ad: "Zeytinyağı Üretim Operatörü", alan: "Gıda Teknolojisi", dal: "Bitkisel Yag Üretim / Zeytin İşleme" },
+  { kod: "21UY0432‐3", ad: "Agrega Kırma Eleme Tesisi (Konkasör) Operatörü", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "11UY0011‐3", ad: "Ahşap Kalıpçı", alan: "İnşaat Teknolojisi", dal: "Betonarme Kalıp ve Donatı Sistemleri" },
+  { kod: "12UY0054‐3", ad: "Alçı Levha Uygulayıcısı", alan: "İnşaat Teknolojisi", dal: "Yapı Dekorasyonu" },
+  { kod: "12UY0055‐3", ad: "Alçı Sıva Uygulayıcısı", alan: "İnşaat Teknolojisi", dal: "Yapı Dekorasyonu" },
+  { kod: "18UY0369‐3", ad: "Beton Pompa Operatörü", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "20UY0404‐3", ad: "Beton Santral Operatörü", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "23UY0567-3", ad: "Beton Transmikser Operatörü", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "11UY0012‐3", ad: "Betonarme Demircisi", alan: "İnşaat Teknolojisi", dal: "Betonarme Kalıp ve Donatı Sistemleri" },
+  { kod: "12UY0049‐3", ad: "Betoncu", alan: "İnşaat Teknolojisi", dal: "Betonarme Kalıp ve Donatı Sistemleri" },
+  { kod: "16UY0254‐4", ad: "Coğrafi Bilgi Sistemleri Operatörü", alan: "Harita‐Tapu‐Kadastro", dal: "Harita Kadastro" },
+  { kod: "16UY0255‐6", ad: "Coğrafi Bilgi Sistemleri Uzmanı", alan: "Harita‐Tapu‐Kadastro", dal: "Harita Kadastro" },
+  { kod: "11UY0026‐3", ad: "Dozer Operatörü", alan: "Motorlu Araçlar Teknolojisi", dal: "İş Makineleri" },
+  { kod: "12UY0048‐3", ad: "Duvarcı", alan: "İnşaat Teknolojisi", dal: "Yapı Duvar ve Sıva Sistemleri" },
+  { kod: "11UY0028‐3", ad: "Ekskavatör Operatörü", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "11UY0029‐3", ad: "Greyder Operatörü", alan: "Motorlu Araçlar Teknolojisi", dal: "İş Makineleri" },
+  { kod: "13UY0117‐4", ad: "Harita Kadastrocu", alan: "Harita‐Tapu‐Kadastro", dal: "Harita Kadastro" },
+  { kod: "13UY0117‐5", ad: "Harita Kadastrocu", alan: "Harita‐Tapu‐Kadastro", dal: "Harita Kadastro" },
+  { kod: "12UY0057‐3", ad: "Isı Yalıtımcısı", alan: "İnşaat Teknolojisi", dal: "Yapı Yalıtımı" },
+  { kod: "11UY0023‐3", ad: "İnşaat Boyacısı", alan: "İnşaat Teknolojisi", dal: "Yapı Dekorasyonu / Yapı Yalıtımı" },
+  { kod: "12UY0056‐3", ad: "İskele Kurulum Elemanı", alan: "İnşaat Teknolojisi", dal: "Yapı Duvar ve Sıva Sistemleri / Betonarme Kalıp ve Donatı Sistemleri" },
+  { kod: "12UY0052‐4", ad: "İş Sağlığı ve Güvenliği Elemanı (İnşaat)", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "15UY0234‐3", ad: "Kartonpiyer Uygulayıcısı", alan: "İnşaat Teknolojisi", dal: "Yapı Dekorasyonu" },
+  { kod: "13UY0171‐3", ad: "Kazıcı Yükleyici (Beko Loder) Operatörü", alan: "Motorlu Araçlar Teknolojisi", dal: "İş Makineleri" },
+  { kod: "22UY0479‐3", ad: "Kiremit Tipi Çatı Kaplamacısı", alan: "İnşaat Teknolojisi", dal: "Çatı Sistemleri" },
+  { kod: "13UY0172‐3", ad: "Mobil Vinç Operatörü", alan: "Motorlu Araçlar Teknolojisi", dal: "İş Makineleri" },
+  { kod: "12UY0050‐3", ad: "Panel Kalıpçı", alan: "İnşaat Teknolojisi", dal: "Betonarme Kalıp ve Donatı Sistemleri" },
+  { kod: "14UY0195‐3", ad: "PVC Doğrama Montajcısı", alan: "İnşaat Teknolojisi", dal: "Cephe Sistemleri ve PVC Doğrama" },
+  { kod: "12UY0051‐3", ad: "Seramik Karo Kaplamacısı", alan: "İnşaat Teknolojisi", dal: "Yapı Yüzey Kaplama" },
+  { kod: "12UY0059‐3", ad: "Ses Yalıtımcısı", alan: "İnşaat Teknolojisi", dal: "Yapı Yalıtımı" },
+  { kod: "11UY0024‐3", ad: "Sıvacı", alan: "İnşaat Teknolojisi", dal: "Yapı Duvar ve Sıva Sistemleri" },
+  { kod: "11UY0027‐3", ad: "Silindir Operatörü", alan: "Motorlu Araçlar Teknolojisi", dal: "İş Makineleri" },
+  { kod: "12UY0058‐3", ad: "Su Yalıtımcısı", alan: "İnşaat Teknolojisi", dal: "Yapı Yalıtımı" },
+  { kod: "13UY0120‐4", ad: "Tarihi Eser Koruma ve Restorasyon Elemanı", alan: "İnşaat Teknolojisi", dal: "Mimari Restorasyon" },
+  { kod: "13UY0120‐5", ad: "Tarihi Eser Koruma ve Restorasyon Elemanı", alan: "İnşaat Teknolojisi", dal: "Mimari Restorasyon" },
+  { kod: "11UY0025‐3", ad: "Tünel Kalıpçı", alan: "İnşaat Teknolojisi", dal: "Betonarme Kalıp ve Donatı Sistemleri" },
+  { kod: "12UY0060‐3", ad: "Yangın Yalıtımcısı", alan: "İnşaat Teknolojisi", dal: "Yapı Yalıtımı" },
+  { kod: "13UY0119‐4", ad: "Yapı Teknik Ressamı (İnşaat/Altyapı/Üstyapı)", alan: "İnşaat Teknolojisi", dal: "Statik Yapı Teknik Ressamlığı / Çelik Yapı Teknik Ressamlığı" },
+  { kod: "13UY0118‐4", ad: "Yapı Teknik Ressamı (Mimari/İç Mimari)", alan: "İnşaat Teknolojisi", dal: "Mimari Yapı Teknik Ressamlığı" },
+  { kod: "14UY0194‐4", ad: "Anketör", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "15UY0203‐4", ad: "Çağrı Merkezi Müşteri Temsilcisi", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "15UY0204‐5", ad: "Çağrı Merkezi Takım Lideri", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "21UY0465‐6", ad: "Eğitim Uzmanı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "21UY0470‐6", ad: "Endüstriyel İlişkiler Uzmanı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "21UY0468‐6", ad: "İdari İşler Uzmanı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "21UY0464‐4", ad: "İnsan Kaynakları Elemanı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "21UY0463‐6", ad: "İnsan Kaynakları Uzmanı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "21UY0462‐6", ad: "İnsan Kaynakları Yöneticisi", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "11UY0017‐6", ad: "İş ve Meslek Danışmanı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "16UY0251‐6", ad: "Kobi Danışmanı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "15UY0215‐6", ad: "Koç", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "21UY0469‐6", ad: "Organizasyonel Gelişim Uzmanı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "21UY0471‐6", ad: "Özel Kalem Müdürü/Üst Düzey Yönetim Asistanı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "21UY0466‐6", ad: "Özlük İşleri Uzmanı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "21UY0467‐6", ad: "Personel Performansı Değerlendirme Uzmanı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "17UY0305‐5", ad: "Proje Yöneticisi", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "16UY0252‐6", ad: "Proje Yöneticisi", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "18UY0354‐6", ad: "Tesis Yöneticisi", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "21UY0472‐6", ad: "Yönetim Danışmanı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "12UY0069‐3", ad: "Plastik Enjeksiyon Üretim Elemanı", alan: "Plastik Teknolojisi", dal: "Plastik İşleme" },
+  { kod: "12UY0069‐4", ad: "Plastik Enjeksiyon Üretim Elemanı", alan: "Plastik Teknolojisi", dal: "Plastik İşleme" },
+  { kod: "13UY0142‐3", ad: "Plastik Profil Üretim Operatörü (Ekstrüzyon)", alan: "Plastik Teknolojisi", dal: "Plastik İşleme" },
+  { kod: "13UY0143‐3", ad: "Plastik Şişirme Film Üretim Operatörü (Ekstrüzyon)", alan: "Plastik Teknolojisi", dal: "Plastik İşleme" },
+  { kod: "16UY0265‐3", ad: "Kırma Eleme Tesis Operatörü", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "19UY0394‐3", ad: "Kimyasal Cevher Zenginleştirme Operatörü", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "18UY0363‐4", ad: "Mekanizasyon İşçisi (Maden)", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "18UY0364‐4", ad: "Mekanize Kazı Operatörü", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "16UY0266‐3", ad: "Mermer Doğaltaş Ocakçısı", alan: "Makine Teknolojisi", dal: "Mermer İşleme" },
+  { kod: "17UY0315‐3", ad: "Mermer‐Doğaltaş İmalat Elemanı", alan: "Makine Teknolojisi", dal: "Mermer İşleme" },
+  { kod: "17UY0315‐4", ad: "Mermer‐Doğaltaş İmalat Elemanı", alan: "Makine Teknolojisi", dal: "Mermer İşleme" },
+  { kod: "17UY0316‐4", ad: "Mermer‐Doğaltaş Ocakçısı", alan: "Makine Teknolojisi", dal: "Mermer İşleme" },
+  { kod: "16UY0267‐4", ad: "Mermer‐Doğaltaş Özel İmalat Elemanı", alan: "Makine Teknolojisi", dal: "Mermer İşleme" },
+  { kod: "19UY0395‐5", ad: "Nezaretçi (Maden)", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "17UY0317‐3", ad: "Öğütme (Değirmen) Operatörü", alan: "Makine Teknolojisi", dal: "Değirmencilik" },
+  { kod: "20UY0421‐4", ad: "Patlayıcı Madde Ambarcısı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "18UY0365‐4", ad: "Pres İşçisi (Maden)", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "19UY0392‐4", ad: "Reaktif Hazırlayıcı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "20UY0422‐4", ad: "Tahlisiyeci", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "18UY0379‐3", ad: "Yeraltı Hazırlık İşçisi", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "18UY0379‐4", ad: "Yeraltı Hazırlık İşçisi", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "19UY0396‐4", ad: "Yeraltı Üretim İşçisi", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "12UY0082‐4", ad: "CNC Programcısı", alan: "Makine Teknolojisi", dal: "Bilgisayarlı Makine İmalatı" },
+  { kod: "12UY0082‐5", ad: "CNC Programcısı", alan: "Makine Teknolojisi", dal: "Bilgisayarlı Makine İmalatı" },
+  { kod: "12UY0081‐3", ad: "Frezeci", alan: "Makine Teknolojisi", dal: "Endüstriyel Kalıp / Makine Bakım Onarım" },
+  { kod: "12UY0081‐4", ad: "Frezeci", alan: "Makine Teknolojisi", dal: "Endüstriyel Kalıp / Makine Bakım Onarım" },
+  { kod: "12UY0080‐4", ad: "Hidrolik‐Pnömatikçi", alan: "Makine Teknolojisi", dal: "Makine Bakım Onarım" },
+  { kod: "12UY0080‐5", ad: "Hidrolik‐Pnömatikçi", alan: "Makine Teknolojisi", dal: "Makine Bakım Onarım" },
+  { kod: "20UY0408-4", ad: "İş Makinesi Bakım ve Onarımcısı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "15UY0222‐5", ad: "Kalıp ve Takım‐Aparat İşçisi", alan: "Makine Teknolojisi", dal: "Endüstriyel Kalıp / Bilgisayarlı Makine İmalatı" },
+  { kod: "10UY0002‐3", ad: "Makine Bakımcı", alan: "Makine Teknolojisi", dal: "Makine Bakım Onarım" },
+  { kod: "10UY0002‐4", ad: "Makine Bakımcı", alan: "Makine Teknolojisi", dal: "Makine Bakım Onarım" },
+  { kod: "10UY0002‐5", ad: "Makine Bakımcı", alan: "Makine Teknolojisi", dal: "Makine Bakım Onarım" },
+  { kod: "12UY0105‐3", ad: "Makine Montajcısı", alan: "Makine Teknolojisi", dal: "Makine Bakım Onarım" },
+  { kod: "12UY0105‐4", ad: "Makine Montajcısı", alan: "Makine Teknolojisi", dal: "Makine Bakım Onarım" },
+  { kod: "14UY0201‐3", ad: "Matkap Tezgah İşçisi", alan: "Makine Teknolojisi", dal: "Makine Bakım Onarım" },
+  { kod: "14UY0201‐4", ad: "Matkap Tezgah İşçisi", alan: "Makine Teknolojisi", dal: "Makine Bakım Onarım" },
+  { kod: "12UY0102‐5", ad: "NC/CNC Takım Tezgahları Mekanik Servis Görevlisi", alan: "Makine Teknolojisi", dal: "Makine Bakım Onarım" },
+  { kod: "12UY0101‐5", ad: "NC/CNC Takım Tezgahları Uygulama ve Servis Görevlisi", alan: "Makine Teknolojisi", dal: "Makine Bakım Onarım" },
+  { kod: "14UY0202‐3", ad: "NC/CNC Tezgâh İşçisi", alan: "Makine Teknolojisi", dal: "Endüstriyel Kalıp / Bilgisayarlı Makine İmalatı" },
+  { kod: "14UY0202‐4", ad: "NC/CNC Tezgâh İşçisi", alan: "Makine Teknolojisi", dal: "Endüstriyel Kalıp / Bilgisayarlı Makine İmalatı" },
+  { kod: "14UY0200‐3", ad: "Taşlama Tezgâh İşçisi", alan: "Makine Teknolojisi", dal: "Makine Bakım Onarım" },
+  { kod: "14UY0200‐4", ad: "Taşlama Tezgâh İşçisi", alan: "Makine Teknolojisi", dal: "Makine Bakım Onarım" },
+  { kod: "18UY0351‐4", ad: "Tel Makineleri Operatörü", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "18UY0350‐3", ad: "Tesviyeci", alan: "Makine Teknolojisi", dal: "Bilgisayarlı Makine İmalatı / Makine Bakım Onarım" },
+  { kod: "18UY0350‐4", ad: "Tesviyeci", alan: "Makine Teknolojisi", dal: "Bilgisayarlı Makine İmalatı / Makine Bakım Onarım" },
+  { kod: "15UY0227‐3", ad: "Tornacı", alan: "Makine Teknolojisi", dal: "Bilgisayarlı Makine İmalatı / Makine Bakım Onarım" },
+  { kod: "15UY0227‐4", ad: "Tornacı", alan: "Makine Teknolojisi", dal: "Bilgisayarlı Makine İmalatı / Makine Bakım Onarım" },
+  { kod: "20UY0407‐6", ad: "İşaret Dili Çevirmeni", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "11UY0014‐3", ad: "Alüminyum Kaynakçısı", alan: "Metal Teknolojisi", dal: "Kaynakçılık / Metal Doğrama" },
+  { kod: "22UY0530‐4", ad: "Anahtarcı (Çilingir)", alan: "Makine Teknolojisi", dal: "Anahtarcılık ve Çilingirlik" },
+  { kod: "11UY0010‐3", ad: "Çelik Kaynakçısı", alan: "Metal Teknolojisi", dal: "Kaynakçılık" },
+  { kod: "11UY0015‐4", ad: "Direnç Kaynak Ayarcısı", alan: "Metal Teknolojisi", dal: "Kaynakçılık" },
+  { kod: "11UY0033‐3", ad: "Doğal Gaz Çelik Boru Kaynakçısı", alan: "Tesisat Teknolojisi ve İklimlendirme", dal: "Gaz Tesisat Sistemleri" },
+  { kod: "13UY0173‐4", ad: "Dökümcü", alan: "Metalurji Teknolojisi", dal: "Döküm" },
+  { kod: "11UY0013‐3", ad: "Endüstriyel Boru Montajcısı", alan: "Tesisat Teknolojisi ve İklimlendirme", dal: "Gaz Tesisat Sistemleri" },
+  { kod: "13UY0150‐3", ad: "Endüstriyel Fırın İşçisi", alan: "Metal Teknolojisi", dal: "Isıl İşlem" },
+  { kod: "13UY0150‐4", ad: "Endüstriyel Fırın İşçisi", alan: "Metal Teknolojisi", dal: "Isıl İşlem" },
+  { kod: "13UY0148‐3", ad: "Haddeci", alan: "Metalurji Teknolojisi", dal: "İzabe" },
+  { kod: "13UY0148‐4", ad: "Haddeci", alan: "Metalurji Teknolojisi", dal: "İzabe" },
+  { kod: "13UY0149‐4", ad: "İzabeci", alan: "Metalurji Teknolojisi", dal: "İzabe" },
+  { kod: "18UY0366‐3", ad: "Kalite Kontrolcü", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "11UY0016‐4", ad: "Kaynak Operatörü", alan: "Metal Teknolojisi", dal: "Kaynakçılık" },
+  { kod: "21UY0441‐4", ad: "Kuyumcu (Perakende)", alan: "Kuyumculuk Teknolojisi", dal: "Vitrin Kuyumculuğu" },
+  { kod: "13UY0178‐3", ad: "Maçacı", alan: "Metalurji Teknolojisi", dal: "Döküm" },
+  { kod: "15UY0223‐4", ad: "Metal Doğramacı", alan: "Metal Teknolojisi", dal: "Metal Doğrama" },
+  { kod: "14UY0199‐3", ad: "Metal İşleri Seri Üretim Tezgâh İşçisi", alan: "Metal Teknolojisi", dal: "Sac işleri" },
+  { kod: "12UY0084‐4", ad: "Metal Kesim Operatörü", alan: "Metal Teknolojisi", dal: "Sac işleri" },
+  { kod: "12UY0083‐3", ad: "Metal Kesimci", alan: "Metal Teknolojisi", dal: "Sac işleri" },
+  { kod: "22UY0536‐3", ad: "Metal Kumlama İşçisi", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "12UY0086‐3", ad: "Metal Levha İşleme Tezgâh İşçisi", alan: "Metal Teknolojisi", dal: "Sac işleri / Metal Levha İşlemeciliği" },
+  { kod: "12UY0087‐4", ad: "Metal Levha İşleme Tezgâh Operatörü", alan: "Metal Teknolojisi", dal: "Sac işleri" },
+  { kod: "12UY0085‐3", ad: "Metal Sac İşlemeci", alan: "Metal Teknolojisi", dal: "Sac işleri" },
+  { kod: "12UY0085‐4", ad: "Metal Sac İşlemeci", alan: "Metal Teknolojisi", dal: "Sac işleri" },
+  { kod: "12UY0053‐3", ad: "Otomotiv Sac ve Gövde Kaynakçısı", alan: "Motorlu Araçlar Teknolojisi", dal: "Otomotiv Gövde" },
+  { kod: "12UY0053‐4", ad: "Otomotiv Sac ve Gövde Kaynakçısı", alan: "Motorlu Araçlar Teknolojisi", dal: "Otomotiv Gövde" },
+  { kod: "15UY0224‐3", ad: "Presçi", alan: "Makine Teknolojisi", dal: "Makine Bakım Onarım" },
+  { kod: "15UY0224‐4", ad: "Presçi", alan: "Makine Teknolojisi", dal: "Makine Bakım Onarım" },
+  { kod: "12UY0070‐3", ad: "Refrakterci", alan: "Metalurji Teknolojisi", dal: "İzabe" },
+  { kod: "12UY0070‐4", ad: "Refrakterci", alan: "Metalurji Teknolojisi", dal: "İzabe" },
+  { kod: "15UY0226‐5", ad: "Tahribatlı Muayeneci", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "11UY0004‐5", ad: "Ağır Vasıta Tecrübe Sürücüsü", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "24UY0577-4", ad: "Batarya Elektrikli Araç Bakım Onarımcısı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "24UY0577-5", ad: "Batarya Elektrikli Araç Bakım Onarımcısı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "24UY0583-3", ad: "Elektrikli Araç Montaj Elemanı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "24UY0583-4", ad: "Elektrikli Araç Montaj Elemanı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "18UY0361‐4", ad: "Folyo Uygulamacısı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "24UY0575-4", ad: "Hibrit Araç Bakım Onarımcısı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "24UY0576-5", ad: "Hibrit Araç Bakım Onarımcısı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "18UY0360‐3", ad: "Lastik Bakım Onarımcısı", alan: "Motorlu Araçlar Teknolojisi", dal: "Ön Düzen Ayarcılığı ve Lastikçilik" },
+  { kod: "11UY0009‐4", ad: "Motor Testçisi", alan: "Motorlu Araçlar Teknolojisi", dal: "Otomotiv Elektromekanik" },
+  { kod: "11UY0009‐5", ad: "Motor Testçisi", alan: "Motorlu Araçlar Teknolojisi", dal: "Otomotiv Elektromekanik" },
+  { kod: "13UY0123‐4", ad: "Motosiklet Bakım Onarımcısı", alan: "Motorlu Araçlar Teknolojisi", dal: "Motosiklet Tamirciliği" },
+  { kod: "20UY0423‐4", ad: "Oto Ekspertiz Elemanı", alan: "Motorlu Araçlar Teknolojisi", dal: "Otomotiv Elektromekanik / Otomotiv Gövde / Otomotiv Boya" },
+  { kod: "11UY0018‐4", ad: "Otomotiv Boya Onarımcısı", alan: "Motorlu Araçlar Teknolojisi", dal: "Otomotiv Boya" },
+  { kod: "11UY0005‐3", ad: "Otomotiv Boyacısı", alan: "Motorlu Araçlar Teknolojisi", dal: "Otomotiv Boya" },
+  { kod: "11UY0005‐4", ad: "Otomotiv Boyacısı", alan: "Motorlu Araçlar Teknolojisi", dal: "Otomotiv Boya" },
+  { kod: "11UY0019‐4", ad: "Otomotiv Elektrikçisi", alan: "Motorlu Araçlar Teknolojisi", dal: "Otomotiv Elektrikçiliği" },
+  { kod: "11UY0020‐5", ad: "Otomotiv Elektromekanikçisi", alan: "Motorlu Araçlar Teknolojisi", dal: "Otomotiv Elektromekanik" },
+  { kod: "14UY0191‐4", ad: "Otomotiv Gövde Onarımcısı", alan: "Motorlu Araçlar Teknolojisi", dal: "Otomotiv Gövde" },
+  { kod: "14UY0191‐5", ad: "Otomotiv Gövde Onarımcısı", alan: "Motorlu Araçlar Teknolojisi", dal: "Otomotiv Gövde" },
+  { kod: "11UY0006‐3", ad: "Otomotiv Kaportacısı", alan: "Motorlu Araçlar Teknolojisi", dal: "Otomotiv Gövde" },
+  { kod: "11UY0006‐4", ad: "Otomotiv Kaportacısı", alan: "Motorlu Araçlar Teknolojisi", dal: "Otomotiv Gövde" },
+  { kod: "14UY0193‐4", ad: "Otomotiv Kontrol, Test ve Ayar İşçisi", alan: "Motorlu Araçlar Teknolojisi", dal: "Otomotiv Elektromekanik" },
+  { kod: "11UY0021‐4", ad: "Otomotiv Mekanikçisi", alan: "Motorlu Araçlar Teknolojisi", dal: "Otomotiv Mekanikerliği" },
+  { kod: "11UY0007‐3", ad: "Otomotiv Montajcısı", alan: "Motorlu Araçlar Teknolojisi", dal: "Otomotiv Gövde / Otomotiv Elektromekanik" },
+  { kod: "11UY0007‐4", ad: "Otomotiv Montajcısı", alan: "Motorlu Araçlar Teknolojisi", dal: "Otomotiv Gövde / Otomotiv Elektromekanik" },
+  { kod: "13UY0144‐3", ad: "Otomotiv Ön Düzencisi", alan: "Motorlu Araçlar Teknolojisi", dal: "Ön Düzen Ayarcılığı ve Lastikçilik" },
+  { kod: "11UY0008‐4", ad: "Otomotiv Prototipçisi", alan: "Makine Teknolojisi", dal: "Makine Bakım Onarım" },
+  { kod: "11UY0008‐5", ad: "Otomotiv Prototipçisi", alan: "Makine Teknolojisi", dal: "Makine Bakım Onarım" },
+  { kod: "11UY0022‐3", ad: "Otomotiv Sac Şekillendirmecisi", alan: "Motorlu Araçlar Teknolojisi", dal: "Otomotiv Gövde" },
+  { kod: "11UY0022‐4", ad: "Otomotiv Sac Şekillendirmecisi", alan: "Motorlu Araçlar Teknolojisi", dal: "Otomotiv Gövde" },
+  { kod: "19UY0389‐4", ad: "Çocuk Bakım Elemanı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "19UY0389-3", ad: "Çocuk Bakım Elemanı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "22UY0532-3", ad: "Engelli ve Yaşlı Bakım Elemanı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "22UY0533-4", ad: "Engelli ve Yaşlı Bakım Elemanı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "22UY0534-5", ad: "Engelli ve Yaşlı Bakım Elemanı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "22UY0490‐4", ad: "Büyükbaş Hayvan Bakıcısı", alan: "Hayvan Yetiştiriciliği ve Sağlığı", dal: "Büyükbaş Hayvan Yetiştiriciliği" },
+  { kod: "22UY0488‐3", ad: "Sağım Elemanı", alan: "Hayvan Yetiştiriciliği ve Sağlığı", dal: "Büyükbaş Hayvan Yetiştiriciliği / Küçükbaş Hayvan Yetiştiriciliği" },
+  { kod: "22UY0487‐4", ad: "Sağım Operatörü", alan: "Hayvan Yetiştiriciliği ve Sağlığı", dal: "Büyükbaş Hayvan Yetiştiriciliği" },
+  { kod: "22UY0489‐4", ad: "Yem Ünitesi Operatörü", alan: "Hayvan Yetiştiriciliği ve Sağlığı", dal: "Büyükbaş Hayvan Yetiştiriciliği / Küçükbaş Hayvan Yetiştiriciliği" },
+  { kod: "12UY0071‐3", ad: "Armürlü Dokuma Kumaş Desen Hazırlama Elemanı", alan: "Tekstil Teknolojisi", dal: "Dokuma Operatörlüğü" },
+  { kod: "12UY0072‐4", ad: "Armürlü Dokuma Kumaş Desinatörü", alan: "Tekstil Teknolojisi", dal: "Dokuma Operatörlüğü" },
+  { kod: "12UY0072‐5", ad: "Armürlü Dokuma Kumaş Desinatörü", alan: "Tekstil Teknolojisi", dal: "Dokuma Operatörlüğü" },
+  { kod: "18UY0370‐4", ad: "Asortici (Deri/Kürk Hazır Giyim)", alan: "Moda Tasarım Teknolojileri", dal: "Deri Giyim" },
+  { kod: "19UY0397‐3", ad: "Atkılı Örme Operatörü", alan: "Tekstil Teknolojisi", dal: "Endüstriyel Çorap Örme / Endüstriyel Düz Örme / Endüstriyel Yuvarlak Örme" },
+  { kod: "12UY0111‐3", ad: "Ayakçı (Deri/Kürk Hazır Giyim)", alan: "Moda Tasarım Teknolojileri", dal: "Deri Giyim" },
+  { kod: "16UY0260‐4", ad: "Ayakkabı İmalatçısı", alan: "Ayakkabı ve Saraciye Teknolojisi", dal: "Ayakkabı Üretimi" },
+  { kod: "13UY0136‐4", ad: "Baskı Operatörü", alan: "Tekstil Teknolojisi", dal: "Tekstil Baskı ve Desenciliği" },
+  { kod: "13UY0137‐3", ad: "Bitim İşlemleri Operatörü", alan: "Tekstil Teknolojisi", dal: "Tekstil Bitim İşlemleri (Apre)" },
+  { kod: "13UY0137‐4", ad: "Bitim İşlemleri Operatörü", alan: "Tekstil Teknolojisi", dal: "Tekstil Bitim İşlemleri (Apre)" },
+  { kod: "13UY0138‐3", ad: "Boyama Operatörü", alan: "Tekstil Teknolojisi", dal: "Tesktil Boyacılığı" },
+  { kod: "13UY0138‐4", ad: "Boyama Operatörü", alan: "Tekstil Teknolojisi", dal: "Tesktil Boyacılığı" },
+  { kod: "18UY0372‐3", ad: "Çakımcı (Kürk Giysi İmalatı)", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "21UY0442‐3", ad: "Çözgü Operatörü", alan: "Tekstil Teknolojisi", dal: "Dokuma Operatörlüğü" },
+  { kod: "19UY0398‐3", ad: "Çözgülü Örme Operatörü", alan: "Tekstil Teknolojisi", dal: "Dokuma Operatörlüğü / Endüstriyel Düz Örme" },
+  { kod: "12UY0116‐4", ad: "Deri İşlenti Operatörü", alan: "Kimya Teknolojisi", dal: "Deri İşleme" },
+  { kod: "18UY0371‐3", ad: "Dikiş Makinesi Operatörü (Deri/Kürk Hazır Giyim)", alan: "Moda Tasarım Teknolojileri", dal: "Hazır Giyim Model Makineciliği" },
+  { kod: "21UY0444‐3", ad: "Dokuma Operatörü", alan: "Tekstil Teknolojisi", dal: "Dokuma Operatörlüğü" },
+  { kod: "21UY0445‐4", ad: "Dokuma Operatörü", alan: "Tekstil Teknolojisi", dal: "Dokuma Operatörlüğü" },
+  { kod: "18UY0375‐3", ad: "El İşçisi (Deri/Kürk Hazır Giyim)", alan: "Moda Tasarım Teknolojileri", dal: "Deri Giyim" },
+  { kod: "11UY0036‐2", ad: "İplik Bitim İşleri Operatörü", alan: "Tekstil Teknolojisi", dal: "İplik Üretim Teknolojisi" },
+  { kod: "11UY0037‐2", ad: "İplik Eğirme Operatörü", alan: "Tekstil Teknolojisi", dal: "İplik Üretim Teknolojisi" },
+  { kod: "11UY0038‐4", ad: "İplik Operatörü", alan: "Tekstil Teknolojisi", dal: "İplik Üretim Teknolojisi" },
+  { kod: "12UY0073‐3", ad: "Jakarlı Dokuma Kumaş Desen Hazırlama Elemanı", alan: "Tekstil Teknolojisi", dal: "Dokuma Operatörlüğü" },
+  { kod: "12UY0074‐4", ad: "Jakarlı Dokuma Kumaş Desinatörü", alan: "Tekstil Teknolojisi", dal: "Dokuma Operatörlüğü" },
+  { kod: "12UY0074‐5", ad: "Jakarlı Dokuma Kumaş Desinatörü", alan: "Tekstil Teknolojisi", dal: "Dokuma Operatörlüğü" },
+  { kod: "12UY0114‐4", ad: "Kesimci (Ayakkabı)", alan: "Ayakkabı ve Saraciye Teknolojisi", dal: "Ayakkabı Üretimi" },
+  { kod: "12UY0113‐4", ad: "Kesimci (Deri/Kürk Hazır Giyim)", alan: "Moda Tasarım Teknolojileri", dal: "Kesim" },
+  { kod: "12UY0115‐3", ad: "Kesimci (Saraciye)", alan: "Ayakkabı ve Saraciye Teknolojisi", dal: "Saraciye Üretimi" },
+  { kod: "19UY0383‐3", ad: "Kompleci (Hazır Giyim ve Ev Tekstili)", alan: "Moda Tasarım Teknolojileri", dal: "Hazır Giyim Model Makineciliği" },
+  { kod: "18UY0374‐5", ad: "Kürk Giysi İmalatçısı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "18UY0373‐3", ad: "Makine Operatörü (Deri İşlenti)", alan: "Kimya Teknolojisi", dal: "Deri İşleme" },
+  { kod: "12UY0112‐4", ad: "Model Makineci (Deri/Kürk Hazır Giyim)", alan: "Moda Tasarım Teknolojileri", dal: "Hazır Giyim Model Makineciliği" },
+  { kod: "19UY0384‐4", ad: "Model Makineci (Hazır Giyim)", alan: "Moda Tasarım Teknolojileri", dal: "Hazır Giyim Model Makineciliği" },
+  { kod: "11UY0039‐3", ad: "Ön İplik Operatörü", alan: "Tekstil Teknolojisi", dal: "İplik Üretim Teknolojisi" },
+  { kod: "11UY0039‐4", ad: "Ön İplik Operatörü", alan: "Tekstil Teknolojisi", dal: "İplik Üretim Teknolojisi" },
+  { kod: "13UY0139‐3", ad: "Ön Terbiye Operatörü", alan: "Tekstil Teknolojisi", dal: "Tesktil Boyacılığı" },
+  { kod: "13UY0139‐4", ad: "Ön Terbiye Operatörü", alan: "Tekstil Teknolojisi", dal: "Tesktil Boyacılığı" },
+  { kod: "19UY0399‐4", ad: "Örme Operatörü", alan: "Tekstil Teknolojisi", dal: "Endüstriyel Çorap Örme / Endüstriyel Düz Örme / Endüstriyel Yuvarlak Örme" },
+  { kod: "16UY0261‐4", ad: "Saraciye İmalatçısı", alan: "Ayakkabı ve Saraciye Teknolojisi", dal: "Saraciye Üretimi" },
+  { kod: "16UY0262‐3", ad: "Sayacı", alan: "Ayakkabı ve Saraciye Teknolojisi", dal: "Ayakkabı Üretimi" },
+  { kod: "21UY0443‐3", ad: "Tahar Operatörü", alan: "Tekstil Teknolojisi", dal: "Dokuma Operatörlüğü" },
+  { kod: "22UY0540-4", ad: "Tekstil Laborantı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "24UY0569-4", ad: "Araç Kiralama Danışmanı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "17UY0273‐5", ad: "Dış Ticaret Sorumlusu", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "17UY0332‐4", ad: "Emlak Danışmanı", alan: "Pazarlama ve Perakende", dal: "Emlak Komisyonculuğu" },
+  { kod: "17UY0296‐3", ad: "Kasiyer", alan: "Pazarlama ve Perakende", dal: "Satış Elemanlığı" },
+  { kod: "17UY0297‐5", ad: "Mağaza Satış Alanı Geliştirme ve Yerleştirme Sorumlusu", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "17UY0298‐4", ad: "Motorlu Kara Taşıtları Alım Satım Danışmanı", alan: "Pazarlama ve Perakende", dal: "Satış Elemanlığı" },
+  { kod: "17UY0299‐5", ad: "Motorlu Kara Taşıtları Alım Satım Sorumlusu", alan: "Pazarlama ve Perakende", dal: "Satış Elemanlığı" },
+  { kod: "17UY0320‐4", ad: "Pazarlama Elemanı", alan: "Pazarlama ve Perakende", dal: "Satış Elemanlığı / Emlak Komisyonculuğu" },
+  { kod: "17UY0321‐5", ad: "Pazarlama Sorumlusu", alan: "Pazarlama ve Perakende", dal: "Satış Elemanlığı" },
+  { kod: "17UY0322‐6", ad: "Pazarlama Yöneticisi", alan: "Pazarlama ve Perakende", dal: "Satış Elemanlığı" },
+  { kod: "17UY0323‐3", ad: "Satış Danışmanı", alan: "Pazarlama ve Perakende", dal: "Satış Elemanlığı" },
+  { kod: "17UY0323‐4", ad: "Satış Danışmanı", alan: "Pazarlama ve Perakende", dal: "Satış Elemanlığı" },
+  { kod: "17UY0324‐5", ad: "Satış Sorumlusu", alan: "Pazarlama ve Perakende", dal: "Satış Elemanlığı" },
+  { kod: "17UY0325‐6", ad: "Satış Yöneticisi", alan: "Pazarlama ve Perakende", dal: "Satış Elemanlığı" },
+  { kod: "17UY0333‐5", ad: "Sorumlu Emlak Danışmanı", alan: "Pazarlama ve Perakende", dal: "Emlak Komisyonculuğu" },
+  { kod: "18UY0346‐3", ad: "Araç Bakım ve Koruma Görevlisi", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "18UY0345‐3", ad: "Araç Temizlik Görevlisi", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "21UY0429‐3", ad: "Bina Görevlisi", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "17UY0281‐3", ad: "Bölgesel İnceltme Uygulayıcısı", alan: "Güzellik ve Saç Bakım Hizmetleri", dal: "Cilt Bakımı ve Makyaj" },
+  { kod: "17UY0280‐3", ad: "Cilt Bakım Uygulayıcısı", alan: "Güzellik ve Saç Bakım Hizmetleri", dal: "Cilt Bakımı ve Makyaj" },
+  { kod: "16UY0248‐3", ad: "Dövme Uygulayıcısı", alan: "Güzellik ve Saç Bakım Hizmetleri", dal: "Cilt Bakımı ve Makyaj" },
+  { kod: "18UY0344‐4", ad: "Epilasyon Uzmanı", alan: "Güzellik ve Saç Bakım Hizmetleri", dal: "Cilt Bakımı ve Makyaj" },
+  { kod: "16UY0244‐4", ad: "Güzellik Uzmanı", alan: "Güzellik ve Saç Bakım Hizmetleri", dal: "Cilt Bakımı ve Makyaj" },
+  { kod: "22UY0494-4", ad: "Havuz Operatörü", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "20UY0417‐5", ad: "Koku Uzmanı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "17UY0286‐3", ad: "Kozmetik Ürünler Tanıtım ve Uygulama Elemanı", alan: "Güzellik ve Saç Bakım Hizmetleri", dal: "Cilt Bakımı ve Makyaj" },
+  { kod: "16UY0245‐4", ad: "Kuaför", alan: "Güzellik ve Saç Bakım Hizmetleri", dal: "Erkek Kuaförü / Kadın Kuaförü" },
+  { kod: "16UY0242‐3", ad: "Makyaj Uygulayıcısı", alan: "Güzellik ve Saç Bakım Hizmetleri", dal: "Cilt Bakımı ve Makyaj" },
+  { kod: "16UY0243‐5", ad: "Makyaj Uzmanı", alan: "Güzellik ve Saç Bakım Hizmetleri", dal: "Cilt Bakımı ve Makyaj" },
+  { kod: "16UY0246‐3", ad: "Manikürist", alan: "Güzellik ve Saç Bakım Hizmetleri", dal: "Erkek Kuaförü / Kadın Kuaförü / Cilt Bakımı ve Makyaj" },
+  { kod: "14UY0197‐3", ad: "Masaj Uygulayıcısı", alan: "Güzellik ve Saç Bakım Hizmetleri", dal: "Erkek Kuaförü / Kadın Kuaförü / Cilt Bakımı ve Makyaj" },
+  { kod: "19UY0386‐3", ad: "Otopark Görevlisi", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "16UY0247‐3", ad: "Protez Tırnak Uygulayıcısı", alan: "Güzellik ve Saç Bakım Hizmetleri", dal: "Erkek Kuaförü / Kadın Kuaförü / Cilt Bakımı ve Makyaj" },
+  { kod: "16UY0249‐3", ad: "Takı (Piercing) Uygulayıcısı", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "19UY0387‐3", ad: "Vale Görevlisi", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "24UY0580-4", ad: "Kantinci", alan: "Yiyecek içecek Hizmetleri", dal: "Kantin İşletmeciliği" },
+  { kod: "22UY0499‐3", ad: "Aşçı", alan: "Yiyecek İçecek Hizmetleri", dal: "Aşçılık" },
+  { kod: "13UY0182‐4", ad: "Aşçı", alan: "Yiyecek İçecek Hizmetleri", dal: "Aşçılık" },
+  { kod: "12UY0094‐4", ad: "Bar Görevlisi", alan: "Yiyecek İçecek Hizmetleri", dal: "Servis" },
+  { kod: "13UY0181‐3", ad: "Dönerci", alan: "Yiyecek İçecek Hizmetleri", dal: "Aşçılık / Kasaplık" },
+  { kod: "12UY0100‐3", ad: "Genel Alan Sorumlusu", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "15UY0216‐4", ad: "Kahve Bar Görevlisi (Barista)", alan: "Yiyecek İçecek Hizmetleri", dal: "Servis" },
+  { kod: "12UY0098‐4", ad: "Kat Hizmetleri Sorumlusu", alan: "Konaklama ve Seyahat Hizmetleri", dal: "Kat Hizmetleri" },
+  { kod: "12UY0098‐5", ad: "Kat Hizmetleri Sorumlusu", alan: "Konaklama ve Seyahat Hizmetleri", dal: "Kat Hizmetleri" },
+  { kod: "12UY0097‐3", ad: "Kat Sorumlusu", alan: "Konaklama ve Seyahat Hizmetleri", dal: "Kat Hizmetleri" },
+  { kod: "13UY0180‐3", ad: "Kebapçı", alan: "Yiyecek İçecek Hizmetleri", dal: "Aşçılık / Kasaplık" },
+  { kod: "12UY0078‐4", ad: "Ön Büro Görevlisi", alan: "Konaklama ve Seyahat Hizmetleri", dal: "Ön Büro" },
+  { kod: "12UY0079‐5", ad: "Ön Büro Yöneticisi", alan: "Konaklama ve Seyahat Hizmetleri", dal: "Ön Büro" },
+  { kod: "13UY0183‐4", ad: "Pastacı", alan: "Yiyecek İçecek Hizmetleri", dal: "Pastacılık ve Tatlı Yapımı" },
+  { kod: "13UY0179‐3", ad: "Pideci", alan: "Yiyecek İçecek Hizmetleri", dal: "Fırıncılık" },
+  { kod: "12UY0093‐3", ad: "Servis Görevlisi", alan: "Yiyecek İçecek Hizmetleri", dal: "Servis" },
+  { kod: "12UY0093‐4", ad: "Servis Görevlisi", alan: "Yiyecek İçecek Hizmetleri", dal: "Servis" },
+  { kod: "12UY0095‐5", ad: "Servis Yöneticisi", alan: "Yiyecek İçecek Hizmetleri", dal: "Servis" },
+  { kod: "13UY0154‐4", ad: "Seyahat Acentası Satış Görevlisi", alan: "Konaklama ve Seyahat Hizmetleri", dal: "Rezervasyon / Operasyon" },
+  { kod: "13UY0153‐5", ad: "Seyahat Acentası Ürün Planlama ve Operasyon Sorumlusu", alan: "Konaklama ve Seyahat Hizmetleri", dal: "Rezervasyon / Operasyon" },
+  { kod: "14UY0196‐6", ad: "Seyahat Acentası Yöneticisi", alan: "Konaklama ve Seyahat Hizmetleri", dal: "Operasyon / Rezervasyon" },
+  { kod: "13UY0155‐3", ad: "Transfer Elemanı", alan: "Konaklama ve Seyahat Hizmetleri", dal: "Rezervasyon / Operasyon" },
+  { kod: "15UY0231‐3", ad: "Alüminotermit Ray Kaynakçısı", alan: "Metal Teknolojisi", dal: "Kaynakçılık" },
+  { kod: "17UY0335‐3", ad: "Ambarcı", alan: "Ulaştırma Hizmetleri", dal: "Lojistik" },
+  { kod: "15UY0229‐4", ad: "Demiryolu Yol Yapım, Bakım ve Onarım Makinesi Operatörü", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "15UY0230‐3", ad: "Demiryolu Yol Yapım, Bakım ve Onarımcısı", alan: "Makine Teknolojisi", dal: "Makine Bakım Onarım" },
+  { kod: "13UY0145‐3", ad: "Endüstriyel Taşımacı", alan: "Ulaştırma Hizmetleri", dal: "Lojistik" },
+  { kod: "17UY0326‐3", ad: "Kamyon Şoförü", alan: "Ulaştırma Hizmetleri", dal: "Lojistik" },
+  { kod: "15UY0219‐3", ad: "Kapı/Kantar Görevlisi", alan: "Ulaştırma Hizmetleri", dal: "Lojistik" },
+  { kod: "15UY0238‐4", ad: "Kent İçi Raylı Sistemler Katener Bakım Elemanı", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Yüksek Gerilim Sistemleri" },
+  { kod: "15UY0239‐5", ad: "Kent İçi Raylı Sistemler Trafik Kontrolörü", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "15UY0240‐4", ad: "Kent İçi Raylı Sistemler Tren Sürücüsü", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "15UY0205‐3", ad: "Köprülü Vinç Operatörü", alan: "Motorlu Araçlar Teknolojisi", dal: "İş Makineleri" },
+  { kod: "12UY0088‐3", ad: "Liman Forklift Operatörü", alan: "Motorlu Araçlar Teknolojisi", dal: "İş Makineleri" },
+  { kod: "13UY0170‐3", ad: "Liman Kuru Yük Operasyon Elemanı (Puantör)", alan: "Ulaştırma Hizmetleri", dal: "Lojistik" },
+  { kod: "15UY0220‐4", ad: "Liman Operasyon Planlamacısı", alan: "Ulaştırma Hizmetleri", dal: "Lojistik" },
+  { kod: "12UY0063‐3", ad: "Liman Pompa ve Tank Saha Operatörü", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "17UY0268‐3", ad: "Liman RTG Operatörü", alan: "Ulaştırma Hizmetleri", dal: "Lojistik" },
+  { kod: "12UY0064‐3", ad: "Liman Saha İstif Makineleri Operatörü (CRS ve ECS)", alan: "Ulaştırma Hizmetleri", dal: "Lojistik" },
+  { kod: "17UY0269‐3", ad: "Liman SSG Operatörü", alan: "Ulaştırma Hizmetleri", dal: "Lojistik" },
+  { kod: "17UY0270‐5", ad: "Lojistik Operasyon Sorumlusu", alan: "Ulaştırma Hizmetleri", dal: "Lojistik" },
+  { kod: "17UY0271‐6", ad: "Lojistik Operasyon Yöneticisi", alan: "Ulaştırma Hizmetleri", dal: "Lojistik" },
+  { kod: "18UY0362‐3", ad: "Metrobüs Şoförü", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "17UY0327‐3", ad: "Minibüs Şoförü", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "12UY0061‐3", ad: "Mobil Vinç Operatörü (MHC, Sahil ve Gemi Vinci)", alan: "Ulaştırma Hizmetleri", dal: "Lojistik" },
+  { kod: "19UY0390‐3", ad: "Motosikletli Kurye", alan: "Ulaştırma Hizmetleri", dal: "Lojistik / Kargo ve Kurye Hizmetleri" },
+  { kod: "22UY0474‐4", ad: "Posta ve Kargo Teslim Elemanı", alan: "Ulaştırma Hizmetleri", dal: "Kargo ve Kurye Hizmetleri" },
+  { kod: "13UY0184‐4", ad: "Raylı Sistem Araçları Elektrik Bakım ve Onarımcısı", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Endüstriyel Bakım Onarım" },
+  { kod: "13UY0185‐4", ad: "Raylı Sistem Araçları Elektronik Bakım ve Onarımcısı", alan: "Elektrik ‐ Elektronik Teknolojisi", dal: "Endüstriyel Bakım Onarım" },
+  { kod: "13UY0186‐4", ad: "Raylı Sistem Araçları Mekanik Bakım ve Onarımcısı", alan: "Makine Teknolojisi", dal: "Makine Bakım Onarım" },
+  { kod: "15UY0233‐4", ad: "Raylı Sistemler Sinyalizasyon Bakım ve Onarımcısı", alan: "Endüstriyel Otomasyon Teknolojileri", dal: "Endüstriyel Kontrol" },
+  { kod: "15UY0233‐5", ad: "Raylı Sistemler Sinyalizasyon Bakım ve Onarımcısı", alan: "Endüstriyel Otomasyon Teknolojileri", dal: "Endüstriyel Kontrol" },
+  { kod: "17UY0328‐3", ad: "Servis Aracı Şoförü", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "17UY0329‐3", ad: "Şehir İçi Toplu Taşıma Otobüs Şoförü", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "17UY0330‐3", ad: "Taksi Şoförü", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "17UY0331‐3", ad: "Tehlikeli Madde Taşımacılığı Şoförü", alan: "Ulaştırma Hizmetleri", dal: "Lojistik" },
+  { kod: "15UY0221‐3", ad: "Terminal Çekici Operatörü", alan: "Ulaştırma Hizmetleri", dal: "Lojistik" },
+  { kod: "11UY0035‐4", ad: "Tren Makinisti", alan: "Karşılığı Yok", dal: "Karşılığı Yok" },
+  { kod: "13UY0190‐4", ad: "Tren Teşkilcisi", alan: "Karşılığı Yok", dal: "Karşılığı Yok" }
+];
+
+// ================================================================
+// 2. UYGULAMA STATE'İ
+// ================================================================
+let basvurular = [];
+
+function loadFromStorage() {
+    const stored = localStorage.getItem('basvuruListesi');
+    if (stored) {
+        try { basvurular = JSON.parse(stored); } catch(e) { basvurular = []; }
+    } else { basvurular = []; }
+}
+function saveToStorage() {
+    localStorage.setItem('basvuruListesi', JSON.stringify(basvurular));
+}
+function getNextSira() {
+    if (basvurular.length === 0) return 1;
+    const max = Math.max(...basvurular.map(b => b.sira || 0));
+    return max + 1;
+}
+function formatBasvuruNo(sira) {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    return `B${year}-${month}/${String(sira).padStart(4, '0')}`;
+}
+
+// ================================================================
+// 3. GOOGLE SHEETS ENTEGRASYONU (Apps Script URL'si ile)
+// ================================================================
+// 🔴 BU URL'Yİ KENDİ APPS SCRIPT WEB APP URL'NİZLE DEĞİŞTİRİN
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzybqqN0QWLUVNPYxcI4xWlz429a30KI070POj10hCz-h7GuGtNH7jV4pfe9jQr1guw/exec';
+
+// Google Sheets'ten veri çek
+async function googleSheetsOku() {
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL);
+        const data = await response.json();
+        if (data && data.length > 0) {
+            // Verileri basvurular dizisine dönüştür
+            const yeniListe = data.map((row, index) => ({
+                sira: index + 1,
+                denklikNo: row['Yapılan Denklik İşleminin Numarası'] || '',
+                tc: row['TC Kimlik No'] || '',
+                ad: row['Adı'] || '',
+                soyad: row['Soyadı'] || '',
+                mezuniyet: row['Mezuniyet'] || '',
+                alan: row['Alan'] || '',
+                dal: row['Dal'] || '',
+                kalfalik: row['Belge Türü KALFALIK'] === 'X',
+                ustalik: row['Belge Türü USTALIK'] === 'X',
+                sinavli: row['Belge Türü SINAVLI'] === 'X',
+                sinavsiz: row['Belge Türü SINAVSIZ'] === 'X',
+                esinav: row['Teorik Sınav Türü E-SINAV'] === 'X',
+                beceri: row['BECERİ SINAVI'] === 'X',
+                sinavMaddesi: row['SINAV MADDESİ'] || '',
+                telefon: row['TELEFON NO'] || '',
+                aciklama: row['Açıklama'] || '',
+                eskiKimlik: row['Eski Kimlik'] || ''
+            }));
+            basvurular = yeniListe;
+            saveToStorage();
+            renderAll();
+            alert('Google Sheets verileri başarıyla içe aktarıldı!');
+        }
+    } catch (e) {
+        console.error('Google Sheets okuma hatası:', e);
+        alert('Google Sheets verileri okunamadı. URL\'yi kontrol edin.');
+    }
+}
+
+// Google Sheets'e veri ekle (tek bir başvuru)
+async function googleSheetsEkle(data) {
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        if (result.success) {
+            alert('Başvuru Google Sheets\'e eklendi!');
+        } else {
+            alert('Google Sheets\'e ekleme hatası: ' + (result.error || 'Bilinmeyen hata'));
+        }
+    } catch (e) {
+        alert('Bağlantı hatası: ' + e.message);
+    }
+}
+
+// ================================================================
+// 4. FORM İŞLEMLERİ
+// ================================================================
+const adInput = document.getElementById('ad');
+const soyadInput = document.getElementById('soyad');
+const tcInput = document.getElementById('tc');
+const telefonInput = document.getElementById('telefon');
+const mezuniyetSelect = document.getElementById('mezuniyet');
+const yeterlilikKoduInput = document.getElementById('yeterlilikKodu');
+const alanInput = document.getElementById('alan');
+const dalInput = document.getElementById('dal');
+const kalfalikChk = document.getElementById('kalfalik');
+const ustalikChk = document.getElementById('ustalik');
+const sinavliChk = document.getElementById('sinavli');
+const sinavsizChk = document.getElementById('sinavsiz');
+const esinavChk = document.getElementById('esinav');
+const beceriChk = document.getElementById('beceri');
+const sinavMaddesiInput = document.getElementById('sinavMaddesi');
+const aciklamaInput = document.getElementById('aciklama');
+const eskiKimlikInput = document.getElementById('eskiKimlik');
+
+const mykMap = {};
+mykData.forEach(item => {
+    mykMap[item.kod] = { alan: item.alan, dal: item.dal };
+});
+
+// Arama önerileri
+const suggestionsDiv = document.getElementById('suggestions');
+yeterlilikKoduInput.addEventListener('input', function() {
+    const q = this.value.trim().toLowerCase();
+    if (!q) {
+        suggestionsDiv.style.display = 'none';
+        alanInput.value = '';
+        dalInput.value = '';
+        return;
+    }
+    const results = mykData.filter(item =>
+        item.kod.toLowerCase().includes(q) ||
+        item.ad.toLowerCase().includes(q)
+    ).slice(0, 12);
+    if (results.length === 0) {
+        suggestionsDiv.style.display = 'none';
+        return;
+    }
+    suggestionsDiv.innerHTML = '';
+    results.forEach(item => {
+        const div = document.createElement('div');
+        div.innerHTML = `<span class="highlight">${item.kod}</span> – ${item.ad} <small>(${item.alan || '-'} / ${item.dal || '-'})</small>`;
+        div.addEventListener('click', () => {
+            yeterlilikKoduInput.value = item.kod;
+            alanInput.value = item.alan || '';
+            dalInput.value = item.dal || '';
+            suggestionsDiv.style.display = 'none';
+        });
+        suggestionsDiv.appendChild(div);
+    });
+    suggestionsDiv.style.display = 'block';
+});
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-wrapper')) suggestionsDiv.style.display = 'none';
+});
+
+// Ekle butonu
+document.getElementById('ekleBtn').addEventListener('click', function() {
+    if (!adInput.value || !soyadInput.value || !tcInput.value || !telefonInput.value || !mezuniyetSelect.value) {
+        alert('Lütfen Adı, Soyadı, TC, TELEFON NO ve Mezuniyet alanlarını doldurun.');
+        return;
+    }
+    if (!yeterlilikKoduInput.value) {
+        alert('Lütfen bir yeterlilik kodu seçin veya girin.');
+        return;
+    }
+    const kod = yeterlilikKoduInput.value.trim();
+    const sira = getNextSira();
+    const basvuruNo = formatBasvuruNo(sira);
+
+    const yeniBasvuru = {
+        sira: sira,
+        denklikNo: '',
+        tc: tcInput.value.trim(),
+        ad: adInput.value.trim(),
+        soyad: soyadInput.value.trim(),
+        mezuniyet: mezuniyetSelect.value,
+        yeterlilikKodu: kod,
+        alan: alanInput.value.trim() || mykMap[kod]?.alan || '',
+        dal: dalInput.value.trim() || mykMap[kod]?.dal || '',
+        kalfalik: kalfalikChk.checked,
+        ustalik: ustalikChk.checked,
+        sinavli: sinavliChk.checked,
+        sinavsiz: sinavsizChk.checked,
+        esinav: esinavChk.checked,
+        beceri: beceriChk.checked,
+        sinavMaddesi: sinavMaddesiInput.value.trim(),
+        aciklama: aciklamaInput.value.trim(),
+        eskiKimlik: eskiKimlikInput.value.trim(),
+        telefon: telefonInput.value.trim(),
+        basvuruNo: basvuruNo // formatlı başvuru no
+    };
+    basvurular.push(yeniBasvuru);
+    saveToStorage();
+    renderAll();
+    document.getElementById('basvuruForm').reset();
+    alanInput.value = '';
+    dalInput.value = '';
+    yeterlilikKoduInput.value = '';
+    document.querySelectorAll('.checkbox-group input').forEach(cb => cb.checked = false);
+});
+
+// Google Sheets Senkron butonu
+document.getElementById('googleSenkronBtn').addEventListener('click', function() {
+    if (confirm('Mevcut verileri Google Sheets\'e göndermek istiyor musunuz?')) {
+        // Tüm verileri sırayla gönder
+        basvurular.forEach(async (b, index) => {
+            // Biraz bekleyerek sırayla gönder
+            setTimeout(() => {
+                googleSheetsEkle(b);
+            }, index * 500);
+        });
+    } else {
+        // Yoksa sadece oku
+        googleSheetsOku();
+    }
+});
+
+// ================================================================
+// 5. RENDER FONKSİYONLARI
+// ================================================================
+function renderTable() {
+    const tbody = document.getElementById('tabloBody');
+    tbody.innerHTML = '';
+    basvurular.forEach((b, index) => {
+        const tr = document.createElement('tr');
+        tr.dataset.index = index;
+        const basvuruNo = formatBasvuruNo(b.sira);
+        tr.innerHTML = `
+            <td><span class="editable-cell readonly-cell">${basvuruNo}</span></td>
+            <td><input class="editable-cell" data-field="denklikNo" value="${b.denklikNo || ''}"></td>
+            <td><input class="editable-cell" data-field="tc" value="${b.tc || ''}"></td>
+            <td><input class="editable-cell" data-field="ad" value="${b.ad || ''}"></td>
+            <td><input class="editable-cell" data-field="soyad" value="${b.soyad || ''}"></td>
+            <td>
+                <select class="editable-cell" data-field="mezuniyet">
+                    <option value="">Seçiniz</option>
+                    ${['TEKNİK LİSE (4Y)','MESLEKİ AÇIK ÖĞRETİM LİSESİ (4Y)','MESLEKİ TEKNİK ANADOLU LİSESİ (4Y)','MYO (2Y)','MESLEK LİSESİ (3Y)','ANADOLU TEKNİK (4Y)','ANADOLU MESLEK (4Y)','LİSE (3Y)','ÖZEL MESLEKİ TEKNİK ANADOLU LİSESİ (4Y)','ÖZEL TEMEL LİSE (4Y)','MESLEK LİSESİ (4Y)']
+                        .map(opt => `<option value="${opt}" ${b.mezuniyet === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                </select>
+            </td>
+            <td><input class="editable-cell" data-field="alan" value="${b.alan || ''}"></td>
+            <td><input class="editable-cell" data-field="dal" value="${b.dal || ''}"></td>
+            <td><input type="checkbox" class="editable-cell checkbox-cell" data-field="kalfalik" ${b.kalfalik ? 'checked' : ''}></td>
+            <td><input type="checkbox" class="editable-cell checkbox-cell" data-field="ustalik" ${b.ustalik ? 'checked' : ''}></td>
+            <td><input type="checkbox" class="editable-cell checkbox-cell" data-field="sinavli" ${b.sinavli ? 'checked' : ''}></td>
+            <td><input type="checkbox" class="editable-cell checkbox-cell" data-field="sinavsiz" ${b.sinavsiz ? 'checked' : ''}></td>
+            <td><input type="checkbox" class="editable-cell checkbox-cell" data-field="esinav" ${b.esinav ? 'checked' : ''}></td>
+            <td><input type="checkbox" class="editable-cell checkbox-cell" data-field="beceri" ${b.beceri ? 'checked' : ''}></td>
+            <td><input class="editable-cell" data-field="sinavMaddesi" value="${b.sinavMaddesi || ''}"></td>
+            <td><input class="editable-cell" data-field="telefon" value="${b.telefon || ''}"></td>
+            <td><input class="editable-cell" data-field="aciklama" value="${b.aciklama || ''}"></td>
+            <td><input class="editable-cell" data-field="eskiKimlik" value="${b.eskiKimlik || ''}"></td>
+            <td>
+                <button class="btn btn-copy" style="padding:2px 8px; font-size:11px; margin-right:4px;" onclick="kopyalaBasvuru(${index})">📋 Kopyala</button>
+                <button class="btn btn-danger" style="padding:2px 8px; font-size:11px;" onclick="silBasvuru(${index})">Sil</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+    // Değişiklikleri otomatik kaydet
+    tbody.querySelectorAll('.editable-cell').forEach(el => {
+        if (el.tagName === 'INPUT' || el.tagName === 'SELECT') {
+            el.addEventListener('change', function() {
+                const tr = this.closest('tr');
+                const index = parseInt(tr.dataset.index);
+                const field = this.dataset.field;
+                let value = this.type === 'checkbox' ? this.checked : this.value;
+                basvurular[index][field] = value;
+                saveToStorage();
+                renderOzet();
+            });
+        }
+    });
+    document.getElementById('toplamSayi').textContent = basvurular.length;
+}
+
+function renderOzet() {
+    const tbody = document.getElementById('ozetBody');
+    tbody.innerHTML = '';
+    const groups = {};
+    basvurular.forEach(b => {
+        const key = `${b.alan}|||${b.dal}`;
+        if (!groups[key]) {
+            groups[key] = { alan: b.alan, dal: b.dal, toplam: 0, kalfalik: 0, ustalik: 0 };
+        }
+        groups[key].toplam++;
+        if (b.kalfalik) groups[key].kalfalik++;
+        if (b.ustalik) groups[key].ustalik++;
+    });
+    let toplamGenel = 0, toplamKalfalik = 0, toplamUstalik = 0;
+    for (const key in groups) {
+        const g = groups[key];
+        toplamGenel += g.toplam;
+        toplamKalfalik += g.kalfalik;
+        toplamUstalik += g.ustalik;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${g.alan}</td><td>${g.dal}</td><td>${g.toplam}</td><td>${g.kalfalik}</td><td>${g.ustalik}</td><td>0</td><td>0</td>`;
+        tbody.appendChild(tr);
+    }
+    const trTop = document.createElement('tr');
+    trTop.style.fontWeight = 'bold';
+    trTop.innerHTML = `<td colspan="2" style="text-align:right;">TOPLAM</td><td>${toplamGenel}</td><td>${toplamKalfalik}</td><td>${toplamUstalik}</td><td>0</td><td>0</td>`;
+    tbody.appendChild(trTop);
+}
+
+function renderAll() { renderTable(); renderOzet(); }
+
+// Kopyala butonu
+function kopyalaBasvuru(index) {
+    const b = basvurular[index];
+    if (b) {
+        adInput.value = b.ad || '';
+        soyadInput.value = b.soyad || '';
+        tcInput.value = b.tc || '';
+        telefonInput.value = b.telefon || '';
+        mezuniyetSelect.value = b.mezuniyet || '';
+        yeterlilikKoduInput.value = b.yeterlilikKodu || '';
+        alanInput.value = b.alan || '';
+        dalInput.value = b.dal || '';
+        kalfalikChk.checked = b.kalfalik || false;
+        ustalikChk.checked = b.ustalik || false;
+        sinavliChk.checked = b.sinavli || false;
+        sinavsizChk.checked = b.sinavsiz || false;
+        esinavChk.checked = b.esinav || false;
+        beceriChk.checked = b.beceri || false;
+        sinavMaddesiInput.value = b.sinavMaddesi || '';
+        aciklamaInput.value = b.aciklama || '';
+        eskiKimlikInput.value = b.eskiKimlik || '';
+        alert(`"${b.ad} ${b.soyad}" başvurusu form alanlarına kopyalandı.`);
+        document.querySelector('.container').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+function silBasvuru(index) {
+    if (confirm('Silmek istediğinize emin misiniz?')) {
+        basvurular.splice(index, 1);
+        saveToStorage();
+        renderAll();
+    }
+}
+document.getElementById('temizleVeriBtn').addEventListener('click', function() {
+    if (confirm('Tüm veriler kalıcı olarak silinecek. Devam etmek istiyor musunuz?')) {
+        basvurular = [];
+        saveToStorage();
+        renderAll();
+    }
+});
+
+// ================================================================
+// 6. EXCEL İNDİRME (Tam kod, kısaltılmadı)
+// ================================================================
+document.getElementById('excelBtn').addEventListener('click', async function() {
+    if (basvurular.length === 0) {
+        alert('Hiç başvuru yok. Önce veri girişi yapın.');
+        return;
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Başvuru Sistemi';
+    workbook.created = new Date();
+
+    // ---------- SAYFA 1: BAŞVURU LİSTESİ ----------
+    const ws1 = workbook.addWorksheet('Başvuru Listesi', { views: [{ state: 'frozen', ySplit: 1 }] });
+
+    const basliklar = [
+        'Başvuru Sıra No',
+        'Yapılan Denklik İşleminin Numarası',
+        'TC Kimlik No',
+        'Adı',
+        'Soyadı',
+        'Mezuniyet',
+        'Alan',
+        'Dal',
+        'Belge Türü KALFALIK',
+        'Belge Türü USTALIK',
+        'Belge Türü SINAVLI',
+        'Belge Türü SINAVSIZ',
+        'Teorik Sınav Türü E-SINAV',
+        'BECERİ SINAVI',
+        'SINAV MADDESİ',
+        'TELEFON NO',
+        'Açıklama',
+        'Eski Kimlik'
+    ];
+
+    const headerRow = ws1.addRow(basliklar);
+    headerRow.height = 28;
+    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+    headerRow.alignment = { horizontal: 'center', vertical: 'middle' };
+    headerRow.eachCell((cell) => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2F5597' } };
+        cell.border = {
+            top: { style: 'thin', color: { argb: 'FFB0C4DE' } },
+            left: { style: 'thin', color: { argb: 'FFB0C4DE' } },
+            bottom: { style: 'thin', color: { argb: 'FFB0C4DE' } },
+            right: { style: 'thin', color: { argb: 'FFB0C4DE' } }
+        };
+    });
+
+    basvurular.forEach(b => {
+        const rowData = [
+            formatBasvuruNo(b.sira),
+            b.denklikNo || '',
+            b.tc || '',
+            b.ad || '',
+            b.soyad || '',
+            b.mezuniyet || '',
+            b.alan || '',
+            b.dal || '',
+            b.kalfalik ? 'X' : '',
+            b.ustalik ? 'X' : '',
+            b.sinavli ? 'X' : '',
+            b.sinavsiz ? 'X' : '',
+            b.esinav ? 'X' : '',
+            b.beceri ? 'X' : '',
+            b.sinavMaddesi || '',
+            b.telefon || '',
+            b.aciklama || '',
+            b.eskiKimlik || ''
+        ];
+        const row = ws1.addRow(rowData);
+        row.height = 22;
+        row.alignment = { horizontal: 'left', vertical: 'middle' };
+        row.eachCell((cell) => {
+            cell.border = {
+                top: { style: 'thin', color: { argb: 'FFD0D7E3' } },
+                left: { style: 'thin', color: { argb: 'FFD0D7E3' } },
+                bottom: { style: 'thin', color: { argb: 'FFD0D7E3' } },
+                right: { style: 'thin', color: { argb: 'FFD0D7E3' } }
+            };
+        });
+    });
+
+    ws1.columns = [
+        { width: 22 }, { width: 30 }, { width: 18 }, { width: 18 },
+        { width: 18 }, { width: 32 }, { width: 28 }, { width: 32 },
+        { width: 18 }, { width: 18 }, { width: 18 }, { width: 18 },
+        { width: 22 }, { width: 16 }, { width: 22 }, { width: 18 },
+        { width: 25 }, { width: 16 }
+    ];
+
+    // ---------- SAYFA 2: MESLEK ÖZETİ ----------
+    const ws2 = workbook.addWorksheet('Meslekler');
+    const ozetBaslik = ['Alan Adı', 'Dal Adı', 'Sınava Girecek Kişi Sayısı', 'Öğrenci Sayısı KALFALIK', 'Öğrenci Sayısı USTALIK', 'Sınav Sayısı KALFALIK', 'Sınav Sayısı USTALIK'];
+    const headerRow2 = ws2.addRow(ozetBaslik);
+    headerRow2.height = 28;
+    headerRow2.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+    headerRow2.alignment = { horizontal: 'center', vertical: 'middle' };
+    headerRow2.eachCell((cell) => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F4E79' } };
+        cell.border = {
+            top: { style: 'thin', color: { argb: 'FFB0C4DE' } },
+            left: { style: 'thin', color: { argb: 'FFB0C4DE' } },
+            bottom: { style: 'thin', color: { argb: 'FFB0C4DE' } },
+            right: { style: 'thin', color: { argb: 'FFB0C4DE' } }
+        };
+    });
+
+    const groups = {};
+    basvurular.forEach(b => {
+        const key = `${b.alan}|||${b.dal}`;
+        if (!groups[key]) {
+            groups[key] = { alan: b.alan, dal: b.dal, toplam: 0, kalfalik: 0, ustalik: 0 };
+        }
+        groups[key].toplam++;
+        if (b.kalfalik) groups[key].kalfalik++;
+        if (b.ustalik) groups[key].ustalik++;
+    });
+
+    let genelToplam = 0, genelKalfalik = 0, genelUstalik = 0;
+    for (const key in groups) {
+        const g = groups[key];
+        genelToplam += g.toplam;
+        genelKalfalik += g.kalfalik;
+        genelUstalik += g.ustalik;
+        const row = ws2.addRow([g.alan, g.dal, g.toplam, g.kalfalik, g.ustalik, 0, 0]);
+        row.height = 22;
+        row.alignment = { horizontal: 'left', vertical: 'middle' };
+        row.eachCell((cell) => {
+            cell.border = {
+                top: { style: 'thin', color: { argb: 'FFD0D7E3' } },
+                left: { style: 'thin', color: { argb: 'FFD0D7E3' } },
+                bottom: { style: 'thin', color: { argb: 'FFD0D7E3' } },
+                right: { style: 'thin', color: { argb: 'FFD0D7E3' } }
+            };
+        });
+    }
+
+    const topRow = ws2.addRow(['TOPLAM', '', genelToplam, genelKalfalik, genelUstalik, 0, 0]);
+    topRow.height = 24;
+    topRow.font = { bold: true };
+    topRow.alignment = { horizontal: 'center', vertical: 'middle' };
+    topRow.eachCell((cell) => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE9ECF0' } };
+        cell.border = {
+            top: { style: 'medium', color: { argb: 'FFB0C4DE' } },
+            left: { style: 'thin', color: { argb: 'FFB0C4DE' } },
+            bottom: { style: 'medium', color: { argb: 'FFB0C4DE' } },
+            right: { style: 'thin', color: { argb: 'FFB0C4DE' } }
+        };
+    });
+
+    ws2.columns = [
+        { width: 32 }, { width: 38 }, { width: 26 },
+        { width: 26 }, { width: 26 }, { width: 26 }, { width: 26 }
+    ];
+
+    // ---------- DOSYAYI İNDİR ----------
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    saveAs(blob, 'Basvuru_Listesi_Renkli.xlsx');
+});
+
+// ================================================================
+// 7. BAŞLAT
+// ================================================================
+loadFromStorage();
+renderAll();
+
+if (mykData.length === 0) {
+    console.warn('⚠️ MYK verisi yüklenmemiş! Lütfen mykData dizisini doldurun.');
+} else {
+    console.log(`✅ ${mykData.length} adet MYK kaydı yüklendi.`);
+}
+</script>
+</body>
+</html>
