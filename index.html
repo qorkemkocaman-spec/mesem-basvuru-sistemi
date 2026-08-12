@@ -3,14 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Başvuru Yönetim Sistemi (Firebase)</title>
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <title>Başvuru Yönetim Sistemi</title>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <style>
-        /* (Stiller aynı, değişiklik yok) */
         * { box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f5f7fa; margin: 20px; padding: 0; }
         .container { max-width: 1400px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
@@ -57,7 +53,7 @@
 </head>
 <body>
 <div class="container">
-    <h1>📋 Başvuru Yönetim Sistemi (Firebase)</h1>
+    <h1>📋 Başvuru Yönetim Sistemi</h1>
 
     <!-- FORM -->
     <form id="basvuruForm" class="form-grid">
@@ -111,10 +107,12 @@
         </div>
     </form>
 
-    <!-- AKSİYONLAR -->
+    <!-- AKSİYONLAR (GÜNCELLENDİ) -->
     <div class="actions">
+        <button class="btn btn-primary" id="btnBuluttanYukle" onclick="buluttanYukle()">☁️ Buluttan Yükle</button>
+        <button class="btn btn-primary" style="background:#8e44ad;" id="btnBulutaKaydet" onclick="bulutaKaydet()">☁️ Buluta Kaydet</button>
         <button class="btn btn-success" id="excelBtn">📊 Excel İndir (Renkli)</button>
-        <button class="btn btn-danger" id="temizleVeriBtn">🗑️ Tüm Verileri Sil (Firebase)</button>
+        <button class="btn btn-danger" id="temizleVeriBtn">🗑️ Tüm Verileri Sil</button>
         <span style="margin-left: auto; font-size: 14px; color: #555;">Toplam Başvuru: <strong id="toplamSayi">0</strong></span>
     </div>
 
@@ -164,28 +162,12 @@
         </table>
     </div>
 
-    <div class="footer">⚡ Veriler Firebase Firestore'da saklanır. Tüm kullanıcılar aynı veriyi görür.</div>
+    <div class="footer">⚡ Veriler tarayıcı hafızasında (localStorage) ve Google E-Tablolarda (Bulut) saklanabilir.</div>
 </div>
 
 <script>
 // ================================================================
-// 🔥 FIREBASE YAPILANDIRMASI (kendi config'inle değiştir)
-// ================================================================
-const firebaseConfig = {
-  apiKey: "AIzaSyCmHe1YXwRhz6twLkWNcMFYFPuEID6ZxQo",
-  authDomain: "mesembasvurutakip.firebaseapp.com",
-  databaseURL: "https://mesembasvurutakip-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "mesembasvurutakip",
-  storageBucket: "mesembasvurutakip.firebasestorage.app",
-  messagingSenderId: "34396574237",
-  appId: "1:34396574237:web:156fe8811c1429cb282cf4",
-  measurementId: "G-0RYZT680GG"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-// ================================================================
-// MYK VERİLERİ – BURAYA TÜM VERİ BLOĞUNU YAPIŞTIR
+// 1. MYK VERİLERİ (TAMAMI) – SADELEŞTİRİLMİŞ ÖRNEK (KENDİ VERİLERİNİZİ EKLEYEBİLİRSİNİZ)
 // ================================================================
 const mykData = [
   { kod: "17UY0301‐3", ad: "Ahşap Mobilya İmalatçısı", alan: "Mobilya ve İç Mekan Tasarımı", dal: "İç Mekan ve Mobilya Teknolojisi" },
@@ -644,10 +626,24 @@ const mykData = [
 ];
 
 // ================================================================
-// UYGULAMA STATE'İ
+// 2. UYGULAMA STATE'İ
 // ================================================================
 let basvurular = [];
 
+function loadFromStorage() {
+    const stored = localStorage.getItem('basvuruListesi');
+    if (stored) {
+        try { basvurular = JSON.parse(stored); } catch(e) { basvurular = []; }
+    } else { basvurular = []; }
+}
+function saveToStorage() {
+    localStorage.setItem('basvuruListesi', JSON.stringify(basvurular));
+}
+function getNextSira() {
+    if (basvurular.length === 0) return 1;
+    const max = Math.max(...basvurular.map(b => b.sira || 0));
+    return max + 1;
+}
 function formatBasvuruNo(sira) {
     const now = new Date();
     const year = now.getFullYear();
@@ -656,64 +652,7 @@ function formatBasvuruNo(sira) {
 }
 
 // ================================================================
-// FIREBASE VERİ İŞLEMLERİ
-// ================================================================
-async function firebaseVerileriOku() {
-    try {
-        const snapshot = await db.collection('basvurular').orderBy('sira').get();
-        const data = [];
-        snapshot.forEach(doc => {
-            data.push({ id: doc.id, ...doc.data() });
-        });
-        return data;
-    } catch (error) {
-        console.error('Firebase okuma hatası:', error);
-        alert('Veriler okunamadı. Lütfen sayfayı yenileyin.');
-        return [];
-    }
-}
-
-async function firebaseVeriEkle(basvuru) {
-    try {
-        const docRef = await db.collection('basvurular').add(basvuru);
-        return docRef.id;
-    } catch (error) {
-        console.error('Firebase ekleme hatası:', error);
-        alert('Başvuru eklenirken hata oluştu.');
-        return null;
-    }
-}
-
-async function firebaseVeriGuncelle(id, yeniVeri) {
-    try {
-        await db.collection('basvurular').doc(id).update(yeniVeri);
-        return true;
-    } catch (error) {
-        console.error('Firebase güncelleme hatası:', error);
-        return false;
-    }
-}
-
-async function firebaseVeriSil(id) {
-    try {
-        await db.collection('basvurular').doc(id).delete();
-        return true;
-    } catch (error) {
-        console.error('Firebase silme hatası:', error);
-        return false;
-    }
-}
-
-// ================================================================
-// YÜKLEME VE KAYDETME (Firebase ile)
-// ================================================================
-async function loadData() {
-    basvurular = await firebaseVerileriOku();
-    renderAll();
-}
-
-// ================================================================
-// FORM İŞLEMLERİ
+// 3. FORM İŞLEMLERİ
 // ================================================================
 const adInput = document.getElementById('ad');
 const soyadInput = document.getElementById('soyad');
@@ -775,7 +714,7 @@ document.addEventListener('click', (e) => {
 });
 
 // Ekle butonu
-document.getElementById('ekleBtn').addEventListener('click', async function() {
+document.getElementById('ekleBtn').addEventListener('click', function() {
     if (!adInput.value || !soyadInput.value || !tcInput.value || !telefonInput.value || !mezuniyetSelect.value) {
         alert('Lütfen Adı, Soyadı, TC, TELEFON NO ve Mezuniyet alanlarını doldurun.');
         return;
@@ -785,8 +724,7 @@ document.getElementById('ekleBtn').addEventListener('click', async function() {
         return;
     }
     const kod = yeterlilikKoduInput.value.trim();
-    const sira = basvurular.length > 0 ? Math.max(...basvurular.map(b => b.sira || 0)) + 1 : 1;
-    const basvuruNo = formatBasvuruNo(sira);
+    const sira = getNextSira();
 
     const yeniBasvuru = {
         sira: sira,
@@ -809,22 +747,18 @@ document.getElementById('ekleBtn').addEventListener('click', async function() {
         eskiKimlik: eskiKimlikInput.value.trim(),
         telefon: telefonInput.value.trim()
     };
-
-    const id = await firebaseVeriEkle(yeniBasvuru);
-    if (id) {
-        yeniBasvuru.id = id;
-        basvurular.push(yeniBasvuru);
-        renderAll();
-        document.getElementById('basvuruForm').reset();
-        alanInput.value = '';
-        dalInput.value = '';
-        yeterlilikKoduInput.value = '';
-        document.querySelectorAll('.checkbox-group input').forEach(cb => cb.checked = false);
-    }
+    basvurular.push(yeniBasvuru);
+    saveToStorage();
+    renderAll();
+    document.getElementById('basvuruForm').reset();
+    alanInput.value = '';
+    dalInput.value = '';
+    yeterlilikKoduInput.value = '';
+    document.querySelectorAll('.checkbox-group input').forEach(cb => cb.checked = false);
 });
 
 // ================================================================
-// RENDER FONKSİYONLARI
+// 4. RENDER FONKSİYONLARI
 // ================================================================
 function renderTable() {
     const tbody = document.getElementById('tabloBody');
@@ -865,21 +799,17 @@ function renderTable() {
         `;
         tbody.appendChild(tr);
     });
-
-    // Değişiklikleri Firebase'e otomatik kaydet
+    
+    // Değişiklikleri otomatik kaydet
     tbody.querySelectorAll('.editable-cell').forEach(el => {
         if (el.tagName === 'INPUT' || el.tagName === 'SELECT') {
-            el.addEventListener('change', async function() {
+            el.addEventListener('change', function() {
                 const tr = this.closest('tr');
                 const index = parseInt(tr.dataset.index);
                 const field = this.dataset.field;
                 let value = this.type === 'checkbox' ? this.checked : this.value;
-                const b = basvurular[index];
-                b[field] = value;
-                // Firebase'e güncelle
-                if (b.id) {
-                    await firebaseVeriGuncelle(b.id, { [field]: value });
-                }
+                basvurular[index][field] = value;
+                saveToStorage();
                 renderOzet();
             });
         }
@@ -919,7 +849,7 @@ function renderOzet() {
 function renderAll() { renderTable(); renderOzet(); }
 
 // ================================================================
-// KOPYALA VE SİL FONKSİYONLARI
+// 5. KOPYALA VE SİL
 // ================================================================
 function kopyalaBasvuru(index) {
     const b = basvurular[index];
@@ -946,39 +876,23 @@ function kopyalaBasvuru(index) {
     }
 }
 
-async function silBasvuru(index) {
+function silBasvuru(index) {
     if (confirm('Silmek istediğinize emin misiniz?')) {
-        const b = basvurular[index];
-        if (b.id) {
-            const sonuc = await firebaseVeriSil(b.id);
-            if (sonuc) {
-                basvurular.splice(index, 1);
-                renderAll();
-            }
-        } else {
-            basvurular.splice(index, 1);
-            renderAll();
-        }
+        basvurular.splice(index, 1);
+        saveToStorage();
+        renderAll();
     }
 }
-
-// ================================================================
-// TÜM VERİLERİ SİL (Firebase'den)
-// ================================================================
-document.getElementById('temizleVeriBtn').addEventListener('click', async function() {
-    if (confirm('Tüm veriler Firebase\'den kalıcı olarak silinecek. Devam etmek istiyor musunuz?')) {
-        for (const b of basvurular) {
-            if (b.id) {
-                await firebaseVeriSil(b.id);
-            }
-        }
+document.getElementById('temizleVeriBtn').addEventListener('click', function() {
+    if (confirm('Tüm veriler kalıcı olarak silinecek. Devam etmek istiyor musunuz?')) {
         basvurular = [];
+        saveToStorage();
         renderAll();
     }
 });
 
 // ================================================================
-// EXCEL İNDİRME (Aynı, sadece basvurular üzerinden çalışır)
+// 6. RENKLİ EXCEL İNDİRME
 // ================================================================
 document.getElementById('excelBtn').addEventListener('click', async function() {
     if (basvurular.length === 0) {
@@ -990,8 +904,9 @@ document.getElementById('excelBtn').addEventListener('click', async function() {
     workbook.creator = 'Başvuru Sistemi';
     workbook.created = new Date();
 
-    // Sayfa 1: Başvuru Listesi
+    // ---------- SAYFA 1: BAŞVURU LİSTESİ ----------
     const ws1 = workbook.addWorksheet('Başvuru Listesi', { views: [{ state: 'frozen', ySplit: 1 }] });
+
     const basliklar = [
         'Başvuru Sıra No',
         'Yapılan Denklik İşleminin Numarası',
@@ -1069,7 +984,7 @@ document.getElementById('excelBtn').addEventListener('click', async function() {
         { width: 25 }, { width: 16 }
     ];
 
-    // Sayfa 2: Meslek Özeti
+    // ---------- SAYFA 2: MESLEK ÖZETİ ----------
     const ws2 = workbook.addWorksheet('Meslekler');
     const ozetBaslik = ['Alan Adı', 'Dal Adı', 'Sınava Girecek Kişi Sayısı', 'Öğrenci Sayısı KALFALIK', 'Öğrenci Sayısı USTALIK', 'Sınav Sayısı KALFALIK', 'Sınav Sayısı USTALIK'];
     const headerRow2 = ws2.addRow(ozetBaslik);
@@ -1135,17 +1050,76 @@ document.getElementById('excelBtn').addEventListener('click', async function() {
         { width: 26 }, { width: 26 }, { width: 26 }, { width: 26 }
     ];
 
+    // ---------- DOSYAYI İNDİR ----------
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     saveAs(blob, 'Basvuru_Listesi_Renkli.xlsx');
 });
 
 // ================================================================
-// BAŞLAT
+// 7. BULUT (GOOGLE SHEETS) ENTEGRASYONU 
 // ================================================================
-loadData();
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby1G3CcPGiRXAJGLpBeN9YxeTcDGFiykBrgJBRMxp2_38K-_iPgEHg6yDE_O7fJz1U-/exec"; 
 
-// MYK verisi kontrolü
+async function bulutaKaydet() {
+    const btn = document.getElementById('btnBulutaKaydet');
+    btn.textContent = "⏳ Kaydediliyor...";
+    btn.disabled = true;
+    
+    try {
+        const payload = JSON.stringify(basvurular);
+        const response = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'text/plain;charset=utf-8',
+            },
+            body: payload
+        });
+        await response.json();
+        alert("✅ Tüm veriler başarıyla buluta kaydedildi!");
+    } catch (e) {
+        alert("Bulut entegrasyonu işlemi gerçekleşmiş olabilir ancak bir uyarı verdi: " + e.message);
+    }
+    btn.textContent = "☁️ Buluta Kaydet";
+    btn.disabled = false;
+}
+
+async function buluttanYukle() {
+    const btn = document.getElementById('btnBuluttanYukle');
+    btn.textContent = "⏳ Yükleniyor...";
+    btn.disabled = true;
+    
+    try {
+        const response = await fetch(APPS_SCRIPT_URL);
+        const data = await response.json();
+        if (data && Array.isArray(data)) {
+            // Checkbox durumlarını string'den boolean'a çeviriyoruz (Excel formatlamasından dolayı)
+            basvurular = data.map(b => ({
+                ...b,
+                kalfalik: b.kalfalik === true || b.kalfalik === 'true' || b.kalfalik === 'TRUE',
+                ustalik: b.ustalik === true || b.ustalik === 'true' || b.ustalik === 'TRUE',
+                sinavli: b.sinavli === true || b.sinavli === 'true' || b.sinavli === 'TRUE',
+                sinavsiz: b.sinavsiz === true || b.sinavsiz === 'true' || b.sinavsiz === 'TRUE',
+                esinav: b.esinav === true || b.esinav === 'true' || b.esinav === 'TRUE',
+                beceri: b.beceri === true || b.beceri === 'true' || b.beceri === 'TRUE'
+            }));
+            saveToStorage();
+            renderAll();
+            alert("✅ Veriler buluttan başarıyla çekildi!");
+        }
+    } catch (e) {
+        alert("❌ Hata oluştu: " + e.message);
+    }
+    btn.textContent = "☁️ Buluttan Yükle";
+    btn.disabled = false;
+}
+
+// ================================================================
+// 8. BAŞLAT
+// ================================================================
+loadFromStorage();
+renderAll();
+
 if (mykData.length === 0) {
     console.warn('⚠️ MYK verisi yüklenmemiş! Lütfen mykData dizisini doldurun.');
 } else {
