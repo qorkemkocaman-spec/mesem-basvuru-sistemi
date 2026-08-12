@@ -1073,12 +1073,13 @@ async function bulutaKaydet() {
             headers: {
                 'Content-Type': 'text/plain;charset=utf-8',
             },
-            body: payload
+            body: payload,
+            redirect: 'follow' // BU SATIR EKLENDİ
         });
         await response.json();
         alert("✅ Tüm veriler başarıyla buluta kaydedildi!");
     } catch (e) {
-        alert("Bulut entegrasyonu işlemi gerçekleşmiş olabilir ancak bir uyarı verdi: " + e.message);
+        alert("❌ Hata oluştu: Sunucuya ulaşılamadı veya erişim reddedildi. (" + e.message + ")");
     }
     btn.textContent = "☁️ Buluta Kaydet";
     btn.disabled = false;
@@ -1090,10 +1091,12 @@ async function buluttanYukle() {
     btn.disabled = true;
     
     try {
-        const response = await fetch(APPS_SCRIPT_URL);
+        const response = await fetch(APPS_SCRIPT_URL, {
+            method: 'GET',
+            redirect: 'follow' // BU SATIR EKLENDİ
+        });
         const data = await response.json();
         if (data && Array.isArray(data)) {
-            // Checkbox durumlarını string'den boolean'a çeviriyoruz (Excel formatlamasından dolayı)
             basvurular = data.map(b => ({
                 ...b,
                 kalfalik: b.kalfalik === true || b.kalfalik === 'true' || b.kalfalik === 'TRUE',
