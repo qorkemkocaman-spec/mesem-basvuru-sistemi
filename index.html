@@ -3,14 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Başvuru Yönetim Sistemi</title>
+    <title>MESEM Başvuru Sistemi</title>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <style>
         * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f5f7fa; margin: 20px; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f5f7fa; margin: 0; padding: 0; }
+        
+        /* GİRİŞ EKRANI STİLLERİ */
+        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(26,60,94,0.9); display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        .login-box { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 100%; max-width: 400px; text-align: center; }
+        .login-box h2 { color: #1a3c5e; margin-top: 0; }
+        .login-box p { color: #6c7a8a; font-size: 14px; margin-bottom: 20px; }
+        .login-input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccd7e6; border-radius: 6px; font-size: 15px; }
+        .login-btn { width: 100%; padding: 12px; background: #2a7de1; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .login-btn:hover { background: #1a5fb0; }
+
+        /* ANA UYGULAMA STİLLERİ */
+        #mainApp { display: none; padding: 20px; }
         .container { max-width: 1400px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
         h1, h2 { color: #1a3c5e; margin-top: 0; }
+        .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px; }
+        .header-bar h1 { margin: 0; }
+        
         .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px 20px; background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
         .form-group { display: flex; flex-direction: column; }
         .form-group label { font-weight: 600; font-size: 13px; margin-bottom: 3px; color: #2c3e50; }
@@ -29,7 +44,6 @@
         .btn-secondary { background: #6c7a8a; }
         .btn-secondary:hover { background: #4e5b69; }
         .btn-copy { background: #17a2b8; color: white; }
-        .btn-copy:hover { background: #117a8b; }
         .actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0 20px; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
         th { background: #e9ecf0; text-align: left; padding: 8px 6px; position: sticky; top: 0; z-index: 2; border-bottom: 2px solid #ccd7e6; }
@@ -52,123 +66,139 @@
     </style>
 </head>
 <body>
-<div class="container">
-    <h1>📋 Başvuru Yönetim Sistemi</h1>
 
-    <!-- FORM -->
-    <form id="basvuruForm" class="form-grid">
-        <div class="form-group"><label>Adı</label><input type="text" id="ad" placeholder="Ad" required></div>
-        <div class="form-group"><label>Soyadı</label><input type="text" id="soyad" placeholder="Soyad" required></div>
-        <div class="form-group"><label>TC Kimlik No</label><input type="text" id="tc" placeholder="11 haneli TC" pattern="[0-9]{11}" required></div>
-        <div class="form-group"><label>TELEFON NO</label><input type="text" id="telefon" placeholder="5xx xxx xx xx" required></div>
-        <div class="form-group">
-            <label>Mezuniyet</label>
-            <select id="mezuniyet">
-                <option value="">Seçiniz</option>
-                <option>TEKNİK LİSE (4Y)</option>
-                <option>MESLEKİ AÇIK ÖĞRETİM LİSESİ (4Y)</option>
-                <option>MESLEKİ TEKNİK ANADOLU LİSESİ (4Y)</option>
-                <option>MYO (2Y)</option>
-                <option>MESLEK LİSESİ (3Y)</option>
-                <option>ANADOLU TEKNİK (4Y)</option>
-                <option>ANADOLU MESLEK (4Y)</option>
-                <option>LİSE (3Y)</option>
-                <option>ÖZEL MESLEKİ TEKNİK ANADOLU LİSESİ (4Y)</option>
-                <option>ÖZEL TEMEL LİSE (4Y)</option>
-                <option>MESLEK LİSESİ (4Y)</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Yeterlilik Kodu</label>
-            <div class="search-wrapper">
-                <input type="text" id="yeterlilikKodu" placeholder="Kod veya ad yazın" autocomplete="off">
-                <div id="suggestions"></div>
+<!-- GİRİŞ EKRANI -->
+<div id="loginOverlay">
+    <div class="login-box">
+        <h2>MESEM Bulut Sistemi</h2>
+        <p>Kurumunuza ait veriler şifreli olarak saklanır.<br>İlk girişinizde kaydınız otomatik oluşturulur.</p>
+        <input type="text" id="loginKurum" class="login-input" placeholder="Kurum Adı (Örn: KIRIKKALE_MESEM)">
+        <input type="password" id="loginSifre" class="login-input" placeholder="Kurum Şifresi">
+        <button class="login-btn" id="btnGiris" onclick="girisYap()">Giriş Yap</button>
+    </div>
+</div>
+
+<!-- ANA UYGULAMA -->
+<div id="mainApp">
+    <div class="container">
+        <div class="header-bar">
+            <h1>📋 Başvuru Yönetim Sistemi</h1>
+            <div>
+                <span style="font-weight: bold; margin-right: 15px; color: #2a7de1;">🏢 Kurum: <span id="aktifKurumAdi"></span></span>
+                <button class="btn btn-secondary" onclick="cikisYap()">🚪 Çıkış Yap</button>
             </div>
         </div>
-        <div class="form-group"><label>Alan</label><input type="text" id="alan" readonly></div>
-        <div class="form-group"><label>Dal</label><input type="text" id="dal" readonly></div>
-        <div class="form-group" style="grid-column: span 2;">
-            <label>Belge Türleri</label>
-            <div class="checkbox-group">
-                <label><input type="checkbox" id="kalfalik"> Belge Türü KALFALIK</label>
-                <label><input type="checkbox" id="ustalik"> Belge Türü USTALIK</label>
-                <label><input type="checkbox" id="sinavli"> Belge Türü SINAVLI</label>
-                <label><input type="checkbox" id="sinavsiz"> Belge Türü SINAVSIZ</label>
-                <label><input type="checkbox" id="esinav"> Teorik Sınav Türü E-SINAV</label>
-                <label><input type="checkbox" id="beceri"> BECERİ SINAVI</label>
+
+        <form id="basvuruForm" class="form-grid">
+            <div class="form-group"><label>Adı</label><input type="text" id="ad" placeholder="Ad" required></div>
+            <div class="form-group"><label>Soyadı</label><input type="text" id="soyad" placeholder="Soyad" required></div>
+            <div class="form-group"><label>TC Kimlik No</label><input type="text" id="tc" placeholder="11 haneli TC" pattern="[0-9]{11}" required></div>
+            <div class="form-group"><label>TELEFON NO</label><input type="text" id="telefon" placeholder="5xx xxx xx xx" required></div>
+            <div class="form-group">
+                <label>Mezuniyet</label>
+                <select id="mezuniyet">
+                    <option value="">Seçiniz</option>
+                    <option>TEKNİK LİSE (4Y)</option>
+                    <option>MESLEKİ AÇIK ÖĞRETİM LİSESİ (4Y)</option>
+                    <option>MESLEKİ TEKNİK ANADOLU LİSESİ (4Y)</option>
+                    <option>MYO (2Y)</option>
+                    <option>MESLEK LİSESİ (3Y)</option>
+                    <option>ANADOLU TEKNİK (4Y)</option>
+                    <option>ANADOLU MESLEK (4Y)</option>
+                    <option>LİSE (3Y)</option>
+                    <option>ÖZEL MESLEKİ TEKNİK ANADOLU LİSESİ (4Y)</option>
+                    <option>ÖZEL TEMEL LİSE (4Y)</option>
+                    <option>MESLEK LİSESİ (4Y)</option>
+                </select>
             </div>
+            <div class="form-group">
+                <label>Yeterlilik Kodu</label>
+                <div class="search-wrapper">
+                    <input type="text" id="yeterlilikKodu" placeholder="Kod veya ad yazın" autocomplete="off">
+                    <div id="suggestions"></div>
+                </div>
+            </div>
+            <div class="form-group"><label>Alan</label><input type="text" id="alan" readonly></div>
+            <div class="form-group"><label>Dal</label><input type="text" id="dal" readonly></div>
+            <div class="form-group" style="grid-column: span 2;">
+                <label>Belge Türleri</label>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" id="kalfalik"> Belge Türü KALFALIK</label>
+                    <label><input type="checkbox" id="ustalik"> Belge Türü USTALIK</label>
+                    <label><input type="checkbox" id="sinavli"> Belge Türü SINAVLI</label>
+                    <label><input type="checkbox" id="sinavsiz"> Belge Türü SINAVSIZ</label>
+                    <label><input type="checkbox" id="esinav"> Teorik Sınav Türü E-SINAV</label>
+                    <label><input type="checkbox" id="beceri"> BECERİ SINAVI</label>
+                </div>
+            </div>
+            <div class="form-group"><label>SINAV MADDESİ</label><input type="text" id="sinavMaddesi" placeholder="örn. 35.Madde"></div>
+            <div class="form-group"><label>Açıklama</label><input type="text" id="aciklama" placeholder="Varsa not"></div>
+            <div class="form-group"><label>Eski Kimlik</label><input type="text" id="eskiKimlik" placeholder="X veya boş"></div>
+            <div class="form-group" style="grid-column: span 2; display: flex; gap: 10px; align-items: center;">
+                <button type="button" class="btn btn-primary" id="ekleBtn">➕ Başvuru Ekle</button>
+                <button type="reset" class="btn btn-secondary">🧹 Temizle</button>
+            </div>
+        </form>
+
+        <div class="actions">
+            <!-- Buluttan Yükle butonunu kaldırdık çünkü artık otomatik yüklüyor -->
+            <button class="btn btn-primary" style="background:#8e44ad;" id="btnBulutaKaydet" onclick="bulutaKaydet()">☁️ Buluta Kaydet (Eşitle)</button>
+            <button class="btn btn-success" id="excelBtn">📊 Excel İndir (Renkli)</button>
+            <button class="btn btn-danger" id="temizleVeriBtn">🗑️ Tüm Verileri Sil</button>
+            <span style="margin-left: auto; font-size: 14px; color: #555;">Toplam Başvuru: <strong id="toplamSayi">0</strong></span>
         </div>
-        <div class="form-group"><label>SINAV MADDESİ</label><input type="text" id="sinavMaddesi" placeholder="örn. 35.Madde"></div>
-        <div class="form-group"><label>Açıklama</label><input type="text" id="aciklama" placeholder="Varsa not"></div>
-        <div class="form-group"><label>Eski Kimlik</label><input type="text" id="eskiKimlik" placeholder="X veya boş"></div>
-        <div class="form-group" style="grid-column: span 2; display: flex; gap: 10px; align-items: center;">
-            <button type="button" class="btn btn-primary" id="ekleBtn">➕ Başvuru Ekle</button>
-            <button type="reset" class="btn btn-secondary">🧹 Temizle</button>
+
+        <div class="table-wrapper">
+            <table id="basvuruTablosu">
+                <thead><tr>
+                    <th style="min-width:140px;">Sıra No</th>
+                    <th style="min-width:150px;">Denklik No</th>
+                    <th style="min-width:120px;">TC Kimlik</th>
+                    <th style="min-width:100px;">Adı</th>
+                    <th style="min-width:100px;">Soyadı</th>
+                    <th style="min-width:200px;">Mezuniyet</th>
+                    <th style="min-width:150px;">Alan</th>
+                    <th style="min-width:200px;">Dal</th>
+                    <th style="min-width:80px;">KALFALIK</th>
+                    <th style="min-width:80px;">USTALIK</th>
+                    <th style="min-width:80px;">SINAVLI</th>
+                    <th style="min-width:80px;">SINAVSIZ</th>
+                    <th style="min-width:100px;">E-SINAV</th>
+                    <th style="min-width:80px;">BECERİ</th>
+                    <th style="min-width:100px;">SINAV MADDESİ</th>
+                    <th style="min-width:120px;">TELEFON NO</th>
+                    <th style="min-width:150px;">Açıklama</th>
+                    <th style="min-width:100px;">Eski Kimlik</th>
+                    <th style="min-width:120px;">İşlem</th>
+                </tr></thead>
+                <tbody id="tabloBody"></tbody>
+            </table>
         </div>
-    </form>
 
-    <!-- AKSİYONLAR -->
-    <div class="actions">
-        <button class="btn btn-primary" id="btnBuluttanYukle" onclick="buluttanYukle()">☁️ Buluttan Yükle</button>
-        <button class="btn btn-primary" style="background:#8e44ad;" id="btnBulutaKaydet" onclick="bulutaKaydet()">☁️ Buluta Kaydet</button>
-        <button class="btn btn-success" id="excelBtn">📊 Excel İndir (Renkli)</button>
-        <button class="btn btn-danger" id="temizleVeriBtn">🗑️ Tüm Verileri Sil</button>
-        <span style="margin-left: auto; font-size: 14px; color: #555;">Toplam Başvuru: <strong id="toplamSayi">0</strong></span>
+        <h2>📊 Meslek Bazlı Özet</h2>
+        <div style="overflow-x: auto;">
+            <table class="summary-table" id="ozetTablo">
+                <thead><tr>
+                    <th>Alan Adı</th><th>Dal Adı</th><th>Sınava Girecek Kişi</th>
+                    <th>Öğrenci (Kalfalık)</th><th>Öğrenci (Ustalık)</th>
+                    <th>Sınav (Kalfalık)</th><th>Sınav (Ustalık)</th>
+                </tr></thead>
+                <tbody id="ozetBody"></tbody>
+            </table>
+        </div>
+
+        <div class="footer">⚡ Veriler Google Bulut sunucularında kurumunuza özel olarak şifreli saklanmaktadır.</div>
     </div>
-
-    <!-- BAŞVURU LİSTESİ TABLOSU -->
-    <h2>Başvuru Listesi (Hücrelere tıklayıp düzenleyin)</h2>
-    <div class="table-wrapper">
-        <table id="basvuruTablosu">
-            <thead><tr>
-                <th style="min-width:140px;">Başvuru Sıra No</th>
-                <th style="min-width:150px;">Yapılan Denklik İşleminin Numarası</th>
-                <th style="min-width:120px;">TC Kimlik No</th>
-                <th style="min-width:100px;">Adı</th>
-                <th style="min-width:100px;">Soyadı</th>
-                <th style="min-width:200px;">Mezuniyet</th>
-                <th style="min-width:150px;">Alan</th>
-                <th style="min-width:200px;">Dal</th>
-                <th style="min-width:80px;">Belge Türü KALFALIK</th>
-                <th style="min-width:80px;">Belge Türü USTALIK</th>
-                <th style="min-width:80px;">Belge Türü SINAVLI</th>
-                <th style="min-width:80px;">Belge Türü SINAVSIZ</th>
-                <th style="min-width:100px;">Teorik Sınav Türü E-SINAV</th>
-                <th style="min-width:80px;">BECERİ SINAVI</th>
-                <th style="min-width:100px;">SINAV MADDESİ</th>
-                <th style="min-width:120px;">TELEFON NO</th>
-                <th style="min-width:150px;">Açıklama</th>
-                <th style="min-width:100px;">Eski Kimlik</th>
-                <th style="min-width:120px;">İşlem</th>
-            </tr></thead>
-            <tbody id="tabloBody"></tbody>
-        </table>
-    </div>
-
-    <!-- ÖZET TABLO -->
-    <h2>📊 Meslek Bazlı Özet</h2>
-    <div style="overflow-x: auto;">
-        <table class="summary-table" id="ozetTablo">
-            <thead><tr>
-                <th>Alan Adı</th>
-                <th>Dal Adı</th>
-                <th>Sınava Girecek Kişi Sayısı</th>
-                <th>Öğrenci Sayısı (Kalfalık)</th>
-                <th>Öğrenci Sayısı (Ustalık)</th>
-                <th>Sınav Sayısı Kalfalık</th>
-                <th>Sınav Sayısı Ustalık</th>
-            </tr></thead>
-            <tbody id="ozetBody"></tbody>
-        </table>
-    </div>
-
-    <div class="footer">⚡ Veriler tarayıcı hafızasında (localStorage) ve Google E-Tablolarda (Bulut) saklanabilir.</div>
 </div>
 
 <script>
 // ================================================================
-// 1. MYK VERİLERİ (TAMAMI) – SADELEŞTİRİLMİŞ ÖRNEK (KENDİ VERİLERİNİZİ EKLEYEBİLİRSİNİZ)
+// 1. YAPILANDIRMA VE MYK VERİLERİ 
 // ================================================================
+
+// BURAYA YENİ ALDIĞINIZ APPS SCRIPT URL'SİNİ YAPIŞTIRIN
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxuv7jNZ_nHMw1YpHXMwUQRj6VP0SF4yo-I3y9ftrCZw3qQlixxfj8GHAUJuy6Horim/exec"; 
+
 const mykData = [
   { kod: "17UY0301‐3", ad: "Ahşap Mobilya İmalatçısı", alan: "Mobilya ve İç Mekan Tasarımı", dal: "İç Mekan ve Mobilya Teknolojisi" },
   { kod: "17UY0301‐4", ad: "Ahşap Mobilya İmalatçısı", alan: "Mobilya ve İç Mekan Tasarımı", dal: "İç Mekan ve Mobilya Teknolojisi" },
@@ -626,139 +656,200 @@ const mykData = [
 ];
 
 // ================================================================
-// 2. UYGULAMA STATE'İ
+// 2. KİMLİK DOĞRULAMA (MULTI-TENANT) VE BULUT API YÖNETİMİ
 // ================================================================
 let basvurular = [];
+let aktifKurum = "";
 
-function loadFromStorage() {
-    const stored = localStorage.getItem('basvuruListesi');
-    if (stored) {
-        try { basvurular = JSON.parse(stored); } catch(e) { basvurular = []; }
-    } else { basvurular = []; }
+// Merkezi API İstek Fonksiyonu
+async function apiIstegi(action, dataObj = null) {
+    const payloadObj = {
+        action: action,
+        kurum: aktifKurum,
+        data: dataObj
+    };
+    if (action === "login") payloadObj.sifre = dataObj; // login durumunda dataObj şifredir.
+
+    const payloadStr = encodeURIComponent(JSON.stringify(payloadObj));
+    const response = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: "data=" + payloadStr
+    });
+    return await response.json();
 }
+
+async function girisYap() {
+    const kurum = document.getElementById("loginKurum").value.trim().toUpperCase();
+    const sifre = document.getElementById("loginSifre").value.trim();
+    
+    if (!kurum || !sifre) { alert("Lütfen kurum adı ve şifre girin!"); return; }
+    if (kurum.includes(" ")) { alert("Kurum adında boşluk bırakmayın (Örn: IL_ILCE_MESEM kullanın)"); return; }
+    
+    const btn = document.getElementById("btnGiris");
+    btn.textContent = "⏳ Bekleyin..."; btn.disabled = true;
+
+    aktifKurum = kurum;
+    try {
+        const result = await apiIstegi("login", sifre);
+        if (result.status === "success") {
+            // Şifre doğruysa kurumu tarayıcıya kaydet
+            sessionStorage.setItem("mesemKurum", kurum);
+            document.getElementById("loginOverlay").style.display = "none";
+            document.getElementById("mainApp").style.display = "block";
+            document.getElementById("aktifKurumAdi").textContent = kurum;
+            
+            // Başarılı girişten hemen sonra buluttan verileri OTOMATİK çek
+            await buluttanOtomatikYukle();
+        } else {
+            alert(result.message);
+        }
+    } catch (e) {
+        alert("Bağlantı hatası: " + e.message);
+    }
+    btn.textContent = "Giriş Yap"; btn.disabled = false;
+}
+
+function cikisYap() {
+    sessionStorage.removeItem("mesemKurum");
+    location.reload();
+}
+
+// Otomatik Yükleme Fonksiyonu
+async function buluttanOtomatikYukle() {
+    try {
+        const result = await apiIstegi("load");
+        if (result.status === "error") throw new Error(result.message);
+        
+        if (result.data && Array.isArray(result.data)) {
+            basvurular = result.data.map(b => ({
+                ...b,
+                kalfalik: b.kalfalik === true || b.kalfalik === 'true' || b.kalfalik === 'TRUE' || b.kalfalik === 'X',
+                ustalik: b.ustalik === true || b.ustalik === 'true' || b.ustalik === 'TRUE' || b.ustalik === 'X',
+                sinavli: b.sinavli === true || b.sinavli === 'true' || b.sinavli === 'TRUE' || b.sinavli === 'X',
+                sinavsiz: b.sinavsiz === true || b.sinavsiz === 'true' || b.sinavsiz === 'TRUE' || b.sinavsiz === 'X',
+                esinav: b.esinav === true || b.esinav === 'true' || b.esinav === 'TRUE' || b.esinav === 'X',
+                beceri: b.beceri === true || b.beceri === 'true' || b.beceri === 'TRUE' || b.beceri === 'X'
+            }));
+            saveToStorage();
+            renderAll();
+        }
+    } catch (e) {
+        alert("Buluttan veri çekilirken hata oluştu: " + e.message);
+    }
+}
+
+async function bulutaKaydet() {
+    const btn = document.getElementById('btnBulutaKaydet');
+    btn.textContent = "⏳ Eşitleniyor..."; btn.disabled = true;
+    
+    try {
+        const result = await apiIstegi("save", basvurular);
+        if (result.status === "error") throw new Error(result.message);
+        alert("✅ Tüm veriler kurumunuzun bulut kasasına kaydedildi!");
+    } catch (e) {
+        alert("Ağ hatası oluştu: " + e.message);
+    }
+    btn.textContent = "☁️ Buluta Kaydet (Eşitle)"; btn.disabled = false;
+}
+
+// Sayfa yüklendiğinde oturum kontrolü
+window.onload = function() {
+    const kayitliKurum = sessionStorage.getItem("mesemKurum");
+    if (kayitliKurum) {
+        aktifKurum = kayitliKurum;
+        document.getElementById("loginOverlay").style.display = "none";
+        document.getElementById("mainApp").style.display = "block";
+        document.getElementById("aktifKurumAdi").textContent = aktifKurum;
+        buluttanOtomatikYukle(); // Otomatik yükle
+    } else {
+        document.getElementById("loginOverlay").style.display = "flex";
+        document.getElementById("mainApp").style.display = "none";
+    }
+};
+
+// ================================================================
+// 3. YEREL DEPOLAMA VE YARDIMCI FONKSİYONLAR
+// ================================================================
 function saveToStorage() {
-    localStorage.setItem('basvuruListesi', JSON.stringify(basvurular));
+    // Verileri kurum adına göre locale kaydet ki aynı PC'de karışmasın
+    if(aktifKurum) localStorage.setItem('basvurular_' + aktifKurum, JSON.stringify(basvurular));
 }
 function getNextSira() {
     if (basvurular.length === 0) return 1;
-    const max = Math.max(...basvurular.map(b => b.sira || 0));
-    return max + 1;
+    return Math.max(...basvurular.map(b => b.sira || 0)) + 1;
 }
 function formatBasvuruNo(sira) {
     const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    return `B${year}-${month}/${String(sira).padStart(4, '0')}`;
+    return `B${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}/${String(sira).padStart(4, '0')}`;
 }
 
 // ================================================================
-// 3. FORM İŞLEMLERİ
+// 4. FORM İŞLEMLERİ (ÖNERİ MOTORU, EKLEME)
 // ================================================================
-const adInput = document.getElementById('ad');
-const soyadInput = document.getElementById('soyad');
-const tcInput = document.getElementById('tc');
-const telefonInput = document.getElementById('telefon');
-const mezuniyetSelect = document.getElementById('mezuniyet');
-const yeterlilikKoduInput = document.getElementById('yeterlilikKodu');
-const alanInput = document.getElementById('alan');
-const dalInput = document.getElementById('dal');
-const kalfalikChk = document.getElementById('kalfalik');
-const ustalikChk = document.getElementById('ustalik');
-const sinavliChk = document.getElementById('sinavli');
-const sinavsizChk = document.getElementById('sinavsiz');
-const esinavChk = document.getElementById('esinav');
-const beceriChk = document.getElementById('beceri');
-const sinavMaddesiInput = document.getElementById('sinavMaddesi');
-const aciklamaInput = document.getElementById('aciklama');
-const eskiKimlikInput = document.getElementById('eskiKimlik');
-
 const mykMap = {};
-mykData.forEach(item => {
-    mykMap[item.kod] = { alan: item.alan, dal: item.dal };
-});
+mykData.forEach(item => { mykMap[item.kod] = { alan: item.alan, dal: item.dal }; });
 
-// Arama önerileri
 const suggestionsDiv = document.getElementById('suggestions');
-yeterlilikKoduInput.addEventListener('input', function() {
+document.getElementById('yeterlilikKodu').addEventListener('input', function() {
     const q = this.value.trim().toLowerCase();
-    if (!q) {
-        suggestionsDiv.style.display = 'none';
-        alanInput.value = '';
-        dalInput.value = '';
-        return;
-    }
-    const results = mykData.filter(item =>
-        item.kod.toLowerCase().includes(q) ||
-        item.ad.toLowerCase().includes(q)
-    ).slice(0, 12);
-    if (results.length === 0) {
-        suggestionsDiv.style.display = 'none';
-        return;
-    }
+    if (!q) { suggestionsDiv.style.display = 'none'; document.getElementById('alan').value = ''; document.getElementById('dal').value = ''; return; }
+    
+    const results = mykData.filter(item => item.kod.toLowerCase().includes(q) || item.ad.toLowerCase().includes(q)).slice(0, 12);
+    if (results.length === 0) { suggestionsDiv.style.display = 'none'; return; }
+    
     suggestionsDiv.innerHTML = '';
     results.forEach(item => {
         const div = document.createElement('div');
         div.innerHTML = `<span class="highlight">${item.kod}</span> – ${item.ad} <small>(${item.alan || '-'} / ${item.dal || '-'})</small>`;
         div.addEventListener('click', () => {
-            yeterlilikKoduInput.value = item.kod;
-            alanInput.value = item.alan || '';
-            dalInput.value = item.dal || '';
+            document.getElementById('yeterlilikKodu').value = item.kod;
+            document.getElementById('alan').value = item.alan || '';
+            document.getElementById('dal').value = item.dal || '';
             suggestionsDiv.style.display = 'none';
         });
         suggestionsDiv.appendChild(div);
     });
     suggestionsDiv.style.display = 'block';
 });
-document.addEventListener('click', (e) => {
-    if (!e.target.closest('.search-wrapper')) suggestionsDiv.style.display = 'none';
-});
+document.addEventListener('click', (e) => { if (!e.target.closest('.search-wrapper')) suggestionsDiv.style.display = 'none'; });
 
-// Ekle butonu
 document.getElementById('ekleBtn').addEventListener('click', function() {
-    if (!adInput.value || !soyadInput.value || !tcInput.value || !telefonInput.value || !mezuniyetSelect.value) {
-        alert('Lütfen Adı, Soyadı, TC, TELEFON NO ve Mezuniyet alanlarını doldurun.');
-        return;
+    const tc = document.getElementById('tc').value.trim();
+    if (!document.getElementById('ad').value || !document.getElementById('soyad').value || !tc || !document.getElementById('telefon').value || !document.getElementById('mezuniyet').value) {
+        alert('Lütfen zorunlu alanları doldurun.'); return;
     }
-    if (!yeterlilikKoduInput.value) {
-        alert('Lütfen bir yeterlilik kodu seçin veya girin.');
-        return;
-    }
-    const kod = yeterlilikKoduInput.value.trim();
-    const sira = getNextSira();
+    const kod = document.getElementById('yeterlilikKodu').value.trim();
+    if (!kod) { alert('Lütfen yeterlilik kodu seçin.'); return; }
 
-    const yeniBasvuru = {
-        sira: sira,
-        denklikNo: '',
-        tc: tcInput.value.trim(),
-        ad: adInput.value.trim(),
-        soyad: soyadInput.value.trim(),
-        mezuniyet: mezuniyetSelect.value,
+    basvurular.push({
+        sira: getNextSira(),
+        denklikNo: '', tc: tc,
+        ad: document.getElementById('ad').value.trim(),
+        soyad: document.getElementById('soyad').value.trim(),
+        mezuniyet: document.getElementById('mezuniyet').value,
         yeterlilikKodu: kod,
-        alan: alanInput.value.trim() || mykMap[kod]?.alan || '',
-        dal: dalInput.value.trim() || mykMap[kod]?.dal || '',
-        kalfalik: kalfalikChk.checked,
-        ustalik: ustalikChk.checked,
-        sinavli: sinavliChk.checked,
-        sinavsiz: sinavsizChk.checked,
-        esinav: esinavChk.checked,
-        beceri: beceriChk.checked,
-        sinavMaddesi: sinavMaddesiInput.value.trim(),
-        aciklama: aciklamaInput.value.trim(),
-        eskiKimlik: eskiKimlikInput.value.trim(),
-        telefon: telefonInput.value.trim()
-    };
-    basvurular.push(yeniBasvuru);
-    saveToStorage();
-    renderAll();
+        alan: document.getElementById('alan').value.trim() || mykMap[kod]?.alan || '',
+        dal: document.getElementById('dal').value.trim() || mykMap[kod]?.dal || '',
+        kalfalik: document.getElementById('kalfalik').checked,
+        ustalik: document.getElementById('ustalik').checked,
+        sinavli: document.getElementById('sinavli').checked,
+        sinavsiz: document.getElementById('sinavsiz').checked,
+        esinav: document.getElementById('esinav').checked,
+        beceri: document.getElementById('beceri').checked,
+        sinavMaddesi: document.getElementById('sinavMaddesi').value.trim(),
+        aciklama: document.getElementById('aciklama').value.trim(),
+        eskiKimlik: document.getElementById('eskiKimlik').value.trim(),
+        telefon: document.getElementById('telefon').value.trim()
+    });
+    saveToStorage(); renderAll();
     document.getElementById('basvuruForm').reset();
-    alanInput.value = '';
-    dalInput.value = '';
-    yeterlilikKoduInput.value = '';
+    document.getElementById('alan').value = ''; document.getElementById('dal').value = ''; document.getElementById('yeterlilikKodu').value = '';
     document.querySelectorAll('.checkbox-group input').forEach(cb => cb.checked = false);
 });
 
 // ================================================================
-// 4. RENDER FONKSİYONLARI
+// 5. RENDER TABLO VE ÖZET
 // ================================================================
 function renderTable() {
     const tbody = document.getElementById('tabloBody');
@@ -766,9 +857,8 @@ function renderTable() {
     basvurular.forEach((b, index) => {
         const tr = document.createElement('tr');
         tr.dataset.index = index;
-        const basvuruNo = formatBasvuruNo(b.sira);
         tr.innerHTML = `
-            <td><span class="editable-cell readonly-cell">${basvuruNo}</span></td>
+            <td><span class="editable-cell readonly-cell">${formatBasvuruNo(b.sira)}</span></td>
             <td><input class="editable-cell" data-field="denklikNo" value="${b.denklikNo || ''}"></td>
             <td><input class="editable-cell" data-field="tc" value="${b.tc || ''}"></td>
             <td><input class="editable-cell" data-field="ad" value="${b.ad || ''}"></td>
@@ -776,8 +866,7 @@ function renderTable() {
             <td>
                 <select class="editable-cell" data-field="mezuniyet">
                     <option value="">Seçiniz</option>
-                    ${['TEKNİK LİSE (4Y)','MESLEKİ AÇIK ÖĞRETİM LİSESİ (4Y)','MESLEKİ TEKNİK ANADOLU LİSESİ (4Y)','MYO (2Y)','MESLEK LİSESİ (3Y)','ANADOLU TEKNİK (4Y)','ANADOLU MESLEK (4Y)','LİSE (3Y)','ÖZEL MESLEKİ TEKNİK ANADOLU LİSESİ (4Y)','ÖZEL TEMEL LİSE (4Y)','MESLEK LİSESİ (4Y)']
-                        .map(opt => `<option value="${opt}" ${b.mezuniyet === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                    ${['TEKNİK LİSE (4Y)','MESLEKİ AÇIK ÖĞRETİM LİSESİ (4Y)','MESLEKİ TEKNİK ANADOLU LİSESİ (4Y)','MYO (2Y)','MESLEK LİSESİ (3Y)','ANADOLU TEKNİK (4Y)','ANADOLU MESLEK (4Y)','LİSE (3Y)','ÖZEL MESLEKİ TEKNİK ANADOLU LİSESİ (4Y)','ÖZEL TEMEL LİSE (4Y)','MESLEK LİSESİ (4Y)'].map(opt => `<option value="${opt}" ${b.mezuniyet === opt ? 'selected' : ''}>${opt}</option>`).join('')}
                 </select>
             </td>
             <td><input class="editable-cell" data-field="alan" value="${b.alan || ''}"></td>
@@ -793,24 +882,19 @@ function renderTable() {
             <td><input class="editable-cell" data-field="aciklama" value="${b.aciklama || ''}"></td>
             <td><input class="editable-cell" data-field="eskiKimlik" value="${b.eskiKimlik || ''}"></td>
             <td>
-                <button class="btn btn-copy" style="padding:2px 8px; font-size:11px; margin-right:4px;" onclick="kopyalaBasvuru(${index})">📋 Kopyala</button>
+                <button class="btn btn-copy" style="padding:2px 8px; font-size:11px; margin-right:4px;" onclick="kopyalaBasvuru(${index})">📋</button>
                 <button class="btn btn-danger" style="padding:2px 8px; font-size:11px;" onclick="silBasvuru(${index})">Sil</button>
             </td>
         `;
         tbody.appendChild(tr);
     });
     
-    // Değişiklikleri otomatik kaydet
     tbody.querySelectorAll('.editable-cell').forEach(el => {
         if (el.tagName === 'INPUT' || el.tagName === 'SELECT') {
             el.addEventListener('change', function() {
-                const tr = this.closest('tr');
-                const index = parseInt(tr.dataset.index);
-                const field = this.dataset.field;
-                let value = this.type === 'checkbox' ? this.checked : this.value;
-                basvurular[index][field] = value;
-                saveToStorage();
-                renderOzet();
+                const index = parseInt(this.closest('tr').dataset.index);
+                basvurular[index][this.dataset.field] = this.type === 'checkbox' ? this.checked : this.value;
+                saveToStorage(); renderOzet();
             });
         }
     });
@@ -823,9 +907,7 @@ function renderOzet() {
     const groups = {};
     basvurular.forEach(b => {
         const key = `${b.alan}|||${b.dal}`;
-        if (!groups[key]) {
-            groups[key] = { alan: b.alan, dal: b.dal, toplam: 0, kalfalik: 0, ustalik: 0 };
-        }
+        if (!groups[key]) groups[key] = { alan: b.alan, dal: b.dal, toplam: 0, kalfalik: 0, ustalik: 0 };
         groups[key].toplam++;
         if (b.kalfalik) groups[key].kalfalik++;
         if (b.ustalik) groups[key].ustalik++;
@@ -833,330 +915,56 @@ function renderOzet() {
     let toplamGenel = 0, toplamKalfalik = 0, toplamUstalik = 0;
     for (const key in groups) {
         const g = groups[key];
-        toplamGenel += g.toplam;
-        toplamKalfalik += g.kalfalik;
-        toplamUstalik += g.ustalik;
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${g.alan}</td><td>${g.dal}</td><td>${g.toplam}</td><td>${g.kalfalik}</td><td>${g.ustalik}</td><td>0</td><td>0</td>`;
-        tbody.appendChild(tr);
+        toplamGenel += g.toplam; toplamKalfalik += g.kalfalik; toplamUstalik += g.ustalik;
+        tbody.innerHTML += `<tr><td>${g.alan}</td><td>${g.dal}</td><td>${g.toplam}</td><td>${g.kalfalik}</td><td>${g.ustalik}</td><td>0</td><td>0</td></tr>`;
     }
-    const trTop = document.createElement('tr');
-    trTop.style.fontWeight = 'bold';
-    trTop.innerHTML = `<td colspan="2" style="text-align:right;">TOPLAM</td><td>${toplamGenel}</td><td>${toplamKalfalik}</td><td>${toplamUstalik}</td><td>0</td><td>0</td>`;
-    tbody.appendChild(trTop);
+    tbody.innerHTML += `<tr style="font-weight:bold"><td colspan="2" style="text-align:right;">TOPLAM</td><td>${toplamGenel}</td><td>${toplamKalfalik}</td><td>${toplamUstalik}</td><td>0</td><td>0</td></tr>`;
 }
 
 function renderAll() { renderTable(); renderOzet(); }
 
 // ================================================================
-// 5. KOPYALA VE SİL
+// 6. SİLME VE KOPYALAMA
 // ================================================================
 function kopyalaBasvuru(index) {
     const b = basvurular[index];
-    if (b) {
-        adInput.value = b.ad || '';
-        soyadInput.value = b.soyad || '';
-        tcInput.value = b.tc || '';
-        telefonInput.value = b.telefon || '';
-        mezuniyetSelect.value = b.mezuniyet || '';
-        yeterlilikKoduInput.value = b.yeterlilikKodu || '';
-        alanInput.value = b.alan || '';
-        dalInput.value = b.dal || '';
-        kalfalikChk.checked = b.kalfalik || false;
-        ustalikChk.checked = b.ustalik || false;
-        sinavliChk.checked = b.sinavli || false;
-        sinavsizChk.checked = b.sinavsiz || false;
-        esinavChk.checked = b.esinav || false;
-        beceriChk.checked = b.beceri || false;
-        sinavMaddesiInput.value = b.sinavMaddesi || '';
-        aciklamaInput.value = b.aciklama || '';
-        eskiKimlikInput.value = b.eskiKimlik || '';
-        alert(`"${b.ad} ${b.soyad}" başvurusu form alanlarına kopyalandı.`);
-        document.querySelector('.container').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if(b) {
+        document.getElementById('ad').value = b.ad || ''; document.getElementById('soyad').value = b.soyad || '';
+        document.getElementById('tc').value = b.tc || ''; document.getElementById('telefon').value = b.telefon || '';
+        document.getElementById('mezuniyet').value = b.mezuniyet || ''; document.getElementById('yeterlilikKodu').value = b.yeterlilikKodu || '';
+        document.getElementById('alan').value = b.alan || ''; document.getElementById('dal').value = b.dal || '';
+        document.getElementById('kalfalik').checked = b.kalfalik || false; document.getElementById('ustalik').checked = b.ustalik || false;
+        document.getElementById('sinavli').checked = b.sinavli || false; document.getElementById('sinavsiz').checked = b.sinavsiz || false;
+        document.getElementById('esinav').checked = b.esinav || false; document.getElementById('beceri').checked = b.beceri || false;
+        document.getElementById('sinavMaddesi').value = b.sinavMaddesi || ''; document.getElementById('aciklama').value = b.aciklama || '';
+        document.getElementById('eskiKimlik').value = b.eskiKimlik || '';
+        alert("Başvuru forma kopyalandı!");
     }
 }
-
 function silBasvuru(index) {
-    if (confirm('Silmek istediğinize emin misiniz?')) {
-        basvurular.splice(index, 1);
-        saveToStorage();
-        renderAll();
-    }
+    if (confirm('Silmek istediğinize emin misiniz?')) { basvurular.splice(index, 1); saveToStorage(); renderAll(); }
 }
 document.getElementById('temizleVeriBtn').addEventListener('click', function() {
-    if (basvurular.length === 0) {
-        alert("Tablo zaten boş. Silinecek veri yok.");
-        return;
-    }
-    if (confirm('⚠️ DİKKAT: Tablodaki tüm veriler (sadece bu ekrandan) silinecek.\n\n(Buluttaki verileriniz "Buluta Kaydet" demediğiniz sürece GÜVENDEDİR).\n\nDevam etmek istiyor musunuz?')) {
-        basvurular = [];
-        saveToStorage();
-        renderAll();
-    }
+    if (confirm('⚠️ Tablodaki veriler silinecek (Bulutu etkilemez). Emin misiniz?')) { basvurular = []; saveToStorage(); renderAll(); }
 });
 
 // ================================================================
-// 6. RENKLİ EXCEL İNDİRME
+// 7. EXCEL ÇIKTISI 
 // ================================================================
 document.getElementById('excelBtn').addEventListener('click', async function() {
-    if (basvurular.length === 0) {
-        alert('Hiç başvuru yok. Önce veri girişi yapın.');
-        return;
-    }
-
+    if (basvurular.length === 0) { alert('Veri yok.'); return; }
     const workbook = new ExcelJS.Workbook();
-    workbook.creator = 'Başvuru Sistemi';
-    workbook.created = new Date();
-
-    // ---------- SAYFA 1: BAŞVURU LİSTESİ ----------
-    const ws1 = workbook.addWorksheet('Başvuru Listesi', { views: [{ state: 'frozen', ySplit: 1 }] });
-
-    const basliklar = [
-        'Başvuru Sıra No',
-        'Yapılan Denklik İşleminin Numarası',
-        'TC Kimlik No',
-        'Adı',
-        'Soyadı',
-        'Mezuniyet',
-        'Alan',
-        'Dal',
-        'Belge Türü KALFALIK',
-        'Belge Türü USTALIK',
-        'Belge Türü SINAVLI',
-        'Belge Türü SINAVSIZ',
-        'Teorik Sınav Türü E-SINAV',
-        'BECERİ SINAVI',
-        'SINAV MADDESİ',
-        'TELEFON NO',
-        'Açıklama',
-        'Eski Kimlik'
-    ];
-
-    const headerRow = ws1.addRow(basliklar);
-    headerRow.height = 28;
-    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
-    headerRow.alignment = { horizontal: 'center', vertical: 'middle' };
-    headerRow.eachCell((cell) => {
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2F5597' } };
-        cell.border = {
-            top: { style: 'thin', color: { argb: 'FFB0C4DE' } },
-            left: { style: 'thin', color: { argb: 'FFB0C4DE' } },
-            bottom: { style: 'thin', color: { argb: 'FFB0C4DE' } },
-            right: { style: 'thin', color: { argb: 'FFB0C4DE' } }
-        };
-    });
-
+    const ws1 = workbook.addWorksheet('Başvurular', { views: [{ state: 'frozen', ySplit: 1 }] });
+    const headerRow = ws1.addRow(['Sıra No', 'Denklik No', 'TC', 'Adı', 'Soyadı', 'Mezuniyet', 'Alan', 'Dal', 'KALFALIK', 'USTALIK', 'SINAVLI', 'SINAVSIZ', 'E-SINAV', 'BECERİ', 'MADDE', 'TELEFON', 'Açıklama', 'Eski Kimlik']);
+    headerRow.eachCell(c => { c.fill = {type: 'pattern', pattern: 'solid', fgColor: {argb: 'FF2F5597'}}; c.font = {color:{argb:'FFFFFFFF'}, bold:true}; });
+    
     basvurular.forEach(b => {
-        const rowData = [
-            formatBasvuruNo(b.sira),
-            b.denklikNo || '',
-            b.tc || '',
-            b.ad || '',
-            b.soyad || '',
-            b.mezuniyet || '',
-            b.alan || '',
-            b.dal || '',
-            b.kalfalik ? 'X' : '',
-            b.ustalik ? 'X' : '',
-            b.sinavli ? 'X' : '',
-            b.sinavsiz ? 'X' : '',
-            b.esinav ? 'X' : '',
-            b.beceri ? 'X' : '',
-            b.sinavMaddesi || '',
-            b.telefon || '',
-            b.aciklama || '',
-            b.eskiKimlik || ''
-        ];
-        const row = ws1.addRow(rowData);
-        row.height = 22;
-        row.alignment = { horizontal: 'left', vertical: 'middle' };
-        row.eachCell((cell) => {
-            cell.border = {
-                top: { style: 'thin', color: { argb: 'FFD0D7E3' } },
-                left: { style: 'thin', color: { argb: 'FFD0D7E3' } },
-                bottom: { style: 'thin', color: { argb: 'FFD0D7E3' } },
-                right: { style: 'thin', color: { argb: 'FFD0D7E3' } }
-            };
-        });
+        ws1.addRow([formatBasvuruNo(b.sira), b.denklikNo||'', b.tc||'', b.ad||'', b.soyad||'', b.mezuniyet||'', b.alan||'', b.dal||'', b.kalfalik?'X':'', b.ustalik?'X':'', b.sinavli?'X':'', b.sinavsiz?'X':'', b.esinav?'X':'', b.beceri?'X':'', b.sinavMaddesi||'', b.telefon||'', b.aciklama||'', b.eskiKimlik||'']);
     });
-
-    ws1.columns = [
-        { width: 22 }, { width: 30 }, { width: 18 }, { width: 18 },
-        { width: 18 }, { width: 32 }, { width: 28 }, { width: 32 },
-        { width: 18 }, { width: 18 }, { width: 18 }, { width: 18 },
-        { width: 22 }, { width: 16 }, { width: 22 }, { width: 18 },
-        { width: 25 }, { width: 16 }
-    ];
-
-    // ---------- SAYFA 2: MESLEK ÖZETİ ----------
-    const ws2 = workbook.addWorksheet('Meslekler');
-    const ozetBaslik = ['Alan Adı', 'Dal Adı', 'Sınava Girecek Kişi Sayısı', 'Öğrenci Sayısı KALFALIK', 'Öğrenci Sayısı USTALIK', 'Sınav Sayısı KALFALIK', 'Sınav Sayısı USTALIK'];
-    const headerRow2 = ws2.addRow(ozetBaslik);
-    headerRow2.height = 28;
-    headerRow2.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
-    headerRow2.alignment = { horizontal: 'center', vertical: 'middle' };
-    headerRow2.eachCell((cell) => {
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F4E79' } };
-        cell.border = {
-            top: { style: 'thin', color: { argb: 'FFB0C4DE' } },
-            left: { style: 'thin', color: { argb: 'FFB0C4DE' } },
-            bottom: { style: 'thin', color: { argb: 'FFB0C4DE' } },
-            right: { style: 'thin', color: { argb: 'FFB0C4DE' } }
-        };
-    });
-
-    const groups = {};
-    basvurular.forEach(b => {
-        const key = `${b.alan}|||${b.dal}`;
-        if (!groups[key]) {
-            groups[key] = { alan: b.alan, dal: b.dal, toplam: 0, kalfalik: 0, ustalik: 0 };
-        }
-        groups[key].toplam++;
-        if (b.kalfalik) groups[key].kalfalik++;
-        if (b.ustalik) groups[key].ustalik++;
-    });
-
-    let genelToplam = 0, genelKalfalik = 0, genelUstalik = 0;
-    for (const key in groups) {
-        const g = groups[key];
-        genelToplam += g.toplam;
-        genelKalfalik += g.kalfalik;
-        genelUstalik += g.ustalik;
-        const row = ws2.addRow([g.alan, g.dal, g.toplam, g.kalfalik, g.ustalik, 0, 0]);
-        row.height = 22;
-        row.alignment = { horizontal: 'left', vertical: 'middle' };
-        row.eachCell((cell) => {
-            cell.border = {
-                top: { style: 'thin', color: { argb: 'FFD0D7E3' } },
-                left: { style: 'thin', color: { argb: 'FFD0D7E3' } },
-                bottom: { style: 'thin', color: { argb: 'FFD0D7E3' } },
-                right: { style: 'thin', color: { argb: 'FFD0D7E3' } }
-            };
-        });
-    }
-
-    const topRow = ws2.addRow(['TOPLAM', '', genelToplam, genelKalfalik, genelUstalik, 0, 0]);
-    topRow.height = 24;
-    topRow.font = { bold: true };
-    topRow.alignment = { horizontal: 'center', vertical: 'middle' };
-    topRow.eachCell((cell) => {
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE9ECF0' } };
-        cell.border = {
-            top: { style: 'medium', color: { argb: 'FFB0C4DE' } },
-            left: { style: 'thin', color: { argb: 'FFB0C4DE' } },
-            bottom: { style: 'medium', color: { argb: 'FFB0C4DE' } },
-            right: { style: 'thin', color: { argb: 'FFB0C4DE' } }
-        };
-    });
-
-    ws2.columns = [
-        { width: 32 }, { width: 38 }, { width: 26 },
-        { width: 26 }, { width: 26 }, { width: 26 }, { width: 26 }
-    ];
-
-    // ---------- DOSYAYI İNDİR ----------
+    
     const buffer = await workbook.xlsx.writeBuffer();
-    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    saveAs(blob, 'Basvuru_Listesi_Renkli.xlsx');
+    saveAs(new Blob([buffer]), `${aktifKurum}_Basvurular.xlsx`);
 });
-
-// ================================================================
-// 7. BULUT (GOOGLE SHEETS) ENTEGRASYONU 
-// ================================================================
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw6BFNe8qC1bJ48_0dCO-2b5_HXKpssTmWIkvqykXiYki6MEx2hOOLMqhFMAblJWWL4/exec"; 
-
-async function bulutaKaydet() {
-    if (basvurular.length === 0) {
-        const onay = confirm("⚠️ DİKKAT! Ekranda (tabloda) hiç başvuru yok.\n\nEğer boş tabloyu buluta kaydederseniz, BULUTTAKİ TÜM VERİLER SİLİNECEKTİR!\n\nGerçekten boş veriyi buluta yazmak (bulutu sıfırlamak) istiyor musunuz?");
-        if (!onay) return;
-    } else {
-        const onay = confirm(`Buluta ${basvurular.length} adet başvuru kaydedilecek. Bu işlem buluttaki mevcut verilerin üzerine yazılır.\n\nDevam etmek istiyor musunuz?`);
-        if (!onay) return;
-    }
-
-    const btn = document.getElementById('btnBulutaKaydet');
-    btn.textContent = "⏳ Kaydediliyor...";
-    btn.disabled = true;
-    
-    try {
-        // CORS hatasını aşmak için veriyi URL kodlaması (Form Submit) mantığıyla gönderiyoruz
-        const payload = encodeURIComponent(JSON.stringify(basvurular));
-        
-        const response = await fetch(APPS_SCRIPT_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: "data=" + payload
-        });
-        
-        const result = await response.json();
-        if (result.status === "error") {
-            alert("Sunucu Hatası: " + result.message);
-        } else {
-            alert("✅ Tüm veriler başarıyla buluta kaydedildi!");
-        }
-    } catch (e) {
-        alert("❌ Ağ hatası oluştu: " + e.message);
-    }
-    btn.textContent = "☁️ Buluta Kaydet";
-    btn.disabled = false;
-}
-
-async function buluttanYukle() {
-    if (basvurular.length > 0) {
-        const onay = confirm("⚠️ DİKKAT: Ekranda halihazırda verileriniz var. Buluttan yükleme yaparsanız, ekrandaki mevcut veriler SİLİNECEK ve yerine buluttakiler gelecektir.\n\nDevam etmek istiyor musunuz?");
-        if (!onay) return;
-    }
-
-    const btn = document.getElementById('btnBuluttanYukle');
-    btn.textContent = "⏳ Yükleniyor...";
-    btn.disabled = true;
-    
-    try {
-        const response = await fetch(APPS_SCRIPT_URL);
-        const data = await response.json();
-        
-        if (data.status === "error") {
-            alert("Sunucu Hatası: " + data.message);
-            btn.textContent = "☁️ Buluttan Yükle";
-            btn.disabled = false;
-            return;
-        }
-        
-        if (data && Array.isArray(data)) {
-            // Excel'deki X/TRUE yazılarını tekrar Javascript'in anladığı Checkbox (True/False) diline çeviriyoruz
-            basvurular = data.map(b => ({
-                ...b,
-                kalfalik: b.kalfalik === true || b.kalfalik === 'true' || b.kalfalik === 'TRUE' || b.kalfalik === 'X',
-                ustalik: b.ustalik === true || b.ustalik === 'true' || b.ustalik === 'TRUE' || b.ustalik === 'X',
-                sinavli: b.sinavli === true || b.sinavli === 'true' || b.sinavli === 'TRUE' || b.sinavli === 'X',
-                sinavsiz: b.sinavsiz === true || b.sinavsiz === 'true' || b.sinavsiz === 'TRUE' || b.sinavsiz === 'X',
-                esinav: b.esinav === true || b.esinav === 'true' || b.esinav === 'TRUE' || b.esinav === 'X',
-                beceri: b.beceri === true || b.beceri === 'true' || b.beceri === 'TRUE' || b.beceri === 'X'
-            }));
-            saveToStorage();
-            renderAll();
-            alert("✅ Veriler buluttan başarıyla çekildi!");
-        }
-    } catch (e) {
-        alert("❌ Ağ hatası oluştu: " + e.message);
-    }
-    btn.textContent = "☁️ Buluttan Yükle";
-    btn.disabled = false;
-}
-
-// ================================================================
-// 8. BAŞLAT
-// ================================================================
-loadFromStorage();
-renderAll();
-
-if (mykData.length === 0) {
-    console.warn('⚠️ MYK verisi yüklenmemiş! Lütfen mykData dizisini doldurun.');
-} else {
-    console.log(`✅ ${mykData.length} adet MYK kaydı yüklendi.`);
-}
 </script>
 </body>
 </html>
