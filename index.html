@@ -107,7 +107,7 @@
         </div>
     </form>
 
-    <!-- AKSİYONLAR (GÜNCELLENDİ) -->
+    <!-- AKSİYONLAR -->
     <div class="actions">
         <button class="btn btn-primary" id="btnBuluttanYukle" onclick="buluttanYukle()">☁️ Buluttan Yükle</button>
         <button class="btn btn-primary" style="background:#8e44ad;" id="btnBulutaKaydet" onclick="bulutaKaydet()">☁️ Buluta Kaydet</button>
@@ -884,7 +884,11 @@ function silBasvuru(index) {
     }
 }
 document.getElementById('temizleVeriBtn').addEventListener('click', function() {
-    if (confirm('Tüm veriler kalıcı olarak silinecek. Devam etmek istiyor musunuz?')) {
+    if (basvurular.length === 0) {
+        alert("Tablo zaten boş. Silinecek veri yok.");
+        return;
+    }
+    if (confirm('⚠️ DİKKAT: Tablodaki tüm veriler (sadece bu ekrandan) silinecek.\n\n(Buluttaki verileriniz "Buluta Kaydet" demediğiniz sürece GÜVENDEDİR).\n\nDevam etmek istiyor musunuz?')) {
         basvurular = [];
         saveToStorage();
         renderAll();
@@ -1062,6 +1066,14 @@ document.getElementById('excelBtn').addEventListener('click', async function() {
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw6BFNe8qC1bJ48_0dCO-2b5_HXKpssTmWIkvqykXiYki6MEx2hOOLMqhFMAblJWWL4/exec"; 
 
 async function bulutaKaydet() {
+    if (basvurular.length === 0) {
+        const onay = confirm("⚠️ DİKKAT! Ekranda (tabloda) hiç başvuru yok.\n\nEğer boş tabloyu buluta kaydederseniz, BULUTTAKİ TÜM VERİLER SİLİNECEKTİR!\n\nGerçekten boş veriyi buluta yazmak (bulutu sıfırlamak) istiyor musunuz?");
+        if (!onay) return;
+    } else {
+        const onay = confirm(`Buluta ${basvurular.length} adet başvuru kaydedilecek. Bu işlem buluttaki mevcut verilerin üzerine yazılır.\n\nDevam etmek istiyor musunuz?`);
+        if (!onay) return;
+    }
+
     const btn = document.getElementById('btnBulutaKaydet');
     btn.textContent = "⏳ Kaydediliyor...";
     btn.disabled = true;
@@ -1092,6 +1104,11 @@ async function bulutaKaydet() {
 }
 
 async function buluttanYukle() {
+    if (basvurular.length > 0) {
+        const onay = confirm("⚠️ DİKKAT: Ekranda halihazırda verileriniz var. Buluttan yükleme yaparsanız, ekrandaki mevcut veriler SİLİNECEK ve yerine buluttakiler gelecektir.\n\nDevam etmek istiyor musunuz?");
+        if (!onay) return;
+    }
+
     const btn = document.getElementById('btnBuluttanYukle');
     btn.textContent = "⏳ Yükleniyor...";
     btn.disabled = true;
@@ -1102,6 +1119,8 @@ async function buluttanYukle() {
         
         if (data.status === "error") {
             alert("Sunucu Hatası: " + data.message);
+            btn.textContent = "☁️ Buluttan Yükle";
+            btn.disabled = false;
             return;
         }
         
