@@ -1059,7 +1059,7 @@ document.getElementById('excelBtn').addEventListener('click', async function() {
 // ================================================================
 // 7. BULUT (GOOGLE SHEETS) ENTEGRASYONU 
 // ================================================================
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby1G3CcPGiRXAJGLpBeN9YxeTcDGFiykBrgJBRMxp2_38K-_iPgEHg6yDE_O7fJz1U-/exec"; 
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw6BFNe8qC1bJ48_0dCO-2b5_HXKpssTmWIkvqykXiYki6MEx2hOOLMqhFMAblJWWL4/exec"; 
 
 async function bulutaKaydet() {
     const btn = document.getElementById('btnBulutaKaydet');
@@ -1067,19 +1067,25 @@ async function bulutaKaydet() {
     btn.disabled = true;
     
     try {
-        const payload = JSON.stringify(basvurular);
+        // CORS hatasını aşmak için veriyi URL kodlaması (Form Submit) mantığıyla gönderiyoruz
+        const payload = encodeURIComponent(JSON.stringify(basvurular));
+        
         const response = await fetch(APPS_SCRIPT_URL, {
             method: 'POST',
             headers: {
-                'Content-Type': 'text/plain;charset=utf-8',
+                'Content-Type': 'application/x-www-form-urlencoded',
             },
-            body: payload,
-            redirect: 'follow' // BU SATIR EKLENDİ
+            body: "data=" + payload
         });
-        await response.json();
-        alert("✅ Tüm veriler başarıyla buluta kaydedildi!");
+        
+        const result = await response.json();
+        if (result.status === "error") {
+            alert("Sunucu Hatası: " + result.message);
+        } else {
+            alert("✅ Tüm veriler başarıyla buluta kaydedildi!");
+        }
     } catch (e) {
-        alert("❌ Hata oluştu: Sunucuya ulaşılamadı veya erişim reddedildi. (" + e.message + ")");
+        alert("❌ Ağ hatası oluştu: " + e.message);
     }
     btn.textContent = "☁️ Buluta Kaydet";
     btn.disabled = false;
@@ -1091,27 +1097,31 @@ async function buluttanYukle() {
     btn.disabled = true;
     
     try {
-        const response = await fetch(APPS_SCRIPT_URL, {
-            method: 'GET',
-            redirect: 'follow' // BU SATIR EKLENDİ
-        });
+        const response = await fetch(APPS_SCRIPT_URL);
         const data = await response.json();
+        
+        if (data.status === "error") {
+            alert("Sunucu Hatası: " + data.message);
+            return;
+        }
+        
         if (data && Array.isArray(data)) {
+            // Excel'deki X/TRUE yazılarını tekrar Javascript'in anladığı Checkbox (True/False) diline çeviriyoruz
             basvurular = data.map(b => ({
                 ...b,
-                kalfalik: b.kalfalik === true || b.kalfalik === 'true' || b.kalfalik === 'TRUE',
-                ustalik: b.ustalik === true || b.ustalik === 'true' || b.ustalik === 'TRUE',
-                sinavli: b.sinavli === true || b.sinavli === 'true' || b.sinavli === 'TRUE',
-                sinavsiz: b.sinavsiz === true || b.sinavsiz === 'true' || b.sinavsiz === 'TRUE',
-                esinav: b.esinav === true || b.esinav === 'true' || b.esinav === 'TRUE',
-                beceri: b.beceri === true || b.beceri === 'true' || b.beceri === 'TRUE'
+                kalfalik: b.kalfalik === true || b.kalfalik === 'true' || b.kalfalik === 'TRUE' || b.kalfalik === 'X',
+                ustalik: b.ustalik === true || b.ustalik === 'true' || b.ustalik === 'TRUE' || b.ustalik === 'X',
+                sinavli: b.sinavli === true || b.sinavli === 'true' || b.sinavli === 'TRUE' || b.sinavli === 'X',
+                sinavsiz: b.sinavsiz === true || b.sinavsiz === 'true' || b.sinavsiz === 'TRUE' || b.sinavsiz === 'X',
+                esinav: b.esinav === true || b.esinav === 'true' || b.esinav === 'TRUE' || b.esinav === 'X',
+                beceri: b.beceri === true || b.beceri === 'true' || b.beceri === 'TRUE' || b.beceri === 'X'
             }));
             saveToStorage();
             renderAll();
             alert("✅ Veriler buluttan başarıyla çekildi!");
         }
     } catch (e) {
-        alert("❌ Hata oluştu: " + e.message);
+        alert("❌ Ağ hatası oluştu: " + e.message);
     }
     btn.textContent = "☁️ Buluttan Yükle";
     btn.disabled = false;
