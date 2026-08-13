@@ -3,38 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MESEM Başvuru Sistemi</title>
+    <title>USTALIK SINAVI - BAŞVURU SİSTEMİ</title>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <style>
         * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f5f7fa; margin: 0; padding: 0; }
-        
-        /* GİRİŞ EKRANI STİLLERİ */
-        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(26,60,94,0.9); display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f4f8; margin: 0; padding: 0; }
+        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(26,60,94,0.92); display: flex; justify-content: center; align-items: center; z-index: 9999; }
         .login-box { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 100%; max-width: 400px; text-align: center; }
         .login-box h2 { color: #1a3c5e; margin-top: 0; }
         .login-box p { color: #6c7a8a; font-size: 14px; margin-bottom: 20px; }
         .login-input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccd7e6; border-radius: 6px; font-size: 15px; }
         .login-btn { width: 100%; padding: 12px; background: #2a7de1; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
         .login-btn:hover { background: #1a5fb0; }
-
-        /* ANA UYGULAMA STİLLERİ */
         #mainApp { display: none; padding: 20px; }
-        .container { max-width: 1400px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
-        h1, h2 { color: #1a3c5e; margin-top: 0; }
-        .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px; }
-        .header-bar h1 { margin: 0; }
-        
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px 20px; background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-        .form-group { display: flex; flex-direction: column; }
-        .form-group label { font-weight: 600; font-size: 13px; margin-bottom: 3px; color: #2c3e50; }
-        .form-group input, .form-group select { padding: 8px 10px; border: 1px solid #ccd7e6; border-radius: 6px; font-size: 14px; background: white; }
-        .form-group input:focus, .form-group select:focus { border-color: #2a7de1; outline: none; box-shadow: 0 0 0 3px rgba(42,125,225,0.15); }
-        .form-group input[readonly] { background: #eef2f7; color: #1a3c5e; }
-        .checkbox-group { display: flex; flex-wrap: wrap; gap: 8px 16px; padding-top: 6px; }
-        .checkbox-group label { font-weight: 400; font-size: 13px; display: flex; align-items: center; gap: 5px; }
-        .btn { padding: 10px 20px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; transition: background 0.2s; color: white; }
+        .container { max-width: 1600px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+        h1, h2, h3 { color: #1a3c5e; margin-top: 0; }
+        .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+        .header-bar h1 { margin: 0; font-size: 24px; }
+        .kurum-bilgi { font-weight: 600; color: #2a7de1; }
+        .btn { padding: 10px 20px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; transition: 0.2s; color: white; }
         .btn-primary { background: #2a7de1; }
         .btn-primary:hover { background: #1a5fb0; }
         .btn-success { background: #28a745; }
@@ -43,34 +31,43 @@
         .btn-danger:hover { background: #b02a37; }
         .btn-secondary { background: #6c7a8a; }
         .btn-secondary:hover { background: #4e5b69; }
-        .btn-copy { background: #17a2b8; color: white; }
-        .actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0 20px; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
-        th { background: #e9ecf0; text-align: left; padding: 8px 6px; position: sticky; top: 0; z-index: 2; border-bottom: 2px solid #ccd7e6; }
+        .btn-warning { background: #f0ad4e; color: #000; }
+        .btn-warning:hover { background: #ec971f; }
+        .btn-sm { padding: 4px 12px; font-size: 12px; }
+        .form-section { background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .form-section h3 { margin-top: 0; border-bottom: 1px solid #dde2e8; padding-bottom: 8px; color: #1a3c5e; font-size: 18px; }
+        .row { display: flex; flex-wrap: wrap; gap: 15px; }
+        .col { flex: 1 1 300px; min-width: 250px; }
+        .form-group { display: flex; flex-direction: column; margin-bottom: 12px; }
+        .form-group label { font-weight: 600; font-size: 13px; margin-bottom: 3px; color: #2c3e50; }
+        .form-group input, .form-group select, .form-group textarea { padding: 8px 10px; border: 1px solid #ccd7e6; border-radius: 6px; font-size: 14px; background: white; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #2a7de1; outline: none; box-shadow: 0 0 0 3px rgba(42,125,225,0.15); }
+        .form-group textarea { resize: vertical; min-height: 60px; }
+        .checkbox-group { display: flex; flex-wrap: wrap; gap: 12px 20px; padding-top: 6px; }
+        .checkbox-group label { font-weight: 400; font-size: 13px; display: flex; align-items: center; gap: 5px; }
+        .sorgula-box { background: #e9f0fa; padding: 15px 20px; border-radius: 8px; display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end; margin-bottom: 20px; border-left: 4px solid #2a7de1; }
+        .sorgula-box .form-group { margin-bottom: 0; flex: 0 1 200px; }
+        .sorgula-box .form-group label { font-weight: 600; }
+        .actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0 20px; align-items: center; }
+        .table-wrapper { max-height: 500px; overflow: auto; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 30px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: #e9ecf0; text-align: left; padding: 8px 6px; position: sticky; top: 0; z-index: 2; border-bottom: 2px solid #ccd7e6; white-space: nowrap; }
         td { padding: 4px 6px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
-        .table-wrapper { max-height: 450px; overflow: auto; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 30px; }
-        .editable-cell { background: transparent; border: none; width: 100%; font-family: inherit; font-size: inherit; padding: 4px 2px; outline: none; border-radius: 3px; }
-        .editable-cell:focus { background: #fffde7; box-shadow: 0 0 0 2px #ffc107; }
-        .editable-cell.checkbox-cell { width: auto; text-align: center; cursor: pointer; }
-        .editable-cell.readonly-cell { background: #f0f2f5; color: #1a3c5e; font-weight: 600; cursor: default; }
-        .summary-table { margin-top: 10px; width: 100%; border-collapse: collapse; font-size: 13px; }
+        .summary-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
         .summary-table th { background: #d4e2f0; }
         .summary-table td, .summary-table th { padding: 6px 12px; border: 1px solid #ccd7e6; }
         .footer { margin-top: 30px; font-size: 13px; color: #888; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 20px; }
-        .search-wrapper { position: relative; }
-        #suggestions { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ccd7e6; border-top: none; border-radius: 0 0 6px 6px; max-height: 200px; overflow-y: auto; z-index: 1000; display: none; box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
-        #suggestions div { padding: 8px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid #f0f0f0; }
-        #suggestions div:hover { background: #e6f0ff; }
-        #suggestions div .highlight { font-weight: 700; color: #1a3c5e; }
-        @media (max-width: 700px) { .form-grid { grid-template-columns: 1fr; } .actions { flex-direction: column; } .btn { width: 100%; } }
+        #mykSuggestions { background:white;border:1px solid #ccc;border-top:none;max-height:120px;overflow-y:auto;display:none;position:relative;z-index:5; }
+        #mykSuggestions div { padding:6px 10px; cursor:pointer; border-bottom:1px solid #eee; }
+        #mykSuggestions div:hover { background:#e6f0ff; }
+        @media (max-width: 700px) { .row { flex-direction: column; } .sorgula-box { flex-direction: column; align-items: stretch; } .actions { flex-direction: column; } .btn { width: 100%; } }
     </style>
 </head>
 <body>
 
-<!-- GİRİŞ EKRANI -->
 <div id="loginOverlay">
     <div class="login-box">
-        <h2>MESEM Bulut Sistemi</h2>
+        <h2>🏫 Ustalık Başvuru Sistemi</h2>
         <p>Kurumunuza ait veriler şifreli olarak saklanır.<br>İlk girişinizde kaydınız otomatik oluşturulur.</p>
         <input type="text" id="loginKurum" class="login-input" placeholder="Kurum Adı (Örn: KIRIKKALE_MESEM)">
         <input type="password" id="loginSifre" class="login-input" placeholder="Kurum Şifresi">
@@ -78,127 +75,218 @@
     </div>
 </div>
 
-<!-- ANA UYGULAMA -->
 <div id="mainApp">
     <div class="container">
         <div class="header-bar">
-            <h1>📋 Başvuru Yönetim Sistemi</h1>
+            <h1>📋 Ustalık Sınavı - Başvuru Yönetimi</h1>
             <div>
-                <span style="font-weight: bold; margin-right: 15px; color: #2a7de1;">🏢 Kurum: <span id="aktifKurumAdi"></span></span>
-                <button class="btn btn-secondary" onclick="cikisYap()">🚪 Çıkış Yap</button>
+                <span class="kurum-bilgi">🏢 <span id="aktifKurumAdi"></span></span>
+                <button class="btn btn-secondary" onclick="cikisYap()" style="margin-left:15px;">🚪 Çıkış</button>
             </div>
         </div>
 
-        <form id="basvuruForm" class="form-grid">
-            <div class="form-group"><label>Adı</label><input type="text" id="ad" placeholder="Ad" required></div>
-            <div class="form-group"><label>Soyadı</label><input type="text" id="soyad" placeholder="Soyad" required></div>
-            <div class="form-group"><label>TC Kimlik No</label><input type="text" id="tc" placeholder="11 haneli TC" pattern="[0-9]{11}" required></div>
-            <div class="form-group"><label>TELEFON NO</label><input type="text" id="telefon" placeholder="5xx xxx xx xx" required></div>
+        <div class="sorgula-box">
             <div class="form-group">
-                <label>Mezuniyet</label>
-                <select id="mezuniyet">
-                    <option value="">Seçiniz</option>
-                    <option>TEKNİK LİSE (4Y)</option>
-                    <option>MESLEKİ AÇIK ÖĞRETİM LİSESİ (4Y)</option>
-                    <option>MESLEKİ TEKNİK ANADOLU LİSESİ (4Y)</option>
-                    <option>MYO (2Y)</option>
-                    <option>MESLEK LİSESİ (3Y)</option>
-                    <option>ANADOLU TEKNİK (4Y)</option>
-                    <option>ANADOLU MESLEK (4Y)</option>
-                    <option>LİSE (3Y)</option>
-                    <option>ÖZEL MESLEKİ TEKNİK ANADOLU LİSESİ (4Y)</option>
-                    <option>ÖZEL TEMEL LİSE (4Y)</option>
-                    <option>MESLEK LİSESİ (4Y)</option>
-                </select>
+                <label>🔍 Kimlik No</label>
+                <input type="text" id="sorgulaTc" placeholder="TC Kimlik No" maxlength="11">
             </div>
             <div class="form-group">
-                <label>Yeterlilik Kodu</label>
-                <div class="search-wrapper">
-                    <input type="text" id="yeterlilikKodu" placeholder="Kod veya ad yazın" autocomplete="off">
-                    <div id="suggestions"></div>
+                <label>📅 Doğum Tarihi</label>
+                <input type="date" id="sorgulaDogum">
+            </div>
+            <button class="btn btn-primary" onclick="sorgula()">Sorgula</button>
+            <button class="btn btn-secondary" onclick="temizleSorgula()">Temizle</button>
+            <span style="margin-left:auto; font-size:13px; color:#555;" id="sorgulaSonuc"></span>
+        </div>
+
+        <form id="basvuruForm" onsubmit="return false;">
+            <div class="form-section">
+                <h3>👤 Kişisel Bilgiler</h3>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group"><label>Adı *</label><input type="text" id="ad" placeholder="Ad" required></div>
+                        <div class="form-group"><label>Soyadı *</label><input type="text" id="soyad" placeholder="Soyad" required></div>
+                        <div class="form-group"><label>Kimlik No *</label><input type="text" id="tc" placeholder="11 haneli TC" pattern="[0-9]{11}" maxlength="11" required></div>
+                        <div class="form-group"><label>Doğum Tarihi *</label><input type="date" id="dogumTarihi" required></div>
+                        <div class="form-group"><label>Kapsam *</label>
+                            <select id="kapsam" required>
+                                <option value="">Seçiniz</option>
+                                <option>28.c-35.Madde</option><option>29.Madde</option><option>G.1.b.2</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>e-Posta</label><input type="email" id="eposta" placeholder="ornek@mail.com"></div>
+                        <div class="form-group"><label>Telefon *</label><input type="text" id="telefon" placeholder="5xx xxx xx xx" required></div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group"><label>Öğrenci Eğitim Türü</label>
+                            <select id="ogrenciEgitimTuru"><option value="">Seçiniz</option><option>Örgün</option><option>Açık Öğretim</option><option>Uzaktan Eğitim</option><option>Diğer</option></select>
+                        </div>
+                        <div class="form-group"><label>Çerçeve Programı</label>
+                            <select id="cerceveProgrami"><option value="">Seçiniz</option><option>MYK 5. Seviye</option><option>MYK 6. Seviye</option><option>MYK 7. Seviye</option></select>
+                        </div>
+                        <div class="form-group"><label>Alan *</label><input type="text" id="alan" placeholder="Alan" readonly></div>
+                        <div class="form-group"><label>Dal *</label><input type="text" id="dal" placeholder="Dal" readonly></div>
+                        <div class="form-group"><label>MYK Kodu (KOD) *</label>
+                            <input type="text" id="mykKodu" placeholder="Örn: 17UY0301‑3" required>
+                            <div id="mykSuggestions"></div>
+                        </div>
+                        <div class="form-group"><label>Fotoğraf</label><input type="file" id="foto" accept="image/*"></div>
+                    </div>
                 </div>
             </div>
-            <div class="form-group"><label>Alan</label><input type="text" id="alan" readonly></div>
-            <div class="form-group"><label>Dal</label><input type="text" id="dal" readonly></div>
-            <div class="form-group" style="grid-column: span 2;">
-                <label>Belge Türleri</label>
-                <div class="checkbox-group">
-                    <label><input type="checkbox" id="kalfalik"> Belge Türü KALFALIK</label>
-                    <label><input type="checkbox" id="ustalik"> Belge Türü USTALIK</label>
-                    <label><input type="checkbox" id="sinavli"> Belge Türü SINAVLI</label>
-                    <label><input type="checkbox" id="sinavsiz"> Belge Türü SINAVSIZ</label>
-                    <label><input type="checkbox" id="esinav"> Teorik Sınav Türü E-SINAV</label>
-                    <label><input type="checkbox" id="beceri"> BECERİ SINAVI</label>
+
+            <div class="form-section">
+                <h3>🎓 Mezuniyet Bilgileri</h3>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group"><label>En Son Mezuniyet *</label>
+                            <select id="enSonMezuniyet" required>
+                                <option value="">Seçiniz</option>
+                                <option>İlkokul</option><option>İlköğretim (Ortaokul)</option>
+                                <option>Lise</option><option>Meslek Lisesi</option>
+                                <option>Ön Lisans</option><option>Lisans</option>
+                                <option>Yüksek Lisans</option><option>Doktora</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>Getirdiği Belge *</label>
+                            <select id="getirdigiBelge" required>
+                                <option value="">Seçiniz</option>
+                                <option>Diploma</option><option>Tasdikname</option><option>Diğer</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>Belge Tarihi</label><input type="date" id="belgeTarihi"></div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group"><label>İlköğretim Mezun Olduğu Okul</label><input type="text" id="ilkogretimOkul" placeholder="Okul adı"></div>
+                        <div class="form-group"><label>İlköğretim Mezun Belge Tarihi</label><input type="date" id="ilkogretimBelgeTarihi"></div>
+                        <div class="form-group"><label>İlköğretim Mezun Belge Sayısı</label><input type="number" id="ilkogretimBelgeSayisi" placeholder="Sayı"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group"><label>Liseden Mezun Olduğu Okul</label><input type="text" id="liseOkul" placeholder="Okul adı"></div>
+                        <div class="form-group"><label>Lise Mezuniyet Belgesinde Mezun Olduğu Alan</label><input type="text" id="liseAlan" placeholder="Alan"></div>
+                        <div class="form-group"><label>Lise Mezun Belge Tarihi</label><input type="date" id="liseBelgeTarihi"></div>
+                        <div class="form-group"><label>Lise Mezun Belge Sayısı</label><input type="number" id="liseBelgeSayisi" placeholder="Sayı"></div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group"><label>Ön Lisans / Lisans Mezun Olduğu Okul</label><input type="text" id="onlisansOkul" placeholder="Okul adı"></div>
+                        <div class="form-group"><label>Ön Lisans Mezuniyet Belgesinde Mezun Olduğu Alan</label><input type="text" id="onlisansAlan" placeholder="Alan"></div>
+                        <div class="form-group"><label>Ön Lisans / Lisans Mezun Belge Tarihi</label><input type="date" id="onlisansBelgeTarihi"></div>
+                        <div class="form-group"><label>Ön Lisans / Lisans Mezun Belge Sayısı</label><input type="number" id="onlisansBelgeSayisi" placeholder="Sayı"></div>
+                    </div>
+                </div>
+                <div class="form-group"><label>Mezuniyet Açıklamaları</label><textarea id="mezuniyetAciklama" rows="2" placeholder="Varsa ek notlar..."></textarea></div>
+            </div>
+
+            <div class="form-section">
+                <h3>📄 Çalışmışlık Belgeleri</h3>
+                <div style="background:#f0f4fb;padding:12px;border-radius:6px;margin-bottom:15px;">
+                    <h4 style="margin:0 0 8px 0;font-size:16px;">2. Çalışmışlık</h4>
+                    <div class="row">
+                        <div class="col">
+                            <div class="form-group"><label>Belge Çeşidi</label>
+                                <select id="calisma2Cesit"><option value="">Seçiniz</option><option>Diploma</option><option>Kurs Belgesi</option><option>Hizmet Belgesi</option><option>SGK</option><option>Diğer</option></select>
+                            </div>
+                            <div class="form-group"><label>Belgeyi Veren Kurum</label><input type="text" id="calisma2Kurum" placeholder="Kurum adı"></div>
+                            <div class="form-group"><label>Belge Sayısı</label><input type="text" id="calisma2Sayi" placeholder="Belge numarası"></div>
+                        </div>
+                        <div class="col">
+                            <div class="form-group"><label>Başlangıç Tarihi</label><input type="date" id="calisma2Baslangic"></div>
+                            <div class="form-group"><label>Bitiş Tarihi</label><input type="date" id="calisma2Bitis"></div>
+                        </div>
+                    </div>
+                    <div class="form-group"><label>Açıklamalar</label><textarea id="calisma2Aciklama" rows="2"></textarea></div>
+                </div>
+
+                <div style="background:#f0f4fb;padding:12px;border-radius:6px;margin-bottom:15px;">
+                    <h4 style="margin:0 0 8px 0;font-size:16px;">3. Çalışmışlık</h4>
+                    <div class="row">
+                        <div class="col">
+                            <div class="form-group"><label>Belge Çeşidi</label>
+                                <select id="calisma3Cesit"><option value="">Seçiniz</option><option>Diploma</option><option>Kurs Belgesi</option><option>Hizmet Belgesi</option><option>SGK</option><option>Diğer</option></select>
+                            </div>
+                            <div class="form-group"><label>Belgeyi Veren Kurum</label><input type="text" id="calisma3Kurum" placeholder="Kurum adı"></div>
+                            <div class="form-group"><label>Belge Sayısı</label><input type="text" id="calisma3Sayi" placeholder="Belge numarası"></div>
+                        </div>
+                        <div class="col">
+                            <div class="form-group"><label>Başlangıç Tarihi</label><input type="date" id="calisma3Baslangic"></div>
+                            <div class="form-group"><label>Bitiş Tarihi</label><input type="date" id="calisma3Bitis"></div>
+                        </div>
+                    </div>
+                    <div class="form-group"><label>Açıklamalar</label><textarea id="calisma3Aciklama" rows="2"></textarea></div>
+                </div>
+
+                <div style="background:#f0f4fb;padding:12px;border-radius:6px;">
+                    <h4 style="margin:0 0 8px 0;font-size:16px;">4. Çalışmışlık</h4>
+                    <div class="row">
+                        <div class="col">
+                            <div class="form-group"><label>Belgeyi Veren Kurum</label><input type="text" id="calisma4Kurum" placeholder="Kurum adı"></div>
+                            <div class="form-group"><label>Belge Sayısı</label><input type="text" id="calisma4Sayi" placeholder="Belge numarası"></div>
+                        </div>
+                        <div class="col">
+                            <div class="form-group"><label>Başlangıç Tarihi</label><input type="date" id="calisma4Baslangic"></div>
+                            <div class="form-group"><label>Bitiş Tarihi</label><input type="date" id="calisma4Bitis"></div>
+                        </div>
+                    </div>
+                    <div class="form-group"><label>Açıklamalar</label><textarea id="calisma4Aciklama" rows="2"></textarea></div>
                 </div>
             </div>
-            <div class="form-group"><label>SINAV MADDESİ</label><input type="text" id="sinavMaddesi" placeholder="örn. 35.Madde"></div>
-            <div class="form-group"><label>Açıklama</label><input type="text" id="aciklama" placeholder="Varsa not"></div>
-            <div class="form-group"><label>Eski Kimlik</label><input type="text" id="eskiKimlik" placeholder="X veya boş"></div>
-            <div class="form-group" style="grid-column: span 2; display: flex; gap: 10px; align-items: center;">
-                <button type="button" class="btn btn-primary" id="ekleBtn">➕ Başvuru Ekle</button>
-                <button type="reset" class="btn btn-secondary">🧹 Temizle</button>
+
+            <div class="form-section">
+                <h3>⚖️ Denklik & Sınav Durumları</h3>
+                <div class="row">
+                    <div class="col"><div class="form-group"><label>Denklik Belge Tarihi</label><input type="date" id="denklikBelgeTarihi"></div></div>
+                    <div class="col">
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="kalfalikSinavGir"> Kalfalık sınavlarına girmesi</label>
+                            <label><input type="checkbox" id="dogrudanKalfalik"> Doğrudan kalfalık belgesi</label>
+                            <label><input type="checkbox" id="kalfalikSinav"> Kalfalık sınavına girmesi</label>
+                            <label><input type="checkbox" id="basariliUstalik"> Başarılı olursa ustalık</label>
+                            <label><input type="checkbox" id="ustalikSinav"> Ustalık sınavına girmesi</label>
+                            <label><input type="checkbox" id="dogrudanUstalik"> Doğrudan ustalık belgesi</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:15px;">
+                <button type="button" class="btn btn-success" id="ekleBtn" onclick="yeniBasvuruEkle()">➕ Başvuru Ekle</button>
+                <button type="reset" class="btn btn-secondary" onclick="formuTemizle()">🧹 Temizle</button>
+                <span style="margin-left:auto;font-size:14px;color:#555;">Toplam Başvuru: <strong id="toplamSayi">0</strong></span>
             </div>
         </form>
 
         <div class="actions">
-            <!-- Buluttan Yükle butonunu kaldırdık çünkü artık otomatik yüklüyor -->
-            <button class="btn btn-primary" style="background:#8e44ad;" id="btnBulutaKaydet" onclick="bulutaKaydet()">☁️ Buluta Kaydet (Eşitle)</button>
-            <button class="btn btn-success" id="excelBtn">📊 Excel İndir (Renkli)</button>
-            <button class="btn btn-danger" id="temizleVeriBtn">🗑️ Tüm Verileri Sil</button>
-            <span style="margin-left: auto; font-size: 14px; color: #555;">Toplam Başvuru: <strong id="toplamSayi">0</strong></span>
+            <button class="btn btn-primary" style="background:#8e44ad;" onclick="bulutaKaydet()">☁️ Buluta Kaydet (Eşitle)</button>
+            <button class="btn btn-success" id="excelBtn" onclick="excelIndir()">📊 Excel İndir (Detaylı)</button>
+            <button class="btn btn-danger" onclick="tumVerileriSil()">🗑️ Tüm Verileri Sil</button>
         </div>
 
+        <h3>📋 Başvuru Listesi</h3>
         <div class="table-wrapper">
             <table id="basvuruTablosu">
-                <thead><tr>
-                    <th style="min-width:140px;">Sıra No</th>
-                    <th style="min-width:150px;">Denklik No</th>
-                    <th style="min-width:120px;">TC Kimlik</th>
-                    <th style="min-width:100px;">Adı</th>
-                    <th style="min-width:100px;">Soyadı</th>
-                    <th style="min-width:200px;">Mezuniyet</th>
-                    <th style="min-width:150px;">Alan</th>
-                    <th style="min-width:200px;">Dal</th>
-                    <th style="min-width:80px;">KALFALIK</th>
-                    <th style="min-width:80px;">USTALIK</th>
-                    <th style="min-width:80px;">SINAVLI</th>
-                    <th style="min-width:80px;">SINAVSIZ</th>
-                    <th style="min-width:100px;">E-SINAV</th>
-                    <th style="min-width:80px;">BECERİ</th>
-                    <th style="min-width:100px;">SINAV MADDESİ</th>
-                    <th style="min-width:120px;">TELEFON NO</th>
-                    <th style="min-width:150px;">Açıklama</th>
-                    <th style="min-width:100px;">Eski Kimlik</th>
-                    <th style="min-width:120px;">İşlem</th>
-                </tr></thead>
+                <thead><tr><th>#</th><th>TC</th><th>Ad</th><th>Soyad</th><th>Kapsam</th><th>Alan</th><th>Dal</th><th>Telefon</th><th>İşlem</th></tr></thead>
                 <tbody id="tabloBody"></tbody>
             </table>
         </div>
 
-        <h2>📊 Meslek Bazlı Özet</h2>
-        <div style="overflow-x: auto;">
+        <h3>📊 Özet İstatistik</h3>
+        <div style="overflow-x:auto;">
             <table class="summary-table" id="ozetTablo">
-                <thead><tr>
-                    <th>Alan Adı</th><th>Dal Adı</th><th>Sınava Girecek Kişi</th>
-                    <th>Öğrenci (Kalfalık)</th><th>Öğrenci (Ustalık)</th>
-                    <th>Sınav (Kalfalık)</th><th>Sınav (Ustalık)</th>
-                </tr></thead>
+                <thead><tr><th>Toplam</th><th>28.c-35</th><th>29.Madde</th><th>G.1.b.2</th><th>Kalfalık Sınavı</th><th>Ustalık Sınavı</th></tr></thead>
                 <tbody id="ozetBody"></tbody>
             </table>
         </div>
 
-        <div class="footer">⚡ Veriler Google Bulut sunucularında kurumunuza özel olarak şifreli saklanmaktadır.</div>
+        <div class="footer">⚡ Veriler Google Bulut sunucularında şifreli saklanır. Evrak oluşturma yakında eklenecektir.</div>
     </div>
 </div>
 
 <script>
 // ================================================================
-// 1. YAPILANDIRMA VE MYK VERİLERİ 
+// 1. MYK VERİLERİ (TAM LİSTE - 500+ MESLEK)
 // ================================================================
-
-// BURAYA YENİ ALDIĞINIZ APPS SCRIPT URL'SİNİ YAPIŞTIRIN
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx7xsKJOPEiP-lqFGVfE52FZ4sAAwVcH3DxJRgXKPcfzHQWDJdbSEZcDp7izu2PkJTh/exec"; 
-
 const mykData = [
   { kod: "17UY0301‐3", ad: "Ahşap Mobilya İmalatçısı", alan: "Mobilya ve İç Mekan Tasarımı", dal: "İç Mekan ve Mobilya Teknolojisi" },
   { kod: "17UY0301‐4", ad: "Ahşap Mobilya İmalatçısı", alan: "Mobilya ve İç Mekan Tasarımı", dal: "İç Mekan ve Mobilya Teknolojisi" },
@@ -656,20 +744,17 @@ const mykData = [
 ];
 
 // ================================================================
-// 2. KİMLİK DOĞRULAMA (MULTI-TENANT) VE BULUT API YÖNETİMİ
+// 2. BULUT BAĞLANTISI VE KİMLİK DOĞRULAMA (EKSİKSİZ)
 // ================================================================
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx7xsKJOPEiP-lqFGVfE52FZ4sAAwVcH3DxJRgXKPcfzHQWDJdbSEZcDp7izu2PkJTh/exec";
+
 let basvurular = [];
 let aktifKurum = "";
+let duzenlemeIndex = -1;
 
-// Merkezi API İstek Fonksiyonu
 async function apiIstegi(action, dataObj = null) {
-    const payloadObj = {
-        action: action,
-        kurum: aktifKurum,
-        data: dataObj
-    };
-    if (action === "login") payloadObj.sifre = dataObj; // login durumunda dataObj şifredir.
-
+    const payloadObj = { action: action, kurum: aktifKurum, data: dataObj };
+    if (action === "login") payloadObj.sifre = dataObj;
     const payloadStr = encodeURIComponent(JSON.stringify(payloadObj));
     const response = await fetch(APPS_SCRIPT_URL, {
         method: 'POST',
@@ -682,24 +767,18 @@ async function apiIstegi(action, dataObj = null) {
 async function girisYap() {
     const kurum = document.getElementById("loginKurum").value.trim().toUpperCase();
     const sifre = document.getElementById("loginSifre").value.trim();
-    
     if (!kurum || !sifre) { alert("Lütfen kurum adı ve şifre girin!"); return; }
-    if (kurum.includes(" ")) { alert("Kurum adında boşluk bırakmayın (Örn: IL_ILCE_MESEM kullanın)"); return; }
-    
+    if (kurum.includes(" ")) { alert("Kurum adında boşluk bırakmayın (Örn: IL_ILCE_MESEM)"); return; }
     const btn = document.getElementById("btnGiris");
     btn.textContent = "⏳ Bekleyin..."; btn.disabled = true;
-
     aktifKurum = kurum;
     try {
         const result = await apiIstegi("login", sifre);
         if (result.status === "success") {
-            // Şifre doğruysa kurumu tarayıcıya kaydet
             sessionStorage.setItem("mesemKurum", kurum);
             document.getElementById("loginOverlay").style.display = "none";
             document.getElementById("mainApp").style.display = "block";
             document.getElementById("aktifKurumAdi").textContent = kurum;
-            
-            // Başarılı girişten hemen sonra buluttan verileri OTOMATİK çek
             await buluttanOtomatikYukle();
         } else {
             alert(result.message);
@@ -715,64 +794,45 @@ function cikisYap() {
     location.reload();
 }
 
-// Otomatik Yükleme Fonksiyonu
 async function buluttanOtomatikYukle() {
     try {
         const result = await apiIstegi("load");
         if (result.status === "error") throw new Error(result.message);
-        
         if (result.data && Array.isArray(result.data)) {
             basvurular = result.data.map(b => ({
                 ...b,
-                kalfalik: b.kalfalik === true || b.kalfalik === 'true' || b.kalfalik === 'TRUE' || b.kalfalik === 'X',
-                ustalik: b.ustalik === true || b.ustalik === 'true' || b.ustalik === 'TRUE' || b.ustalik === 'X',
-                sinavli: b.sinavli === true || b.sinavli === 'true' || b.sinavli === 'TRUE' || b.sinavli === 'X',
-                sinavsiz: b.sinavsiz === true || b.sinavsiz === 'true' || b.sinavsiz === 'TRUE' || b.sinavsiz === 'X',
-                esinav: b.esinav === true || b.esinav === 'true' || b.esinav === 'TRUE' || b.esinav === 'X',
-                beceri: b.beceri === true || b.beceri === 'true' || b.beceri === 'TRUE' || b.beceri === 'X'
+                kalfalikSinavGir: b.kalfalikSinavGir === true || b.kalfalikSinavGir === 'true',
+                dogrudanKalfalik: b.dogrudanKalfalik === true || b.dogrudanKalfalik === 'true',
+                kalfalikSinav: b.kalfalikSinav === true || b.kalfalikSinav === 'true',
+                basariliUstalik: b.basariliUstalik === true || b.basariliUstalik === 'true',
+                ustalikSinav: b.ustalikSinav === true || b.ustalikSinav === 'true',
+                dogrudanUstalik: b.dogrudanUstalik === true || b.dogrudanUstalik === 'true'
             }));
             saveToStorage();
             renderAll();
         }
     } catch (e) {
-        alert("Buluttan veri çekilirken hata oluştu: " + e.message);
+        alert("Buluttan veri çekilirken hata: " + e.message);
     }
 }
 
 async function bulutaKaydet() {
-    const btn = document.getElementById('btnBulutaKaydet');
+    const btn = document.querySelector('.actions .btn-primary');
     btn.textContent = "⏳ Eşitleniyor..."; btn.disabled = true;
-    
     try {
         const result = await apiIstegi("save", basvurular);
         if (result.status === "error") throw new Error(result.message);
         alert("✅ Tüm veriler kurumunuzun bulut kasasına kaydedildi!");
     } catch (e) {
-        alert("Ağ hatası oluştu: " + e.message);
+        alert("Ağ hatası: " + e.message);
     }
     btn.textContent = "☁️ Buluta Kaydet (Eşitle)"; btn.disabled = false;
 }
 
-// Sayfa yüklendiğinde oturum kontrolü
-window.onload = function() {
-    const kayitliKurum = sessionStorage.getItem("mesemKurum");
-    if (kayitliKurum) {
-        aktifKurum = kayitliKurum;
-        document.getElementById("loginOverlay").style.display = "none";
-        document.getElementById("mainApp").style.display = "block";
-        document.getElementById("aktifKurumAdi").textContent = aktifKurum;
-        buluttanOtomatikYukle(); // Otomatik yükle
-    } else {
-        document.getElementById("loginOverlay").style.display = "flex";
-        document.getElementById("mainApp").style.display = "none";
-    }
-};
-
 // ================================================================
-// 3. YEREL DEPOLAMA VE YARDIMCI FONKSİYONLAR
+// 3. YEREL DEPOLAMA
 // ================================================================
 function saveToStorage() {
-    // Verileri kurum adına göre locale kaydet ki aynı PC'de karışmasın
     if(aktifKurum) localStorage.setItem('basvurular_' + aktifKurum, JSON.stringify(basvurular));
 }
 function getNextSira() {
@@ -785,68 +845,169 @@ function formatBasvuruNo(sira) {
 }
 
 // ================================================================
-// 4. FORM İŞLEMLERİ (ÖNERİ MOTORU, EKLEME)
+// 4. FORM İŞLEMLERİ (EKLE, GÜNCELLE, SORGULA)
 // ================================================================
-const mykMap = {};
-mykData.forEach(item => { mykMap[item.kod] = { alan: item.alan, dal: item.dal }; });
+function formuTemizle() {
+    document.getElementById('basvuruForm').reset();
+    document.querySelectorAll('#basvuruForm input[type="checkbox"]').forEach(cb => cb.checked = false);
+    document.getElementById('alan').value = '';
+    document.getElementById('dal').value = '';
+    document.getElementById('mykKodu').value = '';
+    document.getElementById('foto').value = '';
+    document.getElementById('sorgulaTc').value = '';
+    document.getElementById('sorgulaDogum').value = '';
+    document.getElementById('sorgulaSonuc').textContent = '';
+    document.getElementById('ekleBtn').style.display = 'inline-block';
+    let guncelleBtn = document.getElementById('guncelleBtn');
+    if (guncelleBtn) guncelleBtn.style.display = 'none';
+}
 
-const suggestionsDiv = document.getElementById('suggestions');
-document.getElementById('yeterlilikKodu').addEventListener('input', function() {
-    const q = this.value.trim().toLowerCase();
-    if (!q) { suggestionsDiv.style.display = 'none'; document.getElementById('alan').value = ''; document.getElementById('dal').value = ''; return; }
-    
-    const results = mykData.filter(item => item.kod.toLowerCase().includes(q) || item.ad.toLowerCase().includes(q)).slice(0, 12);
-    if (results.length === 0) { suggestionsDiv.style.display = 'none'; return; }
-    
-    suggestionsDiv.innerHTML = '';
-    results.forEach(item => {
-        const div = document.createElement('div');
-        div.innerHTML = `<span class="highlight">${item.kod}</span> – ${item.ad} <small>(${item.alan || '-'} / ${item.dal || '-'})</small>`;
-        div.addEventListener('click', () => {
-            document.getElementById('yeterlilikKodu').value = item.kod;
-            document.getElementById('alan').value = item.alan || '';
-            document.getElementById('dal').value = item.dal || '';
-            suggestionsDiv.style.display = 'none';
-        });
-        suggestionsDiv.appendChild(div);
-    });
-    suggestionsDiv.style.display = 'block';
-});
-document.addEventListener('click', (e) => { if (!e.target.closest('.search-wrapper')) suggestionsDiv.style.display = 'none'; });
-
-document.getElementById('ekleBtn').addEventListener('click', function() {
+function yeniBasvuruEkle() {
+    const ad = document.getElementById('ad').value.trim();
+    const soyad = document.getElementById('soyad').value.trim();
     const tc = document.getElementById('tc').value.trim();
-    if (!document.getElementById('ad').value || !document.getElementById('soyad').value || !tc || !document.getElementById('telefon').value || !document.getElementById('mezuniyet').value) {
-        alert('Lütfen zorunlu alanları doldurun.'); return;
+    const dogum = document.getElementById('dogumTarihi').value;
+    const kapsam = document.getElementById('kapsam').value;
+    const telefon = document.getElementById('telefon').value.trim();
+    const mykKodu = document.getElementById('mykKodu').value.trim();
+    const enSonMezuniyet = document.getElementById('enSonMezuniyet').value;
+    const getirdigiBelge = document.getElementById('getirdigiBelge').value;
+    if (!ad || !soyad || !tc || !dogum || !kapsam || !telefon || !mykKodu || !enSonMezuniyet || !getirdigiBelge) {
+        alert('Lütfen tüm zorunlu alanları (*) doldurun.');
+        return;
     }
-    const kod = document.getElementById('yeterlilikKodu').value.trim();
-    if (!kod) { alert('Lütfen yeterlilik kodu seçin.'); return; }
+    if (tc.length !== 11 || isNaN(tc)) { alert('TC Kimlik No 11 haneli rakam olmalı.'); return; }
+
+    const fotoDosyaAdi = document.getElementById('foto').files.length > 0 ? document.getElementById('foto').files[0].name : '';
 
     basvurular.push({
         sira: getNextSira(),
-        denklikNo: '', tc: tc,
-        ad: document.getElementById('ad').value.trim(),
-        soyad: document.getElementById('soyad').value.trim(),
-        mezuniyet: document.getElementById('mezuniyet').value,
-        yeterlilikKodu: kod,
-        alan: document.getElementById('alan').value.trim() || mykMap[kod]?.alan || '',
-        dal: document.getElementById('dal').value.trim() || mykMap[kod]?.dal || '',
-        kalfalik: document.getElementById('kalfalik').checked,
-        ustalik: document.getElementById('ustalik').checked,
-        sinavli: document.getElementById('sinavli').checked,
-        sinavsiz: document.getElementById('sinavsiz').checked,
-        esinav: document.getElementById('esinav').checked,
-        beceri: document.getElementById('beceri').checked,
-        sinavMaddesi: document.getElementById('sinavMaddesi').value.trim(),
-        aciklama: document.getElementById('aciklama').value.trim(),
-        eskiKimlik: document.getElementById('eskiKimlik').value.trim(),
-        telefon: document.getElementById('telefon').value.trim()
+        ad, soyad, tc, dogumTarihi: dogum, kapsam,
+        alan: document.getElementById('alan').value.trim() || '',
+        dal: document.getElementById('dal').value.trim() || '',
+        ogrenciEgitimTuru: document.getElementById('ogrenciEgitimTuru').value,
+        cerceveProgrami: document.getElementById('cerceveProgrami').value,
+        eposta: document.getElementById('eposta').value.trim(),
+        telefon,
+        mykKodu,
+        enSonMezuniyet,
+        getirdigiBelge,
+        belgeTarihi: document.getElementById('belgeTarihi').value || '',
+        ilkogretimOkul: document.getElementById('ilkogretimOkul').value.trim(),
+        ilkogretimBelgeTarihi: document.getElementById('ilkogretimBelgeTarihi').value || '',
+        ilkogretimBelgeSayisi: document.getElementById('ilkogretimBelgeSayisi').value || '',
+        liseOkul: document.getElementById('liseOkul').value.trim(),
+        liseAlan: document.getElementById('liseAlan').value.trim(),
+        liseBelgeTarihi: document.getElementById('liseBelgeTarihi').value || '',
+        liseBelgeSayisi: document.getElementById('liseBelgeSayisi').value || '',
+        onlisansOkul: document.getElementById('onlisansOkul').value.trim(),
+        onlisansAlan: document.getElementById('onlisansAlan').value.trim(),
+        onlisansBelgeTarihi: document.getElementById('onlisansBelgeTarihi').value || '',
+        onlisansBelgeSayisi: document.getElementById('onlisansBelgeSayisi').value || '',
+        mezuniyetAciklama: document.getElementById('mezuniyetAciklama').value.trim(),
+        calisma2Cesit: document.getElementById('calisma2Cesit').value,
+        calisma2Kurum: document.getElementById('calisma2Kurum').value.trim(),
+        calisma2Sayi: document.getElementById('calisma2Sayi').value.trim(),
+        calisma2Baslangic: document.getElementById('calisma2Baslangic').value || '',
+        calisma2Bitis: document.getElementById('calisma2Bitis').value || '',
+        calisma2Aciklama: document.getElementById('calisma2Aciklama').value.trim(),
+        calisma3Cesit: document.getElementById('calisma3Cesit').value,
+        calisma3Kurum: document.getElementById('calisma3Kurum').value.trim(),
+        calisma3Sayi: document.getElementById('calisma3Sayi').value.trim(),
+        calisma3Baslangic: document.getElementById('calisma3Baslangic').value || '',
+        calisma3Bitis: document.getElementById('calisma3Bitis').value || '',
+        calisma3Aciklama: document.getElementById('calisma3Aciklama').value.trim(),
+        calisma4Kurum: document.getElementById('calisma4Kurum').value.trim(),
+        calisma4Sayi: document.getElementById('calisma4Sayi').value.trim(),
+        calisma4Baslangic: document.getElementById('calisma4Baslangic').value || '',
+        calisma4Bitis: document.getElementById('calisma4Bitis').value || '',
+        calisma4Aciklama: document.getElementById('calisma4Aciklama').value.trim(),
+        denklikBelgeTarihi: document.getElementById('denklikBelgeTarihi').value || '',
+        kalfalikSinavGir: document.getElementById('kalfalikSinavGir').checked,
+        dogrudanKalfalik: document.getElementById('dogrudanKalfalik').checked,
+        kalfalikSinav: document.getElementById('kalfalikSinav').checked,
+        basariliUstalik: document.getElementById('basariliUstalik').checked,
+        ustalikSinav: document.getElementById('ustalikSinav').checked,
+        dogrudanUstalik: document.getElementById('dogrudanUstalik').checked,
+        fotoDosyaAdi: fotoDosyaAdi
     });
-    saveToStorage(); renderAll();
-    document.getElementById('basvuruForm').reset();
-    document.getElementById('alan').value = ''; document.getElementById('dal').value = ''; document.getElementById('yeterlilikKodu').value = '';
-    document.querySelectorAll('.checkbox-group input').forEach(cb => cb.checked = false);
-});
+    saveToStorage();
+    renderAll();
+    formuTemizle();
+    alert('Başvuru başarıyla eklendi!');
+}
+
+function sorgula() {
+    const tc = document.getElementById('sorgulaTc').value.trim();
+    const dogum = document.getElementById('sorgulaDogum').value;
+    if (!tc && !dogum) { alert('Lütfen TC veya doğum tarihi girin.'); return; }
+    const bulunan = basvurular.filter(b => {
+        let esles = true;
+        if (tc) esles = esles && b.tc === tc;
+        if (dogum) esles = esles && b.dogumTarihi === dogum;
+        return esles;
+    });
+    if (bulunan.length === 0) { document.getElementById('sorgulaSonuc').textContent = '❌ Kayıt bulunamadı.'; return; }
+    document.getElementById('sorgulaSonuc').textContent = `✅ ${bulunan.length} kayıt bulundu. Listeden düzenleyin.`;
+    const b = bulunan[0];
+    document.getElementById('ad').value = b.ad || '';
+    document.getElementById('soyad').value = b.soyad || '';
+    document.getElementById('tc').value = b.tc || '';
+    document.getElementById('dogumTarihi').value = b.dogumTarihi || '';
+    document.getElementById('kapsam').value = b.kapsam || '';
+    document.getElementById('eposta').value = b.eposta || '';
+    document.getElementById('telefon').value = b.telefon || '';
+    document.getElementById('ogrenciEgitimTuru').value = b.ogrenciEgitimTuru || '';
+    document.getElementById('cerceveProgrami').value = b.cerceveProgrami || '';
+    document.getElementById('alan').value = b.alan || '';
+    document.getElementById('dal').value = b.dal || '';
+    document.getElementById('mykKodu').value = b.mykKodu || '';
+    document.getElementById('enSonMezuniyet').value = b.enSonMezuniyet || '';
+    document.getElementById('getirdigiBelge').value = b.getirdigiBelge || '';
+    document.getElementById('belgeTarihi').value = b.belgeTarihi || '';
+    document.getElementById('ilkogretimOkul').value = b.ilkogretimOkul || '';
+    document.getElementById('ilkogretimBelgeTarihi').value = b.ilkogretimBelgeTarihi || '';
+    document.getElementById('ilkogretimBelgeSayisi').value = b.ilkogretimBelgeSayisi || '';
+    document.getElementById('liseOkul').value = b.liseOkul || '';
+    document.getElementById('liseAlan').value = b.liseAlan || '';
+    document.getElementById('liseBelgeTarihi').value = b.liseBelgeTarihi || '';
+    document.getElementById('liseBelgeSayisi').value = b.liseBelgeSayisi || '';
+    document.getElementById('onlisansOkul').value = b.onlisansOkul || '';
+    document.getElementById('onlisansAlan').value = b.onlisansAlan || '';
+    document.getElementById('onlisansBelgeTarihi').value = b.onlisansBelgeTarihi || '';
+    document.getElementById('onlisansBelgeSayisi').value = b.onlisansBelgeSayisi || '';
+    document.getElementById('mezuniyetAciklama').value = b.mezuniyetAciklama || '';
+    document.getElementById('calisma2Cesit').value = b.calisma2Cesit || '';
+    document.getElementById('calisma2Kurum').value = b.calisma2Kurum || '';
+    document.getElementById('calisma2Sayi').value = b.calisma2Sayi || '';
+    document.getElementById('calisma2Baslangic').value = b.calisma2Baslangic || '';
+    document.getElementById('calisma2Bitis').value = b.calisma2Bitis || '';
+    document.getElementById('calisma2Aciklama').value = b.calisma2Aciklama || '';
+    document.getElementById('calisma3Cesit').value = b.calisma3Cesit || '';
+    document.getElementById('calisma3Kurum').value = b.calisma3Kurum || '';
+    document.getElementById('calisma3Sayi').value = b.calisma3Sayi || '';
+    document.getElementById('calisma3Baslangic').value = b.calisma3Baslangic || '';
+    document.getElementById('calisma3Bitis').value = b.calisma3Bitis || '';
+    document.getElementById('calisma3Aciklama').value = b.calisma3Aciklama || '';
+    document.getElementById('calisma4Kurum').value = b.calisma4Kurum || '';
+    document.getElementById('calisma4Sayi').value = b.calisma4Sayi || '';
+    document.getElementById('calisma4Baslangic').value = b.calisma4Baslangic || '';
+    document.getElementById('calisma4Bitis').value = b.calisma4Bitis || '';
+    document.getElementById('calisma4Aciklama').value = b.calisma4Aciklama || '';
+    document.getElementById('denklikBelgeTarihi').value = b.denklikBelgeTarihi || '';
+    document.getElementById('kalfalikSinavGir').checked = !!b.kalfalikSinavGir;
+    document.getElementById('dogrudanKalfalik').checked = !!b.dogrudanKalfalik;
+    document.getElementById('kalfalikSinav').checked = !!b.kalfalikSinav;
+    document.getElementById('basariliUstalik').checked = !!b.basariliUstalik;
+    document.getElementById('ustalikSinav').checked = !!b.ustalikSinav;
+    document.getElementById('dogrudanUstalik').checked = !!b.dogrudanUstalik;
+}
+
+function temizleSorgula() {
+    document.getElementById('sorgulaTc').value = '';
+    document.getElementById('sorgulaDogum').value = '';
+    document.getElementById('sorgulaSonuc').textContent = '';
+}
 
 // ================================================================
 // 5. RENDER TABLO VE ÖZET
@@ -856,115 +1017,282 @@ function renderTable() {
     tbody.innerHTML = '';
     basvurular.forEach((b, index) => {
         const tr = document.createElement('tr');
-        tr.dataset.index = index;
         tr.innerHTML = `
-            <td><span class="editable-cell readonly-cell">${formatBasvuruNo(b.sira)}</span></td>
-            <td><input class="editable-cell" data-field="denklikNo" value="${b.denklikNo || ''}"></td>
-            <td><input class="editable-cell" data-field="tc" value="${b.tc || ''}"></td>
-            <td><input class="editable-cell" data-field="ad" value="${b.ad || ''}"></td>
-            <td><input class="editable-cell" data-field="soyad" value="${b.soyad || ''}"></td>
+            <td>${formatBasvuruNo(b.sira)}</td>
+            <td>${b.tc || ''}</td>
+            <td>${b.ad || ''}</td>
+            <td>${b.soyad || ''}</td>
+            <td>${b.kapsam || ''}</td>
+            <td>${b.alan || ''}</td>
+            <td>${b.dal || ''}</td>
+            <td>${b.telefon || ''}</td>
             <td>
-                <select class="editable-cell" data-field="mezuniyet">
-                    <option value="">Seçiniz</option>
-                    ${['TEKNİK LİSE (4Y)','MESLEKİ AÇIK ÖĞRETİM LİSESİ (4Y)','MESLEKİ TEKNİK ANADOLU LİSESİ (4Y)','MYO (2Y)','MESLEK LİSESİ (3Y)','ANADOLU TEKNİK (4Y)','ANADOLU MESLEK (4Y)','LİSE (3Y)','ÖZEL MESLEKİ TEKNİK ANADOLU LİSESİ (4Y)','ÖZEL TEMEL LİSE (4Y)','MESLEK LİSESİ (4Y)'].map(opt => `<option value="${opt}" ${b.mezuniyet === opt ? 'selected' : ''}>${opt}</option>`).join('')}
-                </select>
-            </td>
-            <td><input class="editable-cell" data-field="alan" value="${b.alan || ''}"></td>
-            <td><input class="editable-cell" data-field="dal" value="${b.dal || ''}"></td>
-            <td><input type="checkbox" class="editable-cell checkbox-cell" data-field="kalfalik" ${b.kalfalik ? 'checked' : ''}></td>
-            <td><input type="checkbox" class="editable-cell checkbox-cell" data-field="ustalik" ${b.ustalik ? 'checked' : ''}></td>
-            <td><input type="checkbox" class="editable-cell checkbox-cell" data-field="sinavli" ${b.sinavli ? 'checked' : ''}></td>
-            <td><input type="checkbox" class="editable-cell checkbox-cell" data-field="sinavsiz" ${b.sinavsiz ? 'checked' : ''}></td>
-            <td><input type="checkbox" class="editable-cell checkbox-cell" data-field="esinav" ${b.esinav ? 'checked' : ''}></td>
-            <td><input type="checkbox" class="editable-cell checkbox-cell" data-field="beceri" ${b.beceri ? 'checked' : ''}></td>
-            <td><input class="editable-cell" data-field="sinavMaddesi" value="${b.sinavMaddesi || ''}"></td>
-            <td><input class="editable-cell" data-field="telefon" value="${b.telefon || ''}"></td>
-            <td><input class="editable-cell" data-field="aciklama" value="${b.aciklama || ''}"></td>
-            <td><input class="editable-cell" data-field="eskiKimlik" value="${b.eskiKimlik || ''}"></td>
-            <td>
-                <button class="btn btn-copy" style="padding:2px 8px; font-size:11px; margin-right:4px;" onclick="kopyalaBasvuru(${index})">📋</button>
-                <button class="btn btn-danger" style="padding:2px 8px; font-size:11px;" onclick="silBasvuru(${index})">Sil</button>
+                <button class="btn btn-primary btn-sm" onclick="duzenleBasvuru(${index})">✏️</button>
+                <button class="btn btn-danger btn-sm" onclick="silBasvuru(${index})">🗑️</button>
             </td>
         `;
         tbody.appendChild(tr);
-    });
-    
-    tbody.querySelectorAll('.editable-cell').forEach(el => {
-        if (el.tagName === 'INPUT' || el.tagName === 'SELECT') {
-            el.addEventListener('change', function() {
-                const index = parseInt(this.closest('tr').dataset.index);
-                basvurular[index][this.dataset.field] = this.type === 'checkbox' ? this.checked : this.value;
-                saveToStorage(); renderOzet();
-            });
-        }
     });
     document.getElementById('toplamSayi').textContent = basvurular.length;
 }
 
 function renderOzet() {
     const tbody = document.getElementById('ozetBody');
-    tbody.innerHTML = '';
-    const groups = {};
-    basvurular.forEach(b => {
-        const key = `${b.alan}|||${b.dal}`;
-        if (!groups[key]) groups[key] = { alan: b.alan, dal: b.dal, toplam: 0, kalfalik: 0, ustalik: 0 };
-        groups[key].toplam++;
-        if (b.kalfalik) groups[key].kalfalik++;
-        if (b.ustalik) groups[key].ustalik++;
-    });
-    let toplamGenel = 0, toplamKalfalik = 0, toplamUstalik = 0;
-    for (const key in groups) {
-        const g = groups[key];
-        toplamGenel += g.toplam; toplamKalfalik += g.kalfalik; toplamUstalik += g.ustalik;
-        tbody.innerHTML += `<tr><td>${g.alan}</td><td>${g.dal}</td><td>${g.toplam}</td><td>${g.kalfalik}</td><td>${g.ustalik}</td><td>0</td><td>0</td></tr>`;
-    }
-    tbody.innerHTML += `<tr style="font-weight:bold"><td colspan="2" style="text-align:right;">TOPLAM</td><td>${toplamGenel}</td><td>${toplamKalfalik}</td><td>${toplamUstalik}</td><td>0</td><td>0</td></tr>`;
+    const toplam = basvurular.length;
+    const k28 = basvurular.filter(b => b.kapsam === '28.c-35.Madde').length;
+    const k29 = basvurular.filter(b => b.kapsam === '29.Madde').length;
+    const kg = basvurular.filter(b => b.kapsam === 'G.1.b.2').length;
+    const kalfalik = basvurular.filter(b => b.kalfalikSinavGir).length;
+    const ustalik = basvurular.filter(b => b.ustalikSinav).length;
+    tbody.innerHTML = `<tr><td>${toplam}</td><td>${k28}</td><td>${k29}</td><td>${kg}</td><td>${kalfalik}</td><td>${ustalik}</td></tr>`;
 }
 
 function renderAll() { renderTable(); renderOzet(); }
 
 // ================================================================
-// 6. SİLME VE KOPYALAMA
+// 6. SİLME VE DÜZENLEME
 // ================================================================
-function kopyalaBasvuru(index) {
-    const b = basvurular[index];
-    if(b) {
-        document.getElementById('ad').value = b.ad || ''; document.getElementById('soyad').value = b.soyad || '';
-        document.getElementById('tc').value = b.tc || ''; document.getElementById('telefon').value = b.telefon || '';
-        document.getElementById('mezuniyet').value = b.mezuniyet || ''; document.getElementById('yeterlilikKodu').value = b.yeterlilikKodu || '';
-        document.getElementById('alan').value = b.alan || ''; document.getElementById('dal').value = b.dal || '';
-        document.getElementById('kalfalik').checked = b.kalfalik || false; document.getElementById('ustalik').checked = b.ustalik || false;
-        document.getElementById('sinavli').checked = b.sinavli || false; document.getElementById('sinavsiz').checked = b.sinavsiz || false;
-        document.getElementById('esinav').checked = b.esinav || false; document.getElementById('beceri').checked = b.beceri || false;
-        document.getElementById('sinavMaddesi').value = b.sinavMaddesi || ''; document.getElementById('aciklama').value = b.aciklama || '';
-        document.getElementById('eskiKimlik').value = b.eskiKimlik || '';
-        alert("Başvuru forma kopyalandı!");
+function silBasvuru(index) {
+    if (confirm('Silmek istediğinize emin misiniz?')) {
+        basvurular.splice(index, 1);
+        saveToStorage();
+        renderAll();
     }
 }
-function silBasvuru(index) {
-    if (confirm('Silmek istediğinize emin misiniz?')) { basvurular.splice(index, 1); saveToStorage(); renderAll(); }
+
+function duzenleBasvuru(index) {
+    duzenlemeIndex = index;
+    const b = basvurular[index];
+    // Formu doldur
+    document.getElementById('ad').value = b.ad || '';
+    document.getElementById('soyad').value = b.soyad || '';
+    document.getElementById('tc').value = b.tc || '';
+    document.getElementById('dogumTarihi').value = b.dogumTarihi || '';
+    document.getElementById('kapsam').value = b.kapsam || '';
+    document.getElementById('eposta').value = b.eposta || '';
+    document.getElementById('telefon').value = b.telefon || '';
+    document.getElementById('ogrenciEgitimTuru').value = b.ogrenciEgitimTuru || '';
+    document.getElementById('cerceveProgrami').value = b.cerceveProgrami || '';
+    document.getElementById('alan').value = b.alan || '';
+    document.getElementById('dal').value = b.dal || '';
+    document.getElementById('mykKodu').value = b.mykKodu || '';
+    document.getElementById('enSonMezuniyet').value = b.enSonMezuniyet || '';
+    document.getElementById('getirdigiBelge').value = b.getirdigiBelge || '';
+    document.getElementById('belgeTarihi').value = b.belgeTarihi || '';
+    document.getElementById('ilkogretimOkul').value = b.ilkogretimOkul || '';
+    document.getElementById('ilkogretimBelgeTarihi').value = b.ilkogretimBelgeTarihi || '';
+    document.getElementById('ilkogretimBelgeSayisi').value = b.ilkogretimBelgeSayisi || '';
+    document.getElementById('liseOkul').value = b.liseOkul || '';
+    document.getElementById('liseAlan').value = b.liseAlan || '';
+    document.getElementById('liseBelgeTarihi').value = b.liseBelgeTarihi || '';
+    document.getElementById('liseBelgeSayisi').value = b.liseBelgeSayisi || '';
+    document.getElementById('onlisansOkul').value = b.onlisansOkul || '';
+    document.getElementById('onlisansAlan').value = b.onlisansAlan || '';
+    document.getElementById('onlisansBelgeTarihi').value = b.onlisansBelgeTarihi || '';
+    document.getElementById('onlisansBelgeSayisi').value = b.onlisansBelgeSayisi || '';
+    document.getElementById('mezuniyetAciklama').value = b.mezuniyetAciklama || '';
+    document.getElementById('calisma2Cesit').value = b.calisma2Cesit || '';
+    document.getElementById('calisma2Kurum').value = b.calisma2Kurum || '';
+    document.getElementById('calisma2Sayi').value = b.calisma2Sayi || '';
+    document.getElementById('calisma2Baslangic').value = b.calisma2Baslangic || '';
+    document.getElementById('calisma2Bitis').value = b.calisma2Bitis || '';
+    document.getElementById('calisma2Aciklama').value = b.calisma2Aciklama || '';
+    document.getElementById('calisma3Cesit').value = b.calisma3Cesit || '';
+    document.getElementById('calisma3Kurum').value = b.calisma3Kurum || '';
+    document.getElementById('calisma3Sayi').value = b.calisma3Sayi || '';
+    document.getElementById('calisma3Baslangic').value = b.calisma3Baslangic || '';
+    document.getElementById('calisma3Bitis').value = b.calisma3Bitis || '';
+    document.getElementById('calisma3Aciklama').value = b.calisma3Aciklama || '';
+    document.getElementById('calisma4Kurum').value = b.calisma4Kurum || '';
+    document.getElementById('calisma4Sayi').value = b.calisma4Sayi || '';
+    document.getElementById('calisma4Baslangic').value = b.calisma4Baslangic || '';
+    document.getElementById('calisma4Bitis').value = b.calisma4Bitis || '';
+    document.getElementById('calisma4Aciklama').value = b.calisma4Aciklama || '';
+    document.getElementById('denklikBelgeTarihi').value = b.denklikBelgeTarihi || '';
+    document.getElementById('kalfalikSinavGir').checked = !!b.kalfalikSinavGir;
+    document.getElementById('dogrudanKalfalik').checked = !!b.dogrudanKalfalik;
+    document.getElementById('kalfalikSinav').checked = !!b.kalfalikSinav;
+    document.getElementById('basariliUstalik').checked = !!b.basariliUstalik;
+    document.getElementById('ustalikSinav').checked = !!b.ustalikSinav;
+    document.getElementById('dogrudanUstalik').checked = !!b.dogrudanUstalik;
+
+    document.getElementById('ekleBtn').style.display = 'none';
+    let guncelleBtn = document.getElementById('guncelleBtn');
+    if (!guncelleBtn) {
+        guncelleBtn = document.createElement('button');
+        guncelleBtn.id = 'guncelleBtn';
+        guncelleBtn.className = 'btn btn-warning';
+        guncelleBtn.textContent = '💾 Güncelle';
+        guncelleBtn.onclick = function() { guncelleBasvuru(duzenlemeIndex); };
+        document.getElementById('ekleBtn').parentNode.appendChild(guncelleBtn);
+    } else {
+        guncelleBtn.style.display = 'inline-block';
+    }
+    document.querySelector('.form-section').scrollIntoView({ behavior: 'smooth' });
 }
-document.getElementById('temizleVeriBtn').addEventListener('click', function() {
-    if (confirm('⚠️ Tablodaki veriler silinecek (Bulutu etkilemez). Emin misiniz?')) { basvurular = []; saveToStorage(); renderAll(); }
-});
+
+function guncelleBasvuru(index) {
+    const b = basvurular[index];
+    b.ad = document.getElementById('ad').value.trim();
+    b.soyad = document.getElementById('soyad').value.trim();
+    b.tc = document.getElementById('tc').value.trim();
+    b.dogumTarihi = document.getElementById('dogumTarihi').value;
+    b.kapsam = document.getElementById('kapsam').value;
+    b.eposta = document.getElementById('eposta').value.trim();
+    b.telefon = document.getElementById('telefon').value.trim();
+    b.ogrenciEgitimTuru = document.getElementById('ogrenciEgitimTuru').value;
+    b.cerceveProgrami = document.getElementById('cerceveProgrami').value;
+    b.alan = document.getElementById('alan').value.trim();
+    b.dal = document.getElementById('dal').value.trim();
+    b.mykKodu = document.getElementById('mykKodu').value.trim();
+    b.enSonMezuniyet = document.getElementById('enSonMezuniyet').value;
+    b.getirdigiBelge = document.getElementById('getirdigiBelge').value;
+    b.belgeTarihi = document.getElementById('belgeTarihi').value;
+    b.ilkogretimOkul = document.getElementById('ilkogretimOkul').value.trim();
+    b.ilkogretimBelgeTarihi = document.getElementById('ilkogretimBelgeTarihi').value;
+    b.ilkogretimBelgeSayisi = document.getElementById('ilkogretimBelgeSayisi').value;
+    b.liseOkul = document.getElementById('liseOkul').value.trim();
+    b.liseAlan = document.getElementById('liseAlan').value.trim();
+    b.liseBelgeTarihi = document.getElementById('liseBelgeTarihi').value;
+    b.liseBelgeSayisi = document.getElementById('liseBelgeSayisi').value;
+    b.onlisansOkul = document.getElementById('onlisansOkul').value.trim();
+    b.onlisansAlan = document.getElementById('onlisansAlan').value.trim();
+    b.onlisansBelgeTarihi = document.getElementById('onlisansBelgeTarihi').value;
+    b.onlisansBelgeSayisi = document.getElementById('onlisansBelgeSayisi').value;
+    b.mezuniyetAciklama = document.getElementById('mezuniyetAciklama').value.trim();
+    b.calisma2Cesit = document.getElementById('calisma2Cesit').value;
+    b.calisma2Kurum = document.getElementById('calisma2Kurum').value.trim();
+    b.calisma2Sayi = document.getElementById('calisma2Sayi').value.trim();
+    b.calisma2Baslangic = document.getElementById('calisma2Baslangic').value;
+    b.calisma2Bitis = document.getElementById('calisma2Bitis').value;
+    b.calisma2Aciklama = document.getElementById('calisma2Aciklama').value.trim();
+    b.calisma3Cesit = document.getElementById('calisma3Cesit').value;
+    b.calisma3Kurum = document.getElementById('calisma3Kurum').value.trim();
+    b.calisma3Sayi = document.getElementById('calisma3Sayi').value.trim();
+    b.calisma3Baslangic = document.getElementById('calisma3Baslangic').value;
+    b.calisma3Bitis = document.getElementById('calisma3Bitis').value;
+    b.calisma3Aciklama = document.getElementById('calisma3Aciklama').value.trim();
+    b.calisma4Kurum = document.getElementById('calisma4Kurum').value.trim();
+    b.calisma4Sayi = document.getElementById('calisma4Sayi').value.trim();
+    b.calisma4Baslangic = document.getElementById('calisma4Baslangic').value;
+    b.calisma4Bitis = document.getElementById('calisma4Bitis').value;
+    b.calisma4Aciklama = document.getElementById('calisma4Aciklama').value.trim();
+    b.denklikBelgeTarihi = document.getElementById('denklikBelgeTarihi').value;
+    b.kalfalikSinavGir = document.getElementById('kalfalikSinavGir').checked;
+    b.dogrudanKalfalik = document.getElementById('dogrudanKalfalik').checked;
+    b.kalfalikSinav = document.getElementById('kalfalikSinav').checked;
+    b.basariliUstalik = document.getElementById('basariliUstalik').checked;
+    b.ustalikSinav = document.getElementById('ustalikSinav').checked;
+    b.dogrudanUstalik = document.getElementById('dogrudanUstalik').checked;
+    const fileInput = document.getElementById('foto');
+    if (fileInput.files.length > 0) b.fotoDosyaAdi = fileInput.files[0].name;
+
+    saveToStorage();
+    renderAll();
+    formuTemizle();
+    alert('Başvuru güncellendi!');
+}
 
 // ================================================================
-// 7. EXCEL ÇIKTISI 
+// 7. EXCEL İNDİR
 // ================================================================
-document.getElementById('excelBtn').addEventListener('click', async function() {
+async function excelIndir() {
     if (basvurular.length === 0) { alert('Veri yok.'); return; }
     const workbook = new ExcelJS.Workbook();
-    const ws1 = workbook.addWorksheet('Başvurular', { views: [{ state: 'frozen', ySplit: 1 }] });
-    const headerRow = ws1.addRow(['Sıra No', 'Denklik No', 'TC', 'Adı', 'Soyadı', 'Mezuniyet', 'Alan', 'Dal', 'KALFALIK', 'USTALIK', 'SINAVLI', 'SINAVSIZ', 'E-SINAV', 'BECERİ', 'MADDE', 'TELEFON', 'Açıklama', 'Eski Kimlik']);
+    const ws = workbook.addWorksheet('Basvurular', { views: [{ state: 'frozen', ySplit: 1 }] });
+    const headers = [
+        'Sıra No', 'TC', 'Ad', 'Soyad', 'Doğum Tarihi', 'Kapsam', 'Alan', 'Dal',
+        'Öğr.Eğitim Türü', 'Çerçeve Programı', 'e-Posta', 'Telefon', 'MYK Kodu',
+        'En Son Mezuniyet', 'Getirdiği Belge', 'Belge Tarihi',
+        'İlköğretim Okul', 'İlköğretim Belge Tarihi', 'İlköğretim Belge Sayısı',
+        'Lise Okul', 'Lise Alan', 'Lise Belge Tarihi', 'Lise Belge Sayısı',
+        'Ön Lisans Okul', 'Ön Lisans Alan', 'Ön Lisans Belge Tarihi', 'Ön Lisans Belge Sayısı',
+        'Mezuniyet Açıklama',
+        '2.Çalışma Çeşit', '2.Çalışma Kurum', '2.Çalışma Sayı', '2.Çalışma Başlangıç', '2.Çalışma Bitiş', '2.Çalışma Açıklama',
+        '3.Çalışma Çeşit', '3.Çalışma Kurum', '3.Çalışma Sayı', '3.Çalışma Başlangıç', '3.Çalışma Bitiş', '3.Çalışma Açıklama',
+        '4.Çalışma Kurum', '4.Çalışma Sayı', '4.Çalışma Başlangıç', '4.Çalışma Bitiş', '4.Çalışma Açıklama',
+        'Denklik Belge Tarihi',
+        'Kalfalık Sınavına Girmesi', 'Doğrudan Kalfalık', 'Kalfalık Sınavı',
+        'Başarılı Ustalık', 'Ustalık Sınavı', 'Doğrudan Ustalık',
+        'Fotoğraf Dosya Adı'
+    ];
+    const headerRow = ws.addRow(headers);
     headerRow.eachCell(c => { c.fill = {type: 'pattern', pattern: 'solid', fgColor: {argb: 'FF2F5597'}}; c.font = {color:{argb:'FFFFFFFF'}, bold:true}; });
-    
     basvurular.forEach(b => {
-        ws1.addRow([formatBasvuruNo(b.sira), b.denklikNo||'', b.tc||'', b.ad||'', b.soyad||'', b.mezuniyet||'', b.alan||'', b.dal||'', b.kalfalik?'X':'', b.ustalik?'X':'', b.sinavli?'X':'', b.sinavsiz?'X':'', b.esinav?'X':'', b.beceri?'X':'', b.sinavMaddesi||'', b.telefon||'', b.aciklama||'', b.eskiKimlik||'']);
+        ws.addRow([
+            formatBasvuruNo(b.sira), b.tc, b.ad, b.soyad, b.dogumTarihi, b.kapsam, b.alan, b.dal,
+            b.ogrenciEgitimTuru, b.cerceveProgrami, b.eposta, b.telefon, b.mykKodu,
+            b.enSonMezuniyet, b.getirdigiBelge, b.belgeTarihi,
+            b.ilkogretimOkul, b.ilkogretimBelgeTarihi, b.ilkogretimBelgeSayisi,
+            b.liseOkul, b.liseAlan, b.liseBelgeTarihi, b.liseBelgeSayisi,
+            b.onlisansOkul, b.onlisansAlan, b.onlisansBelgeTarihi, b.onlisansBelgeSayisi,
+            b.mezuniyetAciklama,
+            b.calisma2Cesit, b.calisma2Kurum, b.calisma2Sayi, b.calisma2Baslangic, b.calisma2Bitis, b.calisma2Aciklama,
+            b.calisma3Cesit, b.calisma3Kurum, b.calisma3Sayi, b.calisma3Baslangic, b.calisma3Bitis, b.calisma3Aciklama,
+            b.calisma4Kurum, b.calisma4Sayi, b.calisma4Baslangic, b.calisma4Bitis, b.calisma4Aciklama,
+            b.denklikBelgeTarihi,
+            b.kalfalikSinavGir ? 'Evet' : '', b.dogrudanKalfalik ? 'Evet' : '', b.kalfalikSinav ? 'Evet' : '',
+            b.basariliUstalik ? 'Evet' : '', b.ustalikSinav ? 'Evet' : '', b.dogrudanUstalik ? 'Evet' : '',
+            b.fotoDosyaAdi || ''
+        ]);
     });
-    
     const buffer = await workbook.xlsx.writeBuffer();
-    saveAs(new Blob([buffer]), `${aktifKurum}_Basvurular.xlsx`);
-});
+    saveAs(new Blob([buffer]), `${aktifKurum}_Basvuru_Detayli.xlsx`);
+}
+
+function tumVerileriSil() {
+    if (confirm('⚠️ Tüm başvurular silinecek (bulutu etkilemez). Emin misiniz?')) {
+        basvurular = [];
+        saveToStorage();
+        renderAll();
+        formuTemizle();
+    }
+}
+
+// ================================================================
+// 8. BAŞLATMA (window.onload)
+// ================================================================
+window.onload = function() {
+    // MYK öneri motoru
+    document.getElementById('mykKodu').addEventListener('input', function() {
+        const q = this.value.trim().toLowerCase();
+        const sugg = document.getElementById('mykSuggestions');
+        if (!q) { sugg.style.display = 'none'; return; }
+        const results = mykData.filter(item => item.kod.toLowerCase().includes(q) || item.ad.toLowerCase().includes(q)).slice(0, 10);
+        if (results.length === 0) { sugg.style.display = 'none'; return; }
+        sugg.innerHTML = '';
+        results.forEach(item => {
+            const div = document.createElement('div');
+            div.textContent = `${item.kod} – ${item.ad}`;
+            div.addEventListener('click', () => {
+                document.getElementById('mykKodu').value = item.kod;
+                document.getElementById('alan').value = item.alan || '';
+                document.getElementById('dal').value = item.dal || '';
+                sugg.style.display = 'none';
+            });
+            sugg.appendChild(div);
+        });
+        sugg.style.display = 'block';
+    });
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('#mykKodu') && !e.target.closest('#mykSuggestions')) {
+            document.getElementById('mykSuggestions').style.display = 'none';
+        }
+    });
+
+    // Oturum kontrolü
+    const kayitliKurum = sessionStorage.getItem("mesemKurum");
+    if (kayitliKurum) {
+        aktifKurum = kayitliKurum;
+        document.getElementById("loginOverlay").style.display = "none";
+        document.getElementById("mainApp").style.display = "block";
+        document.getElementById("aktifKurumAdi").textContent = aktifKurum;
+        buluttanOtomatikYukle();
+    } else {
+        document.getElementById("loginOverlay").style.display = "flex";
+        document.getElementById("mainApp").style.display = "none";
+    }
+};
 </script>
 </body>
 </html>
