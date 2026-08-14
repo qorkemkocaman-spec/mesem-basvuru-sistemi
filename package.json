@@ -1,0 +1,13 @@
+{
+  "name": "mesem-basvuru-sistemi",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "description": "MESEM başvuru sistemi - çok kurumlu web uygulaması (Vercel + Neon Postgres)",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "pg": "^8.13.1"
+  }
+}
