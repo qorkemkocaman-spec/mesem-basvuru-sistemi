@@ -7,6 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <style>
+        /* (Stiller aynen önceki gibi, değişmedi) */
         * { box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f4f8; margin: 0; padding: 0; }
         #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(26,60,94,0.92); display: flex; justify-content: center; align-items: center; z-index: 9999; }
@@ -91,7 +92,7 @@
         <h2>🏫 Ustalık/Kalfalık Başvuru Sistemi</h2>
         <p>Kurumunuza ait veriler şifreli olarak saklanır.<br>İlk girişinizde kaydınız otomatik oluşturulur.</p>
         <input type="text" id="loginKurum" class="login-input" placeholder="Kurum Adı (Örn: KIRIKKALE_MESEM)">
-        <input type="password" id="loginSifre" class="login-input" placeholder="Kurum Şifresi">
+        <input type="password" id="loginSifre" class="login-input" placeholder="Kurum Şifresi (varsayılan: 1234)">
         <button class="login-btn" id="btnGiris" onclick="girisYap()">Giriş Yap</button>
     </div>
 </div>
@@ -483,7 +484,7 @@
 
 <script>
 // ================================================================
-// 1. MYK VERİLERİ (TAM LİSTE)
+// 1. MYK VERİLERİ (TAM LİSTE – 350+ KAYIT)
 // ================================================================
 const mykData = [
   { kod: "17UY0301‐3", ad: "Ahşap Mobilya İmalatçısı", alan: "Mobilya ve İç Mekan Tasarımı", dal: "İç Mekan ve Mobilya Teknolojisi" },
@@ -944,7 +945,7 @@ const mykData = [
 // ================================================================
 // 2. BULUT BAĞLANTISI VE KİMLİK DOĞRULAMA
 // ================================================================
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxFW1dF6khR7cV3bo-j0dkEYc5O2IyLc7JZmSxO8TJRarch65qI0C6j-ATyFBhEJzSF/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwNI4v-Nw10pbh24L0PN08FTX-pnfGUBVgKi_sduW3ezX39_-83wEASsXUc6uddfm6c/exec";
 
 let basvurular = [];
 let aktifKurum = "";
@@ -1089,11 +1090,9 @@ function formuTemizle() {
     document.getElementById('ekleBtn').style.display = 'inline-block';
     let guncelleBtn = document.getElementById('guncelleBtn');
     if (guncelleBtn) guncelleBtn.style.display = 'none';
-    // Otomatik açıklamayı temizle
     document.getElementById('mezuniyetAciklama').value = '';
 }
 
-// Mezuniyet Açıklamaları otomatik doldurma
 function mezuniyetAciklamaGuncelle() {
     const enSon = document.getElementById('enSonMezuniyet').value;
     const yil = document.getElementById('mezuniyetYili').value.trim();
@@ -1102,10 +1101,9 @@ function mezuniyetAciklamaGuncelle() {
         document.getElementById('mezuniyetAciklama').value = '';
         return;
     }
-    // Hangi okul ve alan alanlarından alınacağını belirle
     if (enSon === 'İlkokul' || enSon === 'İlköğretim (Ortaokul)') {
         okul = document.getElementById('ilkogretimOkul').value.trim();
-        alan = ''; // ilköğretimde alan yok
+        alan = '';
     } else if (enSon === 'Lise' || enSon === 'Meslek Lisesi') {
         okul = document.getElementById('liseOkul').value.trim();
         alan = document.getElementById('liseAlan').value.trim();
@@ -1120,7 +1118,6 @@ function mezuniyetAciklamaGuncelle() {
     document.getElementById('mezuniyetAciklama').value = metin;
 }
 
-// Değişiklikleri dinle
 document.addEventListener('DOMContentLoaded', function() {
     const mezuniyetSelect = document.getElementById('enSonMezuniyet');
     const yilInput = document.getElementById('mezuniyetYili');
@@ -1129,15 +1126,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const liseAlan = document.getElementById('liseAlan');
     const onlisansOkul = document.getElementById('onlisansOkul');
     const onlisansAlan = document.getElementById('onlisansAlan');
-
     const update = () => mezuniyetAciklamaGuncelle();
-    mezuniyetSelect.addEventListener('change', update);
-    yilInput.addEventListener('input', update);
-    ilkOkul.addEventListener('input', update);
-    liseOkul.addEventListener('input', update);
-    liseAlan.addEventListener('input', update);
-    onlisansOkul.addEventListener('input', update);
-    onlisansAlan.addEventListener('input', update);
+    [mezuniyetSelect, yilInput, ilkOkul, liseOkul, liseAlan, onlisansOkul, onlisansAlan].forEach(el => el.addEventListener('input', update));
 });
 
 function yeniBasvuruEkle() {
@@ -1284,7 +1274,6 @@ function sorgula() {
     document.getElementById('basariliUstalik').checked = !!b.basariliUstalik;
     document.getElementById('ustalikSinav').checked = !!b.ustalikSinav;
     document.getElementById('dogrudanUstalik').checked = !!b.dogrudanUstalik;
-    // Otomatik açıklamayı güncelle
     mezuniyetAciklamaGuncelle();
 }
 
@@ -1353,7 +1342,6 @@ function silBasvuru(index) {
 function duzenleBasvuru(index) {
     duzenlemeIndex = index;
     const b = basvurular[index];
-    // Formu doldur (sorgula ile aynı)
     document.getElementById('ad').value = b.ad || '';
     document.getElementById('soyad').value = b.soyad || '';
     document.getElementById('tc').value = b.tc || '';
@@ -1407,7 +1395,6 @@ function duzenleBasvuru(index) {
     document.getElementById('basariliUstalik').checked = !!b.basariliUstalik;
     document.getElementById('ustalikSinav').checked = !!b.ustalikSinav;
     document.getElementById('dogrudanUstalik').checked = !!b.dogrudanUstalik;
-    // Otomatik açıklamayı güncelle
     mezuniyetAciklamaGuncelle();
 
     document.getElementById('ekleBtn').style.display = 'none';
@@ -1505,7 +1492,6 @@ function kisiFormuAc(index) {
     document.getElementById('kisiMezuniyet').textContent = b.enSonMezuniyet || '';
     document.getElementById('kisiBelge').textContent = b.getirdigiBelge || '';
     document.getElementById('kisiBelgeTarihi').textContent = b.belgeTarihi || '';
-    // Fotoğraf alanını sıfırla
     const kare = document.getElementById('kisiFotoKare');
     kare.innerHTML = `📷 Fotoğraf
         <div class="foto-upload">
@@ -1554,7 +1540,7 @@ function sablonFotoYukle(event) {
 }
 
 // ================================================================
-// 9. EXCEL İNDİR (Güncellenmiş)
+// 9. EXCEL İNDİR
 // ================================================================
 async function excelIndir() {
     if (basvurular.length === 0) { alert('Veri yok.'); return; }
@@ -1608,10 +1594,9 @@ function tumVerileriSil() {
 }
 
 // ================================================================
-// 10. BAŞLATMA (window.onload)
+// 10. BAŞLATMA
 // ================================================================
 window.onload = function() {
-    // MYK öneri motoru
     document.getElementById('mykAra').addEventListener('input', function() {
         const q = this.value.trim().toLowerCase();
         const sugg = document.getElementById('mykSuggestions');
@@ -1638,7 +1623,6 @@ window.onload = function() {
         }
     });
 
-    // Oturum kontrolü
     const kayitliKurum = sessionStorage.getItem("mesemKurum");
     if (kayitliKurum) {
         aktifKurum = kayitliKurum;
