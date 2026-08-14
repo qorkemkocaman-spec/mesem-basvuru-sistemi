@@ -70,8 +70,9 @@
         .form-baski .baslik { font-weight: bold; background: #e9ecf0; }
         .form-baski .foto-upload { margin-top: 5px; }
         .form-baski .foto-upload input { font-size: 11px; }
+        .form-baski .not-bilgi { font-size: 11px; color: #a00; margin-top: 5px; }
         @media print {
-            .modal-box .close-btn, .modal-box .btn, .modal-box .foto-upload { display: none; }
+            .modal-box .close-btn, .modal-box .btn, .modal-box .foto-upload, .no-print { display: none; }
             .modal-overlay { background: white; }
             .modal-box { box-shadow: none; max-width: 100%; padding: 10px; }
             .form-baski .foto-kare { border: 1px solid #000; }
@@ -130,7 +131,10 @@
                     <div class="col">
                         <div class="form-group"><label>Adı *</label><input type="text" id="ad" placeholder="Ad" required></div>
                         <div class="form-group"><label>Soyadı *</label><input type="text" id="soyad" placeholder="Soyad" required></div>
-                        <div class="form-group"><label>Kimlik No *</label><input type="text" id="tc" placeholder="11 haneli TC" pattern="[0-9]{11}" maxlength="11" required></div>
+                        <div class="form-group"><label>Kimlik No *</label>
+                            <input type="text" id="tc" placeholder="11 haneli TC" pattern="[0-9]{11}" maxlength="11" required>
+                            <small style="color:#a00; font-size:11px;">⚠️ Eski tip (nüfus cüzdanı) kimlikle başvuru yapılamaz.</small>
+                        </div>
                         <div class="form-group"><label>Doğum Tarihi *</label><input type="date" id="dogumTarihi" required></div>
                         <div class="form-group"><label>Kapsam *</label>
                             <select id="kapsam" required>
@@ -179,6 +183,9 @@
                                 <option>Yüksek Lisans</option><option>Doktora</option>
                             </select>
                         </div>
+                        <div class="form-group"><label>Kaç Yıllık</label>
+                            <input type="number" id="mezuniyetYili" placeholder="Örn: 4" min="0">
+                        </div>
                         <div class="form-group"><label>Getirdiği Belge *</label>
                             <select id="getirdigiBelge" required>
                                 <option value="">Seçiniz</option>
@@ -207,7 +214,9 @@
                         <div class="form-group"><label>Ön Lisans / Lisans Mezun Belge Sayısı</label><input type="number" id="onlisansBelgeSayisi" placeholder="Sayı"></div>
                     </div>
                 </div>
-                <div class="form-group"><label>Mezuniyet Açıklamaları</label><textarea id="mezuniyetAciklama" rows="2" placeholder="Varsa ek notlar..."></textarea></div>
+                <div class="form-group"><label>Mezuniyet Açıklamaları</label>
+                    <textarea id="mezuniyetAciklama" rows="2" placeholder="En yüksek mezuniyet bilgileri otomatik dolar, isterseniz düzenleyin."></textarea>
+                </div>
             </div>
 
             <!-- ÇALIŞMIŞLIK BİLGİLERİ -->
@@ -295,7 +304,7 @@
             <button class="btn btn-primary" style="background:#8e44ad;" onclick="bulutaKaydet()">☁️ Buluta Kaydet (Eşitle)</button>
             <button class="btn btn-success" onclick="excelIndir()">📊 Excel İndir (Detaylı)</button>
             <button class="btn btn-danger" onclick="tumVerileriSil()">🗑️ Tüm Verileri Sil</button>
-            <button class="btn btn-warning" onclick="acikBasvuruFormu()">📄 Başvuru Formu Şablonu</button>
+            <button class="btn btn-warning" onclick="acikBosForm()">📄 Yeni Başvuru Formu</button>
         </div>
 
         <!-- BAŞVURU LİSTESİ -->
@@ -319,7 +328,7 @@
     </div>
 </div>
 
-<!-- MODAL: BAŞVURU FORMU ŞABLONU (KİŞİYE VERİLECEK) -->
+<!-- MODAL: YENİ BAŞVURU FORMU (BOŞ ŞABLON) -->
 <div class="modal-overlay" id="formSablonModal">
     <div class="modal-box">
         <button class="close-btn" onclick="kapatSablonModal()">✕</button>
@@ -426,9 +435,48 @@
                 <p style="text-align:right; margin-top:15px; font-size:12px;">Tarih: _______________</p>
             </div>
         </div>
-        <div style="margin-top:15px; display:flex; gap:10px;">
+        <div style="margin-top:15px; display:flex; gap:10px;" class="no-print">
             <button class="btn btn-primary" onclick="window.print()">🖨️ Yazdır</button>
             <button class="btn btn-secondary" onclick="kapatSablonModal()">Kapat</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: KİŞİYE ÖZEL BAŞVURU FORMU (FOTOĞRAFLI, SADECE İSTENEN ALANLAR) -->
+<div class="modal-overlay" id="kisiFormModal">
+    <div class="modal-box">
+        <button class="close-btn" onclick="kapatKisiFormModal()">✕</button>
+        <div id="kisiFormContainer" class="form-baski">
+            <div style="position:relative; padding:10px;">
+                <div class="foto-kare" id="kisiFotoKare">
+                    📷 Fotoğraf
+                    <div class="foto-upload">
+                        <input type="file" accept="image/*" onchange="kisiFotoYukle(event)">
+                    </div>
+                </div>
+                <h2 style="text-align:center; margin:0;">KİŞİNİN USTALIK/KALFALIK BAŞVURUSUNA AİT TÜM BİLGİLERİ</h2>
+                <p style="text-align:center; margin:0; font-size:12px;">(Bu form, başvuru sahibine verilecek resmî belgedir.)</p>
+                <table>
+                    <tr><td style="font-weight:bold;width:30%;">Kimlik No</td><td><span id="kisiTc"></span></td></tr>
+                    <tr><td style="font-weight:bold;">Doğum Tarihi</td><td><span id="kisiDogum"></span></td></tr>
+                    <tr><td style="font-weight:bold;">Adı</td><td><span id="kisiAd"></span></td></tr>
+                    <tr><td style="font-weight:bold;">Soyadı</td><td><span id="kisiSoyad"></span></td></tr>
+                    <tr><td style="font-weight:bold;">Kapsam</td><td><span id="kisiKapsam"></span> <small style="color:#666;">(Kurum Tarafından Doldurulacak)</small></td></tr>
+                    <tr><td style="font-weight:bold;">Ustalık/Kalfalığa Gireceği Alan</td><td><span id="kisiAlan"></span></td></tr>
+                    <tr><td style="font-weight:bold;">Ustalık/Kalfalığa Gireceği Dal</td><td><span id="kisiDal"></span></td></tr>
+                    <tr><td style="font-weight:bold;">e-Posta</td><td><span id="kisiEposta"></span></td></tr>
+                    <tr><td style="font-weight:bold;">Telefon</td><td><span id="kisiTelefon"></span></td></tr>
+                    <tr><td style="font-weight:bold;">En Son Mezuniyeti</td><td><span id="kisiMezuniyet"></span></td></tr>
+                    <tr><td style="font-weight:bold;">Getirdiği Belge</td><td><span id="kisiBelge"></span></td></tr>
+                    <tr><td style="font-weight:bold;">Belge Tarihi</td><td><span id="kisiBelgeTarihi"></span></td></tr>
+                </table>
+                <p style="text-align:right; margin-top:15px; font-size:12px;">Tarih: _______________</p>
+                <p style="font-size:11px; color:#a00; margin-top:5px;">⚠️ Eski tip (nüfus cüzdanı) kimlikle başvuru geçersizdir.</p>
+            </div>
+        </div>
+        <div style="margin-top:15px; display:flex; gap:10px;" class="no-print">
+            <button class="btn btn-primary" onclick="window.print()">🖨️ Yazdır</button>
+            <button class="btn btn-secondary" onclick="kapatKisiFormModal()">Kapat</button>
         </div>
     </div>
 </div>
@@ -896,7 +944,7 @@ const mykData = [
 // ================================================================
 // 2. BULUT BAĞLANTISI VE KİMLİK DOĞRULAMA
 // ================================================================
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx7xsKJOPEiP-lqFGVfE52FZ4sAAwVcH3DxJRgXKPcfzHQWDJdbSEZcDp7izu2PkJTh/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxFW1dF6khR7cV3bo-j0dkEYc5O2IyLc7JZmSxO8TJRarch65qI0C6j-ATyFBhEJzSF/exec";
 
 let basvurular = [];
 let aktifKurum = "";
@@ -957,7 +1005,6 @@ async function buluttanOtomatikYukle() {
                 basariliUstalik: b.basariliUstalik === true || b.basariliUstalik === 'true',
                 ustalikSinav: b.ustalikSinav === true || b.ustalikSinav === 'true',
                 dogrudanUstalik: b.dogrudanUstalik === true || b.dogrudanUstalik === 'true',
-                // Eksik alanları varsayılanla doldur
                 ogrenciEgitimTuru: b.ogrenciEgitimTuru || '',
                 cerceveProgrami: b.cerceveProgrami || '',
                 kod: b.kod || '',
@@ -991,7 +1038,8 @@ async function buluttanOtomatikYukle() {
                 calisma4Baslangic: b.calisma4Baslangic || '',
                 calisma4Bitis: b.calisma4Bitis || '',
                 calisma4Aciklama: b.calisma4Aciklama || '',
-                denklikBelgeTarihi: b.denklikBelgeTarihi || ''
+                denklikBelgeTarihi: b.denklikBelgeTarihi || '',
+                mezuniyetYili: b.mezuniyetYili || ''
             }));
             saveToStorage();
             renderAll();
@@ -1041,7 +1089,56 @@ function formuTemizle() {
     document.getElementById('ekleBtn').style.display = 'inline-block';
     let guncelleBtn = document.getElementById('guncelleBtn');
     if (guncelleBtn) guncelleBtn.style.display = 'none';
+    // Otomatik açıklamayı temizle
+    document.getElementById('mezuniyetAciklama').value = '';
 }
+
+// Mezuniyet Açıklamaları otomatik doldurma
+function mezuniyetAciklamaGuncelle() {
+    const enSon = document.getElementById('enSonMezuniyet').value;
+    const yil = document.getElementById('mezuniyetYili').value.trim();
+    let okul = '', alan = '';
+    if (!enSon) {
+        document.getElementById('mezuniyetAciklama').value = '';
+        return;
+    }
+    // Hangi okul ve alan alanlarından alınacağını belirle
+    if (enSon === 'İlkokul' || enSon === 'İlköğretim (Ortaokul)') {
+        okul = document.getElementById('ilkogretimOkul').value.trim();
+        alan = ''; // ilköğretimde alan yok
+    } else if (enSon === 'Lise' || enSon === 'Meslek Lisesi') {
+        okul = document.getElementById('liseOkul').value.trim();
+        alan = document.getElementById('liseAlan').value.trim();
+    } else if (enSon === 'Ön Lisans' || enSon === 'Lisans' || enSon === 'Yüksek Lisans' || enSon === 'Doktora') {
+        okul = document.getElementById('onlisansOkul').value.trim();
+        alan = document.getElementById('onlisansAlan').value.trim();
+    }
+    let metin = `En son mezuniyet: ${enSon}`;
+    if (yil) metin += ` (${yil} yıl)`;
+    if (okul) metin += `, Okul: ${okul}`;
+    if (alan) metin += `, Alan: ${alan}`;
+    document.getElementById('mezuniyetAciklama').value = metin;
+}
+
+// Değişiklikleri dinle
+document.addEventListener('DOMContentLoaded', function() {
+    const mezuniyetSelect = document.getElementById('enSonMezuniyet');
+    const yilInput = document.getElementById('mezuniyetYili');
+    const ilkOkul = document.getElementById('ilkogretimOkul');
+    const liseOkul = document.getElementById('liseOkul');
+    const liseAlan = document.getElementById('liseAlan');
+    const onlisansOkul = document.getElementById('onlisansOkul');
+    const onlisansAlan = document.getElementById('onlisansAlan');
+
+    const update = () => mezuniyetAciklamaGuncelle();
+    mezuniyetSelect.addEventListener('change', update);
+    yilInput.addEventListener('input', update);
+    ilkOkul.addEventListener('input', update);
+    liseOkul.addEventListener('input', update);
+    liseAlan.addEventListener('input', update);
+    onlisansOkul.addEventListener('input', update);
+    onlisansAlan.addEventListener('input', update);
+});
 
 function yeniBasvuruEkle() {
     const ad = document.getElementById('ad').value.trim();
@@ -1056,6 +1153,7 @@ function yeniBasvuruEkle() {
     const kod = document.getElementById('kod').value.trim();
     const enSonMezuniyet = document.getElementById('enSonMezuniyet').value;
     const getirdigiBelge = document.getElementById('getirdigiBelge').value;
+    const mezuniyetYili = document.getElementById('mezuniyetYili').value.trim();
     if (!ad || !soyad || !tc || !dogum || !kapsam || !telefon || !alan || !dal || !enSonMezuniyet || !getirdigiBelge) {
         alert('Lütfen tüm zorunlu alanları (*) doldurun.');
         return;
@@ -1110,7 +1208,8 @@ function yeniBasvuruEkle() {
         kalfalikSinav: document.getElementById('kalfalikSinav').checked,
         basariliUstalik: document.getElementById('basariliUstalik').checked,
         ustalikSinav: document.getElementById('ustalikSinav').checked,
-        dogrudanUstalik: document.getElementById('dogrudanUstalik').checked
+        dogrudanUstalik: document.getElementById('dogrudanUstalik').checked,
+        mezuniyetYili: mezuniyetYili
     });
     saveToStorage();
     renderAll();
@@ -1146,6 +1245,7 @@ function sorgula() {
     document.getElementById('mykAra').value = b.mykAra || '';
     document.getElementById('kod').value = b.kod || '';
     document.getElementById('enSonMezuniyet').value = b.enSonMezuniyet || '';
+    document.getElementById('mezuniyetYili').value = b.mezuniyetYili || '';
     document.getElementById('getirdigiBelge').value = b.getirdigiBelge || '';
     document.getElementById('belgeTarihi').value = b.belgeTarihi || '';
     document.getElementById('ilkogretimOkul').value = b.ilkogretimOkul || '';
@@ -1184,6 +1284,8 @@ function sorgula() {
     document.getElementById('basariliUstalik').checked = !!b.basariliUstalik;
     document.getElementById('ustalikSinav').checked = !!b.ustalikSinav;
     document.getElementById('dogrudanUstalik').checked = !!b.dogrudanUstalik;
+    // Otomatik açıklamayı güncelle
+    mezuniyetAciklamaGuncelle();
 }
 
 function temizleSorgula() {
@@ -1212,6 +1314,7 @@ function renderTable() {
             <td>
                 <button class="btn btn-primary btn-sm" onclick="duzenleBasvuru(${index})">✏️</button>
                 <button class="btn btn-danger btn-sm" onclick="silBasvuru(${index})">🗑️</button>
+                <button class="btn btn-warning btn-sm" onclick="kisiFormuAc(${index})">📄 Formu Aç</button>
             </td>
         `;
         tbody.appendChild(tr);
@@ -1265,6 +1368,7 @@ function duzenleBasvuru(index) {
     document.getElementById('mykAra').value = b.mykAra || '';
     document.getElementById('kod').value = b.kod || '';
     document.getElementById('enSonMezuniyet').value = b.enSonMezuniyet || '';
+    document.getElementById('mezuniyetYili').value = b.mezuniyetYili || '';
     document.getElementById('getirdigiBelge').value = b.getirdigiBelge || '';
     document.getElementById('belgeTarihi').value = b.belgeTarihi || '';
     document.getElementById('ilkogretimOkul').value = b.ilkogretimOkul || '';
@@ -1303,6 +1407,8 @@ function duzenleBasvuru(index) {
     document.getElementById('basariliUstalik').checked = !!b.basariliUstalik;
     document.getElementById('ustalikSinav').checked = !!b.ustalikSinav;
     document.getElementById('dogrudanUstalik').checked = !!b.dogrudanUstalik;
+    // Otomatik açıklamayı güncelle
+    mezuniyetAciklamaGuncelle();
 
     document.getElementById('ekleBtn').style.display = 'none';
     let guncelleBtn = document.getElementById('guncelleBtn');
@@ -1335,6 +1441,7 @@ function guncelleBasvuru(index) {
     b.mykAra = document.getElementById('mykAra').value.trim();
     b.kod = document.getElementById('kod').value.trim();
     b.enSonMezuniyet = document.getElementById('enSonMezuniyet').value;
+    b.mezuniyetYili = document.getElementById('mezuniyetYili').value.trim();
     b.getirdigiBelge = document.getElementById('getirdigiBelge').value;
     b.belgeTarihi = document.getElementById('belgeTarihi').value;
     b.ilkogretimOkul = document.getElementById('ilkogretimOkul').value.trim();
@@ -1381,9 +1488,52 @@ function guncelleBasvuru(index) {
 }
 
 // ================================================================
-// 7. BAŞVURU FORMU ŞABLONU (KİŞİYE VERİLECEK)
+// 7. KİŞİYE ÖZEL BAŞVURU FORMU (MODAL)
 // ================================================================
-function acikBasvuruFormu() {
+function kisiFormuAc(index) {
+    const b = basvurular[index];
+    if (!b) return;
+    document.getElementById('kisiTc').textContent = b.tc || '';
+    document.getElementById('kisiDogum').textContent = b.dogumTarihi || '';
+    document.getElementById('kisiAd').textContent = b.ad || '';
+    document.getElementById('kisiSoyad').textContent = b.soyad || '';
+    document.getElementById('kisiKapsam').textContent = b.kapsam || '';
+    document.getElementById('kisiAlan').textContent = b.alan || '';
+    document.getElementById('kisiDal').textContent = b.dal || '';
+    document.getElementById('kisiEposta').textContent = b.eposta || '';
+    document.getElementById('kisiTelefon').textContent = b.telefon || '';
+    document.getElementById('kisiMezuniyet').textContent = b.enSonMezuniyet || '';
+    document.getElementById('kisiBelge').textContent = b.getirdigiBelge || '';
+    document.getElementById('kisiBelgeTarihi').textContent = b.belgeTarihi || '';
+    // Fotoğraf alanını sıfırla
+    const kare = document.getElementById('kisiFotoKare');
+    kare.innerHTML = `📷 Fotoğraf
+        <div class="foto-upload">
+            <input type="file" accept="image/*" onchange="kisiFotoYukle(event)">
+        </div>`;
+    document.getElementById('kisiFormModal').classList.add('active');
+}
+
+function kapatKisiFormModal() {
+    document.getElementById('kisiFormModal').classList.remove('active');
+}
+
+function kisiFotoYukle(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const kare = document.getElementById('kisiFotoKare');
+            kare.innerHTML = `<img src="${e.target.result}" style="max-width:100%; max-height:100%; object-fit:contain;">`;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+// ================================================================
+// 8. YENİ BAŞVURU FORMU ŞABLONU (BOŞ)
+// ================================================================
+function acikBosForm() {
     document.getElementById('formSablonModal').classList.add('active');
 }
 
@@ -1404,7 +1554,7 @@ function sablonFotoYukle(event) {
 }
 
 // ================================================================
-// 8. EXCEL İNDİR (Güncellenmiş)
+// 9. EXCEL İNDİR (Güncellenmiş)
 // ================================================================
 async function excelIndir() {
     if (basvurular.length === 0) { alert('Veri yok.'); return; }
@@ -1413,7 +1563,7 @@ async function excelIndir() {
     const headers = [
         'Sıra No', 'TC', 'Ad', 'Soyad', 'Doğum Tarihi', 'Kapsam', 'Alan', 'Dal', 'MYK Yeterlilik', 'KOD',
         'Öğr.Eğitim Türü', 'Çerçeve Programı', 'e-Posta', 'Telefon',
-        'En Son Mezuniyet', 'Getirdiği Belge', 'Belge Tarihi',
+        'En Son Mezuniyet', 'Kaç Yıllık', 'Getirdiği Belge', 'Belge Tarihi',
         'İlköğretim Okul', 'İlköğretim Belge Tarihi', 'İlköğretim Belge Sayısı',
         'Lise Okul', 'Lise Alan', 'Lise Belge Tarihi', 'Lise Belge Sayısı',
         'Ön Lisans Okul', 'Ön Lisans Alan', 'Ön Lisans Belge Tarihi', 'Ön Lisans Belge Sayısı',
@@ -1431,7 +1581,7 @@ async function excelIndir() {
         ws.addRow([
             formatBasvuruNo(b.sira), b.tc, b.ad, b.soyad, b.dogumTarihi, b.kapsam, b.alan, b.dal, b.mykAra, b.kod,
             b.ogrenciEgitimTuru, b.cerceveProgrami, b.eposta, b.telefon,
-            b.enSonMezuniyet, b.getirdigiBelge, b.belgeTarihi,
+            b.enSonMezuniyet, b.mezuniyetYili, b.getirdigiBelge, b.belgeTarihi,
             b.ilkogretimOkul, b.ilkogretimBelgeTarihi, b.ilkogretimBelgeSayisi,
             b.liseOkul, b.liseAlan, b.liseBelgeTarihi, b.liseBelgeSayisi,
             b.onlisansOkul, b.onlisansAlan, b.onlisansBelgeTarihi, b.onlisansBelgeSayisi,
@@ -1458,7 +1608,7 @@ function tumVerileriSil() {
 }
 
 // ================================================================
-// 9. BAŞLATMA (window.onload)
+// 10. BAŞLATMA (window.onload)
 // ================================================================
 window.onload = function() {
     // MYK öneri motoru
