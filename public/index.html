@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>E-MESEM Başvuru ve Denklik Yönetim Sistemi</title>
+<title>E-MESEM Başvuru, Denklik ve Otomasyon Sistemi</title>
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 <style>
@@ -45,7 +45,7 @@
 
     /* HEADER */
     .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
-    .header-title-box { display: flex; align-items: center; gap: 12px; }
+    .header-title-box { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
     .header-title-box h1 { margin: 0; font-size: 22px; color: #fff; font-weight: 700; letter-spacing: -0.5px; }
     .kurum-bilgi { font-weight: 600; color: var(--primary); background: #1f2937; padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 13px; }
 
@@ -63,8 +63,16 @@
     .btn-primary:hover:enabled { background: var(--primary-hover); }
     .btn-success { background: var(--success); color: #fff; }
     .btn-success:hover:enabled { background: #059669; }
-    .btn-emesem { background: var(--purple); color: #fff; }
-    .btn-emesem:hover:enabled { background: #7c3aed; }
+    .btn-emesem { background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: #fff; box-shadow: 0 4px 12px rgba(139,92,246,0.35); }
+    .btn-emesem:hover:enabled { background: linear-gradient(135deg, #7c3aed, #5b21b6); transform: translateY(-1px); }
+    .btn-glow {
+        animation: pulseGlow 2s infinite ease-in-out;
+        border: 1px solid #c084fc !important;
+    }
+    @keyframes pulseGlow {
+        0%, 100% { box-shadow: 0 0 10px rgba(168,85,247,0.5), 0 0 20px rgba(168,85,247,0.2); }
+        50% { box-shadow: 0 0 18px rgba(168,85,247,0.9), 0 0 30px rgba(168,85,247,0.4); }
+    }
     .btn-danger { background: var(--danger); color: #fff; }
     .btn-danger:hover:enabled { background: #dc2626; }
     .btn-secondary { background: #475569; color: #fff; }
@@ -134,8 +142,6 @@
     .form-baski table { width: 100%; border-collapse: collapse; margin-top: 8px; }
     .form-baski td, .form-baski th { border: 1px solid #000; padding: 6px 8px; font-size: 13px; color: #000; }
     .form-baski th { background: #f2f2f2 !important; color: #000; text-align: center; font-weight: bold; font-size: 12.5px; }
-    .form-baski td:nth-child(1) { font-weight: bold; width: 34%; }
-    .form-baski td:nth-child(2) { width: 66%; }
 
     @media print {
         body { background: #fff !important; margin: 0 !important; padding: 0 !important; color: #000 !important; }
@@ -174,7 +180,7 @@
     .badge-bekliyor { background: #854d0e; color: #fef08a; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; margin-left: 5px; }
 
     #toast { position: fixed; right: 24px; bottom: 24px; z-index: 10001; display: flex; flex-direction: column; gap: 10px; }
-    .toast-item { background: #1e293b; border: 1px solid var(--border-color); border-left: 4px solid var(--primary); color: #fff; padding: 12px 18px; border-radius: 6px; font-size: 13px; max-width: 360px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+    .toast-item { background: #1e293b; border: 1px solid var(--border-color); border-left: 4px solid var(--primary); color: #fff; padding: 12px 18px; border-radius: 6px; font-size: 13px; max-width: 380px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
     .toast-item.ok { border-left-color: var(--success); }
     .toast-item.hata { border-left-color: var(--danger); }
 </style>
@@ -209,9 +215,11 @@
                 <span class="kurum-bilgi" id="aktifKurumAdi"></span>
             </div>
             <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <button class="btn btn-emesem btn-glow btn-sm" id="btnHeaderEmesem" style="font-weight:bold;">🤖 E-MESEM Ön Kayıt Robotu</button>
+                <button class="btn btn-teal btn-sm" id="btnKomisyonAyarlarAc">⚙️ Komisyon & Kurum Ayarları</button>
                 <span id="syncBadge">—</span>
                 <button class="btn btn-secondary btn-sm" id="btnKilavuzAc">📖 Kullanım Kılavuzu</button>
-                <button class="btn btn-secondary btn-sm" id="btnIletisimAc">✉️ İletişim / Şifre Talebi</button>
+                <button class="btn btn-secondary btn-sm" id="btnIletisimAc">✉️ İletişim / Şifre</button>
                 <button class="btn btn-danger btn-sm" id="btnCikis">Çıkış</button>
             </div>
         </div>
@@ -482,13 +490,13 @@
 
         <!-- AKSİYON VE ARAÇLAR ÇUBUĞU -->
         <div class="actions">
+            <button class="btn btn-emesem btn-glow" id="btnEmesemYardimci">🤖 E-MESEM Ön Kayıt Robotu</button>
             <button class="btn btn-success" id="btnEsitle">☁️ Buluta Eşitle</button>
             <button class="btn btn-warning" id="btnExcel">📊 Excel İndir</button>
             <button class="btn btn-primary" id="btnExcelAktar">📥 Excel'den İçe Aktar</button>
             <input type="file" id="excelDosya" accept=".xlsx,.xls,.csv" style="display:none;">
             <button class="btn btn-teal" id="btnHizliGiris">⚡ Hızlı Giriş (Excel'den Yapıştır)</button>
-            <button class="btn btn-emesem" id="btnEmesemYardimci">🤖 E-MESEM Ön Kayıt Robotu</button>
-            <button class="btn btn-secondary" id="btnRaporlarModali">📑 Resmi Rapor & Çıktılar</button>
+            <button class="btn btn-secondary" id="btnRaporlarModali">📑 Resmi Rapor & Çıktılar (EK-2, EK-3, Defter)</button>
             <button class="btn btn-secondary" id="btnTabloKopyala">📋 Tabloyu Kopyala</button>
             <button class="btn btn-danger" id="btnSifirla" style="margin-left:auto;">🗑️ Verileri Sıfırla</button>
         </div>
@@ -523,23 +531,24 @@
 
         <!-- FOOTER & COPYRIGHT -->
         <div class="footer">
-            <strong>E-MESEM Başvuru ve Denklik Yönetim Sistemi</strong> &copy; 2026<br>
+            <strong>E-MESEM Başvuru, Denklik ve Otomasyon Sistemi</strong> &copy; 2026<br>
             Tasarım & Geliştirme: <strong>Görkem Kocaman</strong> | Tüm Hakları Saklıdır.<br>
             İletişim & Destek: <a href="mailto:gorkemkocaman.tr@gmail.com" style="color:var(--primary); text-decoration:none;">gorkemkocaman.tr@gmail.com</a>
         </div>
     </div>
 </div>
 
-<!-- MODAL: RESMİ RAPORLAR & ÇIKTI ŞABLONLARI -->
+<!-- MODAL: RESMİ RAPORLAR & ÇIKTI ŞABLONLARI (EK-2, EK-3, DEFTER) -->
 <div class="modal-overlay" id="formSablonModal">
-    <div class="modal-box" style="max-width:1100px;">
+    <div class="modal-box" style="max-width:1250px;">
         <button class="close-btn baski-gizle" id="btnSablonKapat" type="button">&#10005;</button>
         
-        <div class="modal-nav baski-gizle" style="display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; border-bottom:1px solid #ddd; padding-bottom:12px;">
+        <div class="modal-nav baski-gizle" style="display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; border-bottom:1px solid #ddd; padding-bottom:12px; align-items:center;">
             <button class="btn btn-primary btn-sm" id="btnSekmeSonuc">📄 EK-3 Başvuru Sonuç Belgesi</button>
             <button class="btn btn-secondary btn-sm" id="btnSekmeKomisyon">📋 EK-2 İl Denklik Komisyonu Değerlendirme Listesi</button>
             <button class="btn btn-secondary btn-sm" id="btnSekmeDefter">📕 Belge Denklik Defteri</button>
             <button class="btn btn-secondary btn-sm" id="btnSekmeBosForm">📝 Boş Başvuru Formu</button>
+            <button class="btn btn-teal btn-sm" id="btnSablonAyarAc" style="margin-left:auto;">⚙️ Kurum & Komisyon Bilgilerini Düzenle</button>
         </div>
 
         <div id="formSablonContainer" class="form-baski">
@@ -567,6 +576,188 @@
     </div>
 </div>
 
+<!-- MODAL: KURUM VE KOMİSYON AYARLARI -->
+<div class="modal-overlay" id="komisyonAyarlarModal">
+    <div class="modal-box dark" style="max-width:850px;">
+        <button class="close-btn" id="btnKomisyonAyarKapat" type="button">&#10005;</button>
+        <h2 style="color:var(--primary); margin-top:0; display:flex; align-items:center; gap:8px;">⚙️ Kurum & Komisyon Ayarları</h2>
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">
+            Resmi evraklarda (EK-2, EK-3 ve Belge Denklik Defteri) yer alan kurum adları, komisyon dönemi, komisyon başkanı ve üyelerin unvanlarını bu ekrandan özelleştirebilirsiniz. Bilgiler tarayıcınızda ve oturumunuzda otomatik saklanır.
+        </p>
+
+        <form id="komisyonAyarForm" onsubmit="return false;">
+            <div style="background:#17202d; padding:14px 18px; border-radius:8px; border:1px solid var(--border-color); margin-bottom:14px;">
+                <h4 style="color:#38bdf8; margin:0 0 10px 0; font-size:14px;">🏢 Üst Kurum & Dönem Bilgileri</h4>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="ayarIlIlceMem">İl/İlçe Milli Eğitim:</label>
+                            <input type="text" id="ayarIlIlceMem" placeholder="Örn: KIRIKKALE İL MİLLİ EĞİTİM MÜDÜRLÜĞÜ">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="ayarKomisyonDonem">Komisyon Dönemi:</label>
+                            <input type="text" id="ayarKomisyonDonem" placeholder="Örn: 2026/4.DÖNEM AĞUSTOS">
+                        </div>
+                    </div>
+                </div>
+                <div class="row" style="margin-top:6px;">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="ayarNoSablon">Belge No Öneki:</label>
+                            <input type="text" id="ayarNoSablon" placeholder="Örn: D2026- veya K202608-">
+                        </div>
+                    </div>
+                    <div class="col"></div>
+                </div>
+            </div>
+
+            <div style="background:#17202d; padding:14px 18px; border-radius:8px; border:1px solid var(--border-color); margin-bottom:14px;">
+                <h4 style="color:#f59e0b; margin:0 0 10px 0; font-size:14px;">👤 Komisyon Başkanı / Onay Makamı</h4>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="ayarBaskanAdSoyad">Adı Soyadı:</label>
+                            <input type="text" id="ayarBaskanAdSoyad" placeholder="Örn: Hamza AYGÜN">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="ayarBaskanUnvan">Unvanı / Görevi:</label>
+                            <input type="text" id="ayarBaskanUnvan" placeholder="Örn: İl Milli Eğitim Müdür Yardımcısı">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background:#17202d; padding:14px 18px; border-radius:8px; border:1px solid var(--border-color); margin-bottom:14px;">
+                <h4 style="color:#10b981; margin:0 0 10px 0; font-size:14px;">👥 Komisyon Üyesi 1 (Mesleki Eğitim Merkezi)</h4>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="ayarUye1Kurum">Kurum Adı:</label>
+                            <input type="text" id="ayarUye1Kurum" placeholder="Örn: MKE Mesleki Eğitim Merkezi">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="ayarUye1AdSoyad">Adı Soyadı:</label>
+                            <input type="text" id="ayarUye1AdSoyad" placeholder="Örn: Mustafa DURAK">
+                        </div>
+                    </div>
+                </div>
+                <div class="row" style="margin-top:6px;">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="ayarUye1Unvan">Unvanı:</label>
+                            <input type="text" id="ayarUye1Unvan" placeholder="Örn: Mesleki Eğitim Merkezi Müdürü">
+                        </div>
+                    </div>
+                    <div class="col"></div>
+                </div>
+            </div>
+
+            <div style="background:#17202d; padding:14px 18px; border-radius:8px; border:1px solid var(--border-color); margin-bottom:14px;">
+                <h4 style="color:#a78bfa; margin:0 0 10px 0; font-size:14px;">👥 Komisyon Üyesi 2 (Mesleki ve Teknik Anadolu Lisesi)</h4>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="ayarUye2Kurum">Kurum Adı:</label>
+                            <input type="text" id="ayarUye2Kurum" placeholder="Örn: Gazi Mesleki ve Teknik Anadolu Lisesi">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="ayarUye2AdSoyad">Adı Soyadı:</label>
+                            <input type="text" id="ayarUye2AdSoyad" placeholder="Örn: Çetin YILDIZ">
+                        </div>
+                    </div>
+                </div>
+                <div class="row" style="margin-top:6px;">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="ayarUye2Unvan">Unvanı:</label>
+                            <input type="text" id="ayarUye2Unvan" placeholder="Örn: Gazi MTAL Müdürü">
+                        </div>
+                    </div>
+                    <div class="col"></div>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px;">
+                <button type="button" class="btn btn-secondary" id="btnKomisyonAyarVarsayilan">🔄 Varsayılanlara Dön</button>
+                <button type="button" class="btn btn-primary" id="btnKomisyonAyarKaydet">💾 Ayarları Kaydet</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL: E-MESEM ÖN KAYIT ROBOTU KÖPRÜSÜ VE REHBERİ -->
+<div class="modal-overlay" id="emesemModal">
+    <div class="modal-box dark" style="max-width:920px;">
+        <button class="close-btn" id="btnEmesemKapat" type="button">&#10005;</button>
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+            <div style="font-size:28px;">🤖</div>
+            <h2 style="margin:0; color:#c084fc;">E-MESEM Sınav Ön Kayıt Robotu & Veri Köprüsü</h2>
+        </div>
+        <p style="font-size:13.5px; color:#cbd5e1; line-height:1.6; margin-bottom:18px;">
+            Bu robot, MEB E-MESEM (<code>emesem.meb.gov.tr</code>) portalındaki <strong>Sınav Öğrenci Ön Kayıt</strong> ekranında formları tam otomatik veya tek tıkla doldurur. Veri kaybını ve manuel giriş hatalarını sıfıra indirir.
+        </p>
+
+        <!-- 1. ADIM: VERİ HAZIRLAMA -->
+        <div style="background:#17202d; border:1px solid #334155; border-radius:8px; padding:16px; margin-bottom:14px;">
+            <div style="font-weight:700; color:#38bdf8; font-size:14px; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+                <span>📋 1. Adım: Aday Verilerini Hazırlayın</span>
+            </div>
+            <p style="font-size:12.5px; color:#94a3b8; margin:0 0 12px 0;">
+                Sistemdeki aktif aday kayıtlarını panoya kopyalayabilir ya da JSON dosyası olarak indirip robota tek tıkla yükleyebilirsiniz.
+            </p>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="btn btn-success" id="btnEmesemTumunuKopyala" type="button" style="font-weight:bold;">📋 1. Adım: Tüm Kayıtları Robot İçin Kopyala</button>
+                <button class="btn btn-teal" id="btnEmesemJsonIndir" type="button">💾 JSON Olarak İndir (Yedek/Robot İçin)</button>
+            </div>
+        </div>
+
+        <!-- 2. ADIM: ROBOTU BAŞLATMA (YER İMİ / KOD) -->
+        <div style="background:#17202d; border:1px solid #334155; border-radius:8px; padding:16px; margin-bottom:14px;">
+            <div style="font-weight:700; color:#c084fc; font-size:14px; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+                <span>🔗 2. Adım: E-MESEM Robotunu Başlatın (Yer İmi / Kod)</span>
+            </div>
+            <p style="font-size:12.5px; color:#94a3b8; margin:0 0 12px 0;">
+                Aşağıdaki butonu farenizle tutup tarayıcınızın <strong>Yer İmleri (Favoriler) Çubuğuna</strong> sürükleyin. MEB E-MESEM sayfasındayken bu yer imine tıklamanız yeterlidir.
+            </p>
+            
+            <div style="padding:14px; background:#1e293b; border:2px dashed #8b5cf6; border-radius:8px; text-align:center; margin-bottom:12px;">
+                <a id="emesemYerImi" href="#" style="display:inline-block; background:linear-gradient(135deg, #8b5cf6, #6d28d9); color:#fff; padding:12px 28px; border-radius:6px; font-weight:bold; text-decoration:none; cursor:move; font-size:14px; box-shadow:0 4px 14px rgba(139,92,246,0.4);">⚡ E-MESEM Ön Kayıt Robotu (Sürükleyin)</a>
+                <div style="font-size:11.5px; color:#a78bfa; margin-top:8px;">👆 Bu butonu tutup tarayıcınızın Yer İmleri (Bookmarks) çubuğuna sürükleyip bırakınız.</div>
+            </div>
+
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="btn btn-warning" id="btnEmesemBetikKopyala" type="button">💻 Konsol Betiğini Kopyala (F12 Yöntemi)</button>
+                <button class="btn btn-secondary" id="btnEmesemYerImiKopyala" type="button">🔗 Yer İmi Kodunu Kopyala</button>
+            </div>
+        </div>
+
+        <!-- 3. ADIM: REHBER -->
+        <div style="background:#17202d; border:1px solid #334155; border-radius:8px; padding:16px;">
+            <div style="font-weight:700; color:#fbbf24; font-size:14px; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+                <span>📖 3. Adım: MEB E-MESEM'de Nasıl Kullanılır?</span>
+            </div>
+            <ol style="font-size:12.5px; color:#e2e8f0; line-height:1.8; margin:0; padding-left:20px;">
+                <li>MEB E-MESEM portalında (<code>emesem.meb.gov.tr</code>) <strong>Sınav Öğrenci Ön Kayıt</strong> ekranını açın.</li>
+                <li>Tarayıcınızın yer imlerindeki <strong>"E-MESEM Ön Kayıt Robotu"</strong>na tıklayın (veya F12 > Console sekmesine betiği yapıştırıp Enter'a basın).</li>
+                <li>Ekranda açılan robot panelinde <strong>"📋 Panodan Al"</strong> veya <strong>"📂 JSON Yükle"</strong> butonuna basarak adayları yükleyin.</li>
+                <li>Robot adayları sırayla listeler; <strong>"▶ Bu Adayı Kaydet"</strong> ile tekil veya <strong>"⏩ Hepsini Sırayla Kaydet"</strong> ile otomatik olarak arka arkaya kaydedebilirsiniz.</li>
+            </ol>
+        </div>
+
+        <div style="margin-top:16px; text-align:right;">
+            <button class="btn btn-secondary" id="btnEmesemKapat2" type="button">Kapat</button>
+        </div>
+    </div>
+</div>
+
 <!-- MODAL: KULLANIM KILAVUZU -->
 <div class="modal-overlay" id="kilavuzModal">
     <div class="modal-box dark" style="max-width:960px;">
@@ -586,7 +777,7 @@
             <p>E-MESEM sayfasında <em>Sınav Öğrenci Ön Kayıt</em> ekranını açın. Yardımcı robot adayın başvuru türüne göre sekmeyi seçer, <strong>"Yeni Kayıt"</strong> butonuna tıklar, TC ve Doğum Tarihini yazıp <strong>"Sorgula"</strong> butonuna basarak MERNİS'ten Ad/Soyad/Cinsiyet/Doğum Yeri bilgilerinin gelmesini bekler. Kapsam, iletişim ve mezuniyet bilgilerini doldurup sağ üstteki <strong>"Kaydet"</strong> butonuna tıklar. Hepsini sırayla veya tek tek kaydedebilirsiniz.</p>
 
             <h4 style="color:#60a5fa; margin-bottom:4px;">5. Resmi Raporlar ve Çıktılar</h4>
-            <p><strong>"Resmi Rapor & Çıktılar"</strong> menüsünden Aday Sonuç Çıktısı, Boş Başvuru Formu, İl Denklik Komisyonu Başvuru Değerlendirme Listesi ve Belge Denklik Defteri şablonlarını resmi formatta görüntüleyip yazdırabilirsiniz.</p>
+            <p><strong>"Resmi Rapor & Çıktılar"</strong> menüsünden EK-2 İl Denklik Komisyonu Değerlendirme Listesi, EK-3 Başvuru Sonuç Belgesi ve Belge Denklik Defteri şablonlarını resmi standartlara birebir uygun formatta görüntüleyip yazdırabilirsiniz.</p>
         </div>
         <div style="margin-top:20px; text-align:right;">
             <button class="btn btn-secondary" id="btnKilavuzKapat2" type="button">Kapat</button>
@@ -633,40 +824,6 @@
             <button class="btn btn-primary" id="btnHizliAktar" type="button">📥 Kayıtları Aktar</button>
             <button class="btn btn-secondary" id="btnHizliBaslikEkle" type="button">📋 Başlık Satırını Panoya Kopyala</button>
             <button class="btn btn-secondary" id="btnHizliKapat2" type="button">Kapat</button>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL: E-MESEM ÖN KAYIT ROBOTU BİLGİ VE YER İMİ -->
-<div class="modal-overlay" id="emesemModal">
-    <div class="modal-box dark" style="max-width:880px;">
-        <button class="close-btn" id="btnEmesemKapat" type="button">&#10005;</button>
-        <h3 style="margin-top:0; color:var(--primary);">🤖 E-MESEM Sınav Ön Kayıt Robotu & Veri Aktarımı</h3>
-        <p style="font-size:13px; color:var(--text-muted); line-height:1.6;">
-            Bu robot, MEB E-MESEM portalındaki (<code>emesem.meb.gov.tr</code>) <strong>Sınav Öğrenci Ön Kayıt</strong> ekranında formları tam otomatik veya adım adım doldurur.
-        </p>
-        
-        <div style="background:#17202d; border:1px solid var(--border-color); border-radius:8px; padding:14px; margin-bottom:16px;">
-            <div style="font-weight:600; color:#38bdf8; margin-bottom:6px; font-size:13.5px;">⚡ Hızlı Kullanım Adımları:</div>
-            <ol style="font-size:13px; color:#e2e8f0; line-height:1.7; margin:0; padding-left:20px;">
-                <li>Aşağıdaki mor <strong>E-MESEM Ön Kayıt Robotu</strong> butonunu tutup tarayıcınızın <strong>Yer İmleri (Favoriler) Çubuğuna</strong> sürükleyin. (Veya "Konsol Betiğini Kopyala" butonuna basın).</li>
-                <li>Bu sistemdeki aday kayıtlarını <strong>"📋 Tüm Kayıtları Robot İçin Kopyala"</strong> veya <strong>"Tek Aday Kopyala"</strong> ile panoya alın.</li>
-                <li>MEB E-MESEM portalında <em>Sınav Öğrenci Ön Kayıt</em> ekranını açın.</li>
-                <li>Yer imlerinizdeki <strong>E-MESEM Ön Kayıt Robotu</strong>'na tıklayın (ya da F12 > Console'a kodu yapıştırıp Enter'a basın).</li>
-                <li>Ekrana gelen robot panelinde <strong>"Panodan Al"</strong> dedikten sonra <strong>"Hepsini Sırayla Kaydet"</strong> veya <strong>"Sıradaki Adayı Doldur"</strong> butonuna basın.</li>
-            </ol>
-        </div>
-
-        <div style="margin:16px 0; padding:16px; background:#1e293b; border:1px dashed #64748b; border-radius:8px; text-align:center;">
-            <a id="emesemYerImi" href="#" style="display:inline-block; background:var(--purple); color:#fff; padding:12px 28px; border-radius:6px; font-weight:bold; text-decoration:none; cursor:move; font-size:14px; box-shadow:0 4px 12px rgba(139,92,246,0.3);">⚡ E-MESEM Ön Kayıt Robotu</a>
-            <div style="font-size:12px; color:var(--text-muted); margin-top:8px;">👆 Bu butonu farenizle tutup tarayıcınızın Yer İmleri (Bookmarks) çubuğuna sürükleyip bırakınız.</div>
-        </div>
-
-        <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-            <button class="btn btn-primary" id="btnEmesemTumunuKopyala" type="button">📋 Tüm Kayıtları Robot İçin Kopyala</button>
-            <button class="btn btn-warning" id="btnEmesemBetikKopyala" type="button">💻 Konsol Betiğini Kopyala</button>
-            <button class="btn btn-secondary" id="btnEmesemYerImiKopyala" type="button">🔗 Yer İmi Kodunu Kopyala</button>
-            <button class="btn btn-secondary" id="btnEmesemKapat2" type="button" style="margin-left:auto;">Kapat</button>
         </div>
     </div>
 </div>
@@ -724,7 +881,7 @@ const mykData = [
    UYGULAMA MANTIĞI & SABİTLER
    ============================================================ */
 const API_ADRESI = "/api/veri";
-const SURUM = "3.2";
+const SURUM = "3.5";
 let YEREL_MOD = true;
 let sunucuSorgusu = null;
 
@@ -751,7 +908,7 @@ async function sunucuyuYokla() {
 }
 
 /* ============================================================
-   ALAN TANIMLARI (TÜM SİSTEM TEK KAYNAK)
+   ALAN TANIMLARI
    ============================================================ */
 const ALANLAR = [
     { id: 'basvuruTuru', ad: 'Başvuru Türü', tip: 'metin' },
@@ -833,6 +990,55 @@ let aktifRaporTuru = 'sonuc';
 
 const $ = (id) => document.getElementById(id);
 
+/* Komisyon ve Kurum Ayarları Yapısı */
+const VARSAYILAN_KOMISYON = {
+    ilIlceMem: "KIRIKKALE İL MİLLİ EĞİTİM MÜDÜRLÜĞÜ",
+    komisyonDonem: "2026/4.DÖNEM AĞUSTOS",
+    noSablon: "D2026-",
+    baskanAdSoyad: "Hamza AYGÜN",
+    baskanUnvan: "İl Milli Eğitim Müdür Yardımcısı",
+    uye1Kurum: "MKE Mesleki Eğitim Merkezi",
+    uye1AdSoyad: "Mustafa DURAK",
+    uye1Unvan: "Mesleki Eğitim Merkezi Müdürü",
+    uye2Kurum: "Gazi Mesleki ve Teknik Anadolu Lisesi",
+    uye2AdSoyad: "Çetin YILDIZ",
+    uye2Unvan: "Gazi Mesleki ve Teknik Anadolu Lisesi Müdürü"
+};
+
+let komisyonAyarlari = Object.assign({}, VARSAYILAN_KOMISYON);
+
+function komisyonAyarlariniYukle() {
+    try {
+        const kayitli = localStorage.getItem('mesem_komisyon_ayarlar');
+        if (kayitli) {
+            komisyonAyarlari = Object.assign({}, VARSAYILAN_KOMISYON, JSON.parse(kayitli));
+        }
+    } catch (e) {
+        komisyonAyarlari = Object.assign({}, VARSAYILAN_KOMISYON);
+    }
+}
+
+function komisyonAyarlariniKaydet(yeniAyarlar) {
+    komisyonAyarlari = Object.assign({}, komisyonAyarlari, yeniAyarlar);
+    try {
+        localStorage.setItem('mesem_komisyon_ayarlar', JSON.stringify(komisyonAyarlari));
+    } catch (e) { }
+}
+
+function komisyonFormunuDoldur() {
+    $('ayarIlIlceMem').value = komisyonAyarlari.ilIlceMem || '';
+    $('ayarKomisyonDonem').value = komisyonAyarlari.komisyonDonem || '';
+    $('ayarNoSablon').value = komisyonAyarlari.noSablon || '';
+    $('ayarBaskanAdSoyad').value = komisyonAyarlari.baskanAdSoyad || '';
+    $('ayarBaskanUnvan').value = komisyonAyarlari.baskanUnvan || '';
+    $('ayarUye1Kurum').value = komisyonAyarlari.uye1Kurum || '';
+    $('ayarUye1AdSoyad').value = komisyonAyarlari.uye1AdSoyad || '';
+    $('ayarUye1Unvan').value = komisyonAyarlari.uye1Unvan || '';
+    $('ayarUye2Kurum').value = komisyonAyarlari.uye2Kurum || '';
+    $('ayarUye2AdSoyad').value = komisyonAyarlari.uye2AdSoyad || '';
+    $('ayarUye2Unvan').value = komisyonAyarlari.uye2Unvan || '';
+}
+
 function yeniId() {
     if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
     return 'k-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
@@ -843,7 +1049,7 @@ function bildir(mesaj, tur) {
     kutu.className = 'toast-item' + (tur ? ' ' + tur : '');
     kutu.textContent = mesaj;
     $('toast').appendChild(kutu);
-    setTimeout(() => kutu.remove(), 4200);
+    setTimeout(() => kutu.remove(), 4500);
 }
 
 function aramaAnahtari(s) {
@@ -886,10 +1092,14 @@ function tcGecerliMi(tc) {
 }
 
 function basvuruNoUret(tarihISO, sira) {
-    const d = tarihISO ? new Date(tarihISO) : new Date();
-    const yil = d.getFullYear();
-    const ay = String(d.getMonth() + 1).padStart(2, '0');
-    return `K${yil}${ay}-${String(sira).padStart(4, '0')}`;
+    const sablon = (komisyonAyarlari.noSablon || 'D2026-').trim();
+    if (sablon.includes('{YIL}')) {
+        const d = tarihISO ? new Date(tarihISO) : new Date();
+        const yil = d.getFullYear();
+        const ay = String(d.getMonth() + 1).padStart(2, '0');
+        return sablon.replace('{YIL}', yil).replace('{AY}', ay) + String(sira).padStart(4, '0');
+    }
+    return `${sablon}${String(sira).padStart(4, '0')}`;
 }
 
 function sonrakiSira() {
@@ -1063,6 +1273,7 @@ function uygulamayiAc() {
     $('mainApp').style.display = 'block';
     $('aktifKurumAdi').textContent = aktifKurum;
     esitlemeDurumu(YEREL_MOD ? 'yerel' : 'ok', YEREL_MOD ? 'Yerel mod' : 'Bulutla eşit');
+    komisyonAyarlariniYukle();
     yeredenOku();
     tumunuYenile();
     basvuruTuruTetikle();
@@ -1090,7 +1301,6 @@ function kaydiNormalize(k) {
     };
     ALANLAR.forEach(a => {
         let d = k[a.id];
-        // Eski kayıt uyumluluğu: kalfalikSinavGir, basariliUstalik veya kalfalikVeBasariliUstalik varsa kalfalikVeUstalik'a aktar
         if (a.id === 'kalfalikVeUstalik' && (k.kalfalikSinavGir || k.basariliUstalik || k.kalfalikVeBasariliUstalik)) {
             d = true;
         }
@@ -1098,7 +1308,6 @@ function kaydiNormalize(k) {
         else if (a.tip === 'tarih') y[a.id] = formatTarih(d);
         else y[a.id] = d == null ? '' : String(d);
     });
-    // Geriye uyumluluk için çift yönlü eşleme
     if (y.kalfalikVeUstalik) y.kalfalikVeBasariliUstalik = true;
     if (k.kalfalikVeBasariliUstalik && !y.kalfalikVeUstalik) y.kalfalikVeUstalik = true;
     if (!y.basvuruTuru) y.basvuruTuru = 'Ustalık/Kalfalık';
@@ -1610,43 +1819,12 @@ function mykKlavye(e) {
 }
 
 /* ============================================================
-   RESMİ RAPORLAR VE YAZDIRILABİLİR ÇIKTI ŞABLONLARI
-   ============================================================ */
-function sablonSatir(tablo, etiket, deger) {
-    const tr = tablo.insertRow();
-    const td1 = tr.insertCell(); td1.textContent = etiket;
-    const td2 = tr.insertCell(); td2.textContent = deger || '\u00A0';
-}
-
-function sablonBaslik(tablo, metin) {
-    const tr = tablo.insertRow();
-    const th = document.createElement('th');
-    th.colSpan = 2; th.textContent = metin;
-    tr.appendChild(th);
-}
-
-function sablonBosSatir(tablo, etiket, yukseklik) {
-    const tr = tablo.insertRow();
-    const td1 = tr.insertCell(); td1.textContent = etiket; td1.style.verticalAlign = 'top';
-    const td2 = tr.insertCell(); td2.textContent = '\u00A0';
-    if (yukseklik) td2.style.height = yukseklik;
-    td2.style.verticalAlign = 'top';
-}
-
-/* ============================================================
    RESMİ RAPORLAR VE ÇIKTI ŞABLONLARI (EK-2, EK-3, DEFTER)
    ============================================================ */
 
-function ilAdiGetir() {
-    const k = aktifKurum || '';
-    if (k.toUpperCase().includes('KIRIKKALE')) return 'KIRIKKALE';
-    const ilkKelime = k.split(/[\s\-_\/]/)[0];
-    return (ilkKelime && ilkKelime.length > 2) ? ilkKelime.toLocaleUpperCase('tr-TR') : 'KIRIKKALE';
-}
-
 function sablonUstYaziGuncelle(baslik, altBaslik, kurum) {
     $('sablonBaslikYazi').textContent = baslik;
-    $('sablonKurumYazi').textContent = kurum || (ilAdiGetir() + ' İL MİLLİ EĞİTİM MÜDÜRLÜĞÜ');
+    $('sablonKurumYazi').textContent = kurum || komisyonAyarlari.ilIlceMem;
     $('sablonAltBaslik').textContent = altBaslik || '';
 }
 
@@ -1657,10 +1835,13 @@ function sonucSablonuKur(k) {
     
     aktifRaporTuru = 'sonuc';
     sekmeButonlariniAyarla('btnSekmeSonuc');
-    $('sablonFotoKare').style.display = 'flex';
-    $('sablonHeaderBox').style.display = 'flex';
+    $('sablonFotoKare').style.display = 'none';
+    $('sablonHeaderBox').style.display = 'none';
     
-    const il = ilAdiGetir();
+    const mem = komisyonAyarlari.ilIlceMem || 'KIRIKKALE İL MİLLİ EĞİTİM MÜDÜRLÜĞÜ';
+    const ilMatch = mem.match(/^([A-ZÇĞİÖŞÜa-zçğıöşü]+)/);
+    const il = ilMatch ? ilMatch[1].toLocaleUpperCase('tr-TR') : 'KIRIKKALE';
+    
     const bul = (id) => String(k[id] || '').trim();
     const birlestir = (list, ayirac) => list.map(x => String(x || '').trim()).filter(Boolean).join(ayirac || ' / ');
 
@@ -1731,56 +1912,59 @@ function sonucSablonuKur(k) {
 
     let belgeSatirlariHtml = belgeler.map(b => `
         <tr>
-            <td style="text-align:center; padding:6px; border:1px solid #000;">${b.sira}</td>
-            <td style="padding:6px; border:1px solid #000;">${b.cesit}</td>
-            <td style="padding:6px; border:1px solid #000;">${b.kurum}</td>
-            <td style="padding:6px; border:1px solid #000; text-align:center;">${b.tarihSayi || '-'}</td>
-            <td style="padding:6px; border:1px solid #000;">${b.aciklama}</td>
+            <td style="text-align:center; padding:5px; border:1px solid #000;">${b.sira}</td>
+            <td style="padding:5px; border:1px solid #000;">${b.cesit}</td>
+            <td style="padding:5px; border:1px solid #000;">${b.kurum}</td>
+            <td style="padding:5px; border:1px solid #000; text-align:center;">${b.tarihSayi || '-'}</td>
+            <td style="padding:5px; border:1px solid #000;">${b.aciklama}</td>
         </tr>
     `).join('');
 
-    const kutuSecim = (durum) => durum ? '<strong style="font-size:15px; color:#000;">[ X ]</strong>' : '<span style="color:#555;">[ &nbsp; ]</span>';
+    const kutuSecim = (durum) => durum ? '<strong style="font-size:16px; color:#000;">[ X ]</strong>' : '<span style="color:#555;">[ &nbsp; ]</span>';
+
+    const bugunTarih = trTarih(formatTarih(k.denklikBelgeTarihi || k.kayitTarihi || new Date()));
 
     container.innerHTML = `
-        <div style="text-align:center; font-family:'Times New Roman', serif; margin-bottom:14px;">
-            <div style="font-size:15px; font-weight:bold; line-height:1.4;">
+        <div style="position:relative; font-family:'Times New Roman', serif; margin-bottom:12px;">
+            <div style="position:absolute; top:0; right:0; font-weight:bold; font-size:14px;">EK-3</div>
+            <div style="text-align:center; font-size:14px; font-weight:bold; line-height:1.4;">
                 T.C.<br>
                 ${il} VALİLİĞİ<br>
                 İL MİLLİ EĞİTİM MÜDÜRLÜĞÜ<br>
-                <span style="font-size:16px; text-decoration:underline;">EK-3 BAŞVURU SONUÇ BELGESİ</span>
+                BAŞVURU SONUÇ BELGESİ
             </div>
         </div>
 
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:12px; font-weight:bold;">
+            <div>Sonuç Belgesinin Tarihi: ${bugunTarih}</div>
+            <div>Sonuç Belgesinin Sayısı: ${k.basvuruNo || '-'}</div>
+        </div>
+
+        <div style="font-weight:bold; font-size:12px; margin:8px 0 4px; text-transform:uppercase;">BAŞVURU SAHİBİNİN</div>
         <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:12px;">
             <tr>
-                <td style="width:25%; font-weight:bold; background:#f5f5f5; border:1px solid #000; padding:6px;">Adı Soyadı</td>
-                <td style="width:40%; font-weight:bold; border:1px solid #000; padding:6px; font-size:13px;">${k.ad || ''} ${k.soyad || ''}</td>
-                <td style="width:18%; font-weight:bold; background:#f5f5f5; border:1px solid #000; padding:6px;">T.C. Kimlik No</td>
-                <td style="width:17%; font-weight:bold; border:1px solid #000; padding:6px; text-align:center; font-size:13px;">${k.tc || '-'}</td>
+                <td style="width:25%; font-weight:bold; background:#f5f5f5; border:1px solid #000; padding:5px;">Adı Soyadı</td>
+                <td style="width:35%; font-weight:bold; border:1px solid #000; padding:5px; font-size:13px;">${k.ad || ''} ${k.soyad || ''}</td>
+                <td style="width:20%; font-weight:bold; background:#f5f5f5; border:1px solid #000; padding:5px;">T.C. Kimlik No</td>
+                <td style="width:20%; font-weight:bold; border:1px solid #000; padding:5px; text-align:center; font-size:13px;">${k.tc || '-'}</td>
             </tr>
             <tr>
-                <td style="font-weight:bold; background:#f5f5f5; border:1px solid #000; padding:6px;">Meslek Alanı</td>
-                <td style="border:1px solid #000; padding:6px;"><strong>${k.alan || '-'}</strong></td>
-                <td style="font-weight:bold; background:#f5f5f5; border:1px solid #000; padding:6px;">Meslek Dalı</td>
-                <td style="border:1px solid #000; padding:6px;">${k.dal || '-'}</td>
-            </tr>
-            <tr>
-                <td style="font-weight:bold; background:#f5f5f5; border:1px solid #000; padding:6px;">Denklik Belge No</td>
-                <td style="border:1px solid #000; padding:6px;"><strong>${k.basvuruNo || '-'}</strong></td>
-                <td style="font-weight:bold; background:#f5f5f5; border:1px solid #000; padding:6px;">Denklik Belge Tarihi</td>
-                <td style="border:1px solid #000; padding:6px; text-align:center;">${trTarih(formatTarih(k.denklikBelgeTarihi || k.kayitTarihi)) || '-'}</td>
+                <td style="font-weight:bold; background:#f5f5f5; border:1px solid #000; padding:5px;">Meslek Alanı</td>
+                <td style="border:1px solid #000; padding:5px;"><strong>${k.alan || '-'}</strong></td>
+                <td style="font-weight:bold; background:#f5f5f5; border:1px solid #000; padding:5px;">Meslek Dalı</td>
+                <td style="border:1px solid #000; padding:5px;">${k.dal || '-'}</td>
             </tr>
         </table>
 
-        <div style="font-weight:bold; font-size:12px; margin:10px 0 4px; text-transform:uppercase;">1. DEĞERLENDİRMEYE ALINAN BELGELER</div>
-        <table style="width:100%; border-collapse:collapse; font-size:11.5px; margin-bottom:14px;">
+        <div style="font-weight:bold; font-size:12px; margin:8px 0 4px; text-transform:uppercase;">DEĞERLENDİRMEYE ALINAN BELGELER</div>
+        <table style="width:100%; border-collapse:collapse; font-size:11px; margin-bottom:10px;">
             <thead>
                 <tr style="background:#f2f2f2; font-weight:bold;">
-                    <th style="width:6%; border:1px solid #000; padding:6px; text-align:center;">Sıra No</th>
-                    <th style="width:26%; border:1px solid #000; padding:6px;">Belge Çeşidi</th>
-                    <th style="width:28%; border:1px solid #000; padding:6px;">Veren Kurum</th>
-                    <th style="width:20%; border:1px solid #000; padding:6px; text-align:center;">Tarih ve Sayı</th>
-                    <th style="width:20%; border:1px solid #000; padding:6px;">Açıklamalar</th>
+                    <th style="width:6%; border:1px solid #000; padding:5px; text-align:center;">Sıra No</th>
+                    <th style="width:26%; border:1px solid #000; padding:5px;">Belge Çeşidi</th>
+                    <th style="width:28%; border:1px solid #000; padding:5px;">Belgeyi Veren Kurum</th>
+                    <th style="width:20%; border:1px solid #000; padding:5px; text-align:center;">Belgenin Tarih ve Sayısı</th>
+                    <th style="width:20%; border:1px solid #000; padding:5px;">Belge ile İlgili Açıklamalar</th>
                 </tr>
             </thead>
             <tbody>
@@ -1788,59 +1972,63 @@ function sonucSablonuKur(k) {
             </tbody>
         </table>
 
-        <div style="font-weight:bold; font-size:12px; margin:10px 0 4px; text-transform:uppercase;">2. BAŞVURU DEĞERLENDİRME SONUCU</div>
-        <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:16px;">
-            <thead>
-                <tr style="background:#f2f2f2; font-weight:bold;">
-                    <th style="width:10%; border:1px solid #000; padding:6px; text-align:center;">Seçim</th>
-                    <th style="width:90%; border:1px solid #000; padding:6px; text-align:left;">Başvuru Sonucu / Tanınan Hak Seviyesi</th>
-                </tr>
-            </thead>
+        <div style="font-size:12px; line-height:1.5; margin:10px 0; text-align:justify; font-style:italic;">
+            Yukarıda bilgileri bulunan başvuru sahibinin evrakları Önceki Öğrenmelerin Tanınması ve Denklik Komisyonu tarafından incelenmiş ve sonuç aşağıda belirtilmiştir.
+        </div>
+
+        <div style="font-weight:bold; font-size:12px; margin:8px 0 4px; text-transform:uppercase;">BAŞVURU SONUCU</div>
+        <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:14px;">
             <tbody>
                 <tr style="${kalSinav ? 'background:#f0fdf4; font-weight:bold;' : ''}">
-                    <td style="border:1px solid #000; text-align:center; padding:7px;">${kutuSecim(kalSinav)}</td>
-                    <td style="border:1px solid #000; padding:7px;">Kalfalık sınavlarına girmesi</td>
+                    <td style="border:1px solid #000; text-align:center; padding:6px; width:10%;">${kutuSecim(kalSinav)}</td>
+                    <td style="border:1px solid #000; padding:6px;">Kalfalık sınavlarına girmesi</td>
                 </tr>
                 <tr style="${dogKal ? 'background:#f0fdf4; font-weight:bold;' : ''}">
-                    <td style="border:1px solid #000; text-align:center; padding:7px;">${kutuSecim(dogKal)}</td>
-                    <td style="border:1px solid #000; padding:7px;">Doğrudan kalfalık belgesi düzenlenmesi</td>
+                    <td style="border:1px solid #000; text-align:center; padding:6px; width:10%;">${kutuSecim(dogKal)}</td>
+                    <td style="border:1px solid #000; padding:6px;">Doğrudan kalfalık belgesi düzenlenmesi</td>
                 </tr>
                 <tr style="${kalVeUst ? 'background:#f0fdf4; font-weight:bold;' : ''}">
-                    <td style="border:1px solid #000; text-align:center; padding:7px;">${kutuSecim(kalVeUst)}</td>
-                    <td style="border:1px solid #000; padding:7px;">Kalfalık sınavına girmesi, başarılı olması halinde ustalık sınavlarına alınması</td>
+                    <td style="border:1px solid #000; text-align:center; padding:6px; width:10%;">${kutuSecim(kalVeUst)}</td>
+                    <td style="border:1px solid #000; padding:6px;">Kalfalık sınavına girmesi, başarılı olması halinde ustalık sınavlarına alınması</td>
                 </tr>
                 <tr style="${ustSinav ? 'background:#f0fdf4; font-weight:bold;' : ''}">
-                    <td style="border:1px solid #000; text-align:center; padding:7px;">${kutuSecim(ustSinav)}</td>
-                    <td style="border:1px solid #000; padding:7px;">Ustalık Sınavına Girmesi</td>
+                    <td style="border:1px solid #000; text-align:center; padding:6px; width:10%;">${kutuSecim(ustSinav)}</td>
+                    <td style="border:1px solid #000; padding:6px;">Ustalık Sınavına Girmesi</td>
                 </tr>
                 <tr style="${dogUst ? 'background:#f0fdf4; font-weight:bold;' : ''}">
-                    <td style="border:1px solid #000; text-align:center; padding:7px;">${kutuSecim(dogUst)}</td>
-                    <td style="border:1px solid #000; padding:7px;">Doğrudan Ustalık Belgesi Düzenlenmesi</td>
+                    <td style="border:1px solid #000; text-align:center; padding:6px; width:10%;">${kutuSecim(dogUst)}</td>
+                    <td style="border:1px solid #000; padding:6px;">Doğrudan Ustalık Belgesi Düzenlenmesi</td>
                 </tr>
             </tbody>
         </table>
     `;
 
     $('sablonAltImza').innerHTML = `
-        <div style="display:flex; justify-content:space-between; margin-top:20px; font-family:'Times New Roman', serif; text-align:center;">
-            <div style="width:30%;">
-                <div style="font-weight:bold; font-size:13px;">Üye</div>
-                <div style="margin-top:35px; border-top:1px dotted #000; padding-top:4px; font-size:12px;">İmza / Kaşe</div>
+        <div style="display:flex; justify-content:space-between; margin-top:16px; font-family:'Times New Roman', serif; text-align:center;">
+            <div style="width:40%;">
+                <div style="font-weight:bold; font-size:12.5px;">Üye</div>
+                <div style="font-size:12px; font-weight:600; margin-top:2px;">${komisyonAyarlari.uye1AdSoyad}</div>
+                <div style="font-size:11.5px; color:#333;">${komisyonAyarlari.uye1Unvan}</div>
+                <div style="margin-top:25px; border-top:1px dotted #000; padding-top:3px; font-size:11px;">İmza</div>
             </div>
-            <div style="width:30%;">
-                <div style="font-weight:bold; font-size:13px;">Üye</div>
-                <div style="margin-top:35px; border-top:1px dotted #000; padding-top:4px; font-size:12px;">İmza / Kaşe</div>
+            <div style="width:40%;">
+                <div style="font-weight:bold; font-size:12.5px;">Üye</div>
+                <div style="font-size:12px; font-weight:600; margin-top:2px;">${komisyonAyarlari.uye2AdSoyad}</div>
+                <div style="font-size:11.5px; color:#333;">${komisyonAyarlari.uye2Unvan}</div>
+                <div style="margin-top:25px; border-top:1px dotted #000; padding-top:3px; font-size:11px;">İmza</div>
             </div>
-            <div style="width:30%;">
-                <div style="font-weight:bold; font-size:13px;">ONAY</div>
-                <div style="font-size:12px;">İl Milli Eğitim Müdür Yardımcısı<br>(Komisyon Başkanı)</div>
-                <div style="margin-top:20px; border-top:1px dotted #000; padding-top:4px; font-size:12px;">Mühür / İmza</div>
-            </div>
+        </div>
+
+        <div style="text-align:center; margin-top:22px; font-family:'Times New Roman', serif;">
+            <div style="font-weight:bold; font-size:13px;">UYGUNDUR</div>
+            <div style="font-size:12px; margin:2px 0;">... / ... / 2026</div>
+            <div style="font-weight:bold; font-size:13px; margin-top:2px;">${komisyonAyarlari.baskanAdSoyad}</div>
+            <div style="font-size:12px;">${komisyonAyarlari.baskanUnvan}</div>
+            <div style="font-size:11.5px; color:#444;">Komisyon Başkanı</div>
+            <div style="margin-top:18px; font-size:11px; font-style:italic;">İmza / Mühür</div>
         </div>
     `;
 
-    sablonUstYaziGuncelle('T.C. ' + il + ' VALİLİĞİ İL MİLLİ EĞİTİM MÜDÜRLÜĞÜ', `Aday: ${k.ad} ${k.soyad} | TC: ${k.tc} | Belge No: ${k.basvuruNo}`, aktifKurum);
-    $('sablonFotoYazi').textContent = 'Aday Fotoğrafı\n' + k.basvuruNo;
     $('formSablonModal').classList.add('active');
 }
 
@@ -1851,10 +2039,10 @@ function komisyonListesiKur() {
     $('sablonFotoKare').style.display = 'none';
     $('sablonHeaderBox').style.display = 'none';
 
-    const il = ilAdiGetir();
     const liste = filtrelenmisKayitlar();
     const container = $('sablonIcerikAlani');
-    const donem = new Date().getFullYear() + ' / ' + (new Date().getMonth() >= 6 ? '2. DÖNEM' : '1. DÖNEM');
+    const donem = komisyonAyarlari.komisyonDonem || '2026/4.DÖNEM AĞUSTOS';
+    const mem = komisyonAyarlari.ilIlceMem || 'KIRIKKALE İL MİLLİ EĞİTİM MÜDÜRLÜĞÜ';
 
     let satirlarHtml = '';
     if (!liste.length) {
@@ -1876,17 +2064,17 @@ function komisyonListesiKur() {
                     <td style="border:1px solid #000; padding:4px 2px; text-align:center; font-weight:bold;">${idx + 1}</td>
                     <td style="border:1px solid #000; padding:4px 2px; text-align:center; font-size:10px;">${k.basvuruNo || '-'}</td>
                     <td style="border:1px solid #000; padding:4px 6px; font-weight:bold; white-space:nowrap;">${k.ad || ''} ${k.soyad || ''}</td>
-                    <td style="border:1px solid #000; padding:4px 2px; text-align:center; font-size:10.5px;">${k.tc || '-'}</td>
+                    <td style="border:1px solid #000; padding:4px 2px; text-align:center; font-size:10px;">${k.tc || '-'}</td>
                     <td style="border:1px solid #000; padding:4px 4px; font-weight:600;">${k.alan || '-'}</td>
                     <td style="border:1px solid #000; padding:4px 4px;">${k.dal || '-'}</td>
-                    <td style="border:1px solid #000; padding:4px 2px; text-align:center; font-weight:bold;">${kalSinav ? 'X' : ''}</td>
-                    <td style="border:1px solid #000; padding:4px 2px; text-align:center; font-weight:bold;">${dogKal ? 'X' : ''}</td>
-                    <td style="border:1px solid #000; padding:4px 2px; text-align:center; font-weight:bold;">${kalVeUst ? 'X' : ''}</td>
-                    <td style="border:1px solid #000; padding:4px 2px; text-align:center; font-weight:bold;">${ustSinav ? 'X' : ''}</td>
-                    <td style="border:1px solid #000; padding:4px 2px; text-align:center; font-weight:bold;">${dogUst ? 'X' : ''}</td>
+                    <td style="border:1px solid #000; padding:4px 2px; text-align:center; font-weight:bold; font-size:11px;">${kalSinav ? 'X' : ''}</td>
+                    <td style="border:1px solid #000; padding:4px 2px; text-align:center; font-weight:bold; font-size:11px;">${dogKal ? 'X' : ''}</td>
+                    <td style="border:1px solid #000; padding:4px 2px; text-align:center; font-weight:bold; font-size:11px;">${kalVeUst ? 'X' : ''}</td>
+                    <td style="border:1px solid #000; padding:4px 2px; text-align:center; font-weight:bold; font-size:11px;">${ustSinav ? 'X' : ''}</td>
+                    <td style="border:1px solid #000; padding:4px 2px; text-align:center; font-weight:bold; font-size:11px;">${dogUst ? 'X' : ''}</td>
                     <td style="border:1px solid #000; padding:4px 2px; text-align:center; font-weight:bold;">X</td>
                     <td style="border:1px solid #000; padding:4px 2px; text-align:center;">&nbsp;</td>
-                    <td style="border:1px solid #000; padding:4px 4px; font-size:10px;">${aciklama || '-'}</td>
+                    <td style="border:1px solid #000; padding:4px 4px; font-size:9.5px;">${aciklama || '-'}</td>
                     <td style="border:1px solid #000; padding:4px 2px; text-align:center; font-size:9.5px;">&nbsp;</td>
                 </tr>
             `;
@@ -1894,36 +2082,37 @@ function komisyonListesiKur() {
     }
 
     container.innerHTML = `
-        <div style="text-align:center; font-family:'Times New Roman', serif; margin-bottom:12px;">
-            <div style="font-size:14px; font-weight:bold; line-height:1.4;">
-                ${il} İL MİLLİ EĞİTİM MÜDÜRLÜĞÜ İL DENKLİK KOMİSYONU BAŞVURU DEĞERLENDİRME LİSTESİ (${donem})
+        <div style="position:relative; font-family:'Times New Roman', serif; margin-bottom:12px;">
+            <div style="position:absolute; top:0; right:0; font-weight:bold; font-size:14px;">EK-2</div>
+            <div style="text-align:center; font-size:13.5px; font-weight:bold; line-height:1.4;">
+                ${mem} İL DENKLİK KOMİSYONU BAŞVURU DEĞERLENDİRME LİSTESİ (${donem})
             </div>
         </div>
 
-        <table style="width:100%; border-collapse:collapse; font-size:10.5px; font-family:'Times New Roman', serif; table-layout:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:10px; font-family:'Times New Roman', serif; table-layout:auto;">
             <thead>
                 <tr style="background:#f2f2f2; text-align:center; font-weight:bold;">
-                    <th rowspan="2" style="border:1px solid #000; padding:4px; width:26px;">No</th>
+                    <th rowspan="2" style="border:1px solid #000; padding:4px; width:24px;">No</th>
                     <th rowspan="2" style="border:1px solid #000; padding:4px; width:65px;">Denklik Belge No</th>
                     <th colspan="2" style="border:1px solid #000; padding:4px;">Başvuru Sahibinin</th>
                     <th colspan="2" style="border:1px solid #000; padding:4px;">Başvuru Yapılan</th>
                     <th colspan="5" style="border:1px solid #000; padding:4px;">Başvuru Seviyesi</th>
                     <th colspan="2" style="border:1px solid #000; padding:4px;">Başvuru Sonucu</th>
-                    <th rowspan="2" style="border:1px solid #000; padding:4px;">Açıklamalar</th>
-                    <th rowspan="2" style="border:1px solid #000; padding:4px; width:95px;">Teslim Alan<br><span style="font-size:9px; font-weight:normal;">(Ad Soyad - İmza - Tarih)</span></th>
+                    <th rowspan="2" style="border:1px solid #000; padding:4px;">Açıklamalar<br><span style="font-size:8.5px; font-weight:normal;">(Başvuru sonucu ret ise nedeni)</span></th>
+                    <th rowspan="2" style="border:1px solid #000; padding:4px; width:95px;">Teslim Alan<br><span style="font-size:8.5px; font-weight:normal;">(Ad Soyad - İmza - Tarih)</span></th>
                 </tr>
-                <tr style="background:#f2f2f2; text-align:center; font-weight:bold; font-size:9.5px;">
+                <tr style="background:#f2f2f2; text-align:center; font-weight:bold; font-size:9px;">
                     <th style="border:1px solid #000; padding:4px;">Adı Soyadı</th>
-                    <th style="border:1px solid #000; padding:4px; width:80px;">T.C. Kimlik No</th>
+                    <th style="border:1px solid #000; padding:4px; width:75px;">T.C. Kimlik No</th>
                     <th style="border:1px solid #000; padding:4px;">Alan</th>
                     <th style="border:1px solid #000; padding:4px;">Dal</th>
-                    <th style="border:1px solid #000; padding:3px; font-size:8.5px; width:52px;" title="Kalfalık sınavlarına girmesi">Kalfalık sınavlarına girmesi</th>
-                    <th style="border:1px solid #000; padding:3px; font-size:8.5px; width:52px;" title="Doğrudan kalfalık belgesi düzenlenmesi">Doğrudan kalfalık belgesi düzenlenmesi</th>
-                    <th style="border:1px solid #000; padding:3px; font-size:8.5px; width:70px;" title="Kalfalık sınavına girmesi, başarılı olması halinde ustalık sınavlarına alınması">Kalfalık sınavına girmesi, başarılı olması halinde ustalık sınavlarına alınması</th>
-                    <th style="border:1px solid #000; padding:3px; font-size:8.5px; width:52px;" title="Ustalık Sınavına Girmesi">Ustalık Sınavına Girmesi</th>
-                    <th style="border:1px solid #000; padding:3px; font-size:8.5px; width:52px;" title="Doğrudan Ustalık Belgesi Düzenlemesi">Doğrudan Ustalık Belgesi Düzenlemesi</th>
-                    <th style="border:1px solid #000; padding:3px; width:34px;">Kabul</th>
-                    <th style="border:1px solid #000; padding:3px; width:30px;">Red</th>
+                    <th style="border:1px solid #000; padding:2px; font-size:8px; width:48px;" title="Kalfalık sınavlarına girmesi">Kalfalık sınavlarına girmesi</th>
+                    <th style="border:1px solid #000; padding:2px; font-size:8px; width:48px;" title="Doğrudan kalfalık belgesi düzenlenmesi">Doğrudan kalfalık belgesi düzenlenmesi</th>
+                    <th style="border:1px solid #000; padding:2px; font-size:8px; width:68px;" title="Kalfalık sınavına girmesi, başarılı olması halinde ustalık sınavlarına alınması">Kalfalık sınavına girmesi, başarılı olması halinde ustalık sınavlarına alınması</th>
+                    <th style="border:1px solid #000; padding:2px; font-size:8px; width:48px;" title="Ustalık Sınavına Girmesi">Ustalık Sınavına Girmesi</th>
+                    <th style="border:1px solid #000; padding:2px; font-size:8px; width:48px;" title="Doğrudan Ustalık Belgesi Düzenlemesi">Doğrudan Ustalık Belgesi Düzenlemesi</th>
+                    <th style="border:1px solid #000; padding:3px; width:30px;">Kabul</th>
+                    <th style="border:1px solid #000; padding:3px; width:28px;">Red</th>
                 </tr>
             </thead>
             <tbody>
@@ -1933,23 +2122,26 @@ function komisyonListesiKur() {
     `;
 
     $('sablonAltImza').innerHTML = `
-        <div style="display:flex; justify-content:space-between; margin-top:25px; font-family:'Times New Roman', serif; text-align:center; font-size:12px;">
-            <div style="width:22%;">
-                <div style="font-weight:bold;">Komisyon Üyesi</div>
-                <div style="margin-top:28px; border-top:1px dotted #000; padding-top:3px;">İmza</div>
+        <div style="display:flex; justify-content:space-between; margin-top:25px; font-family:'Times New Roman', serif; text-align:center; font-size:11.5px;">
+            <div style="width:30%;">
+                <div style="font-weight:bold; font-size:12px;">Komisyon Üyesi</div>
+                <div style="font-size:11px; margin-top:2px;">${komisyonAyarlari.uye1Kurum}</div>
+                <div style="font-weight:600; margin-top:1px;">${komisyonAyarlari.uye1AdSoyad}</div>
+                <div style="font-size:10.5px; color:#444;">${komisyonAyarlari.uye1Unvan}</div>
+                <div style="margin-top:28px; border-top:1px dotted #000; padding-top:2px;">İmza</div>
             </div>
-            <div style="width:22%;">
-                <div style="font-weight:bold;">Komisyon Üyesi</div>
-                <div style="margin-top:28px; border-top:1px dotted #000; padding-top:3px;">İmza</div>
+            <div style="width:30%;">
+                <div style="font-weight:bold; font-size:12.5px;">ONAY / Komisyon Başkanı</div>
+                <div style="font-weight:600; margin-top:2px;">${komisyonAyarlari.baskanAdSoyad}</div>
+                <div style="font-size:11px;">${komisyonAyarlari.baskanUnvan}</div>
+                <div style="margin-top:28px; border-top:1px dotted #000; padding-top:2px;">İmza / Mühür</div>
             </div>
-            <div style="width:22%;">
-                <div style="font-weight:bold;">Komisyon Üyesi</div>
-                <div style="margin-top:28px; border-top:1px dotted #000; padding-top:3px;">İmza</div>
-            </div>
-            <div style="width:28%;">
-                <div style="font-weight:bold;">ONAY</div>
-                <div>İl Milli Eğitim Müdür Yardımcısı<br>(Komisyon Başkanı)</div>
-                <div style="margin-top:14px; border-top:1px dotted #000; padding-top:3px;">Mühür / İmza</div>
+            <div style="width:30%;">
+                <div style="font-weight:bold; font-size:12px;">Komisyon Üyesi</div>
+                <div style="font-size:11px; margin-top:2px;">${komisyonAyarlari.uye2Kurum}</div>
+                <div style="font-weight:600; margin-top:1px;">${komisyonAyarlari.uye2AdSoyad}</div>
+                <div style="font-size:10.5px; color:#444;">${komisyonAyarlari.uye2Unvan}</div>
+                <div style="margin-top:28px; border-top:1px dotted #000; padding-top:2px;">İmza</div>
             </div>
         </div>
     `;
@@ -1964,7 +2156,7 @@ function denklikDefteriKur() {
     $('sablonFotoKare').style.display = 'none';
     $('sablonHeaderBox').style.display = 'none';
 
-    const il = ilAdiGetir();
+    const mem = komisyonAyarlari.ilIlceMem || 'KIRIKKALE İL MİLLİ EĞİTİM MÜDÜRLÜĞÜ';
     const liste = filtrelenmisKayitlar();
     const container = $('sablonIcerikAlani');
 
@@ -1973,7 +2165,6 @@ function denklikDefteriKur() {
         satirlarHtml = `<tr><td colspan="9" style="text-align:center; padding:20px; border:1px solid #000;">Kayıtlı defter verisi bulunamadı.</td></tr>`;
     } else {
         liste.forEach((k, idx) => {
-            // Belgenin kişiye kazandırdığı haklar
             let hak = '';
             if (k.kalfalikVeUstalik || k.kalfalikVeBasariliUstalik) hak = 'Kalfalık sınavına girmesi, başarılı olması halinde ustalık sınavlarına alınması';
             else if (k.dogrudanKalfalik) hak = 'Doğrudan kalfalık belgesi düzenlenmesi';
@@ -1982,7 +2173,6 @@ function denklikDefteriKur() {
             else if (k.ustalikSinav) hak = 'Ustalık Sınavına Girmesi';
             else hak = k.basvuruTuru || '-';
 
-            // Değerlendirmeye alınan belgeler
             const alinanBelgeler = [
                 k.getirdigiBelge || k.enSonMezuniyet,
                 k.mezunOlduguOkul,
@@ -2014,11 +2204,10 @@ function denklikDefteriKur() {
     }
 
     container.innerHTML = `
-        <div style="text-align:center; font-family:'Times New Roman', serif; margin-bottom:12px;">
-            <div style="font-size:14px; font-weight:bold; line-height:1.4;">
-                T.C.<br>
-                ${il} VALİLİĞİ<br>
-                İL MİLLİ EĞİTİM MÜDÜRLÜĞÜ<br>
+        <div style="position:relative; font-family:'Times New Roman', serif; margin-bottom:12px;">
+            <div style="position:absolute; top:0; right:0; font-size:12px; font-weight:bold;">Sayfa No: ........</div>
+            <div style="text-align:center; font-size:14px; font-weight:bold; line-height:1.4;">
+                ${mem}<br>
                 <span style="font-size:15px; text-decoration:underline;">BELGE DENKLİK DEFTERİ</span>
             </div>
         </div>
@@ -2045,13 +2234,17 @@ function denklikDefteriKur() {
 
     $('sablonAltImza').innerHTML = `
         <div style="display:flex; justify-content:space-between; margin-top:25px; font-family:'Times New Roman', serif; text-align:center; font-size:12px;">
-            <div style="width:30%;">
+            <div style="width:35%;">
                 <div style="font-weight:bold;">Defteri Düzenleyen</div>
-                <div style="margin-top:28px; border-top:1px dotted #000; padding-top:3px;">İmza / Mühür</div>
+                <div style="font-weight:600; margin-top:2px;">${komisyonAyarlari.uye1AdSoyad}</div>
+                <div style="font-size:11px; color:#444;">${komisyonAyarlari.uye1Unvan}</div>
+                <div style="margin-top:25px; border-top:1px dotted #000; padding-top:3px;">İmza / Mühür</div>
             </div>
-            <div style="width:30%;">
+            <div style="width:35%;">
                 <div style="font-weight:bold;">İl Denklik Komisyon Başkanı</div>
-                <div style="margin-top:28px; border-top:1px dotted #000; padding-top:3px;">İmza / Mühür</div>
+                <div style="font-weight:600; margin-top:2px;">${komisyonAyarlari.baskanAdSoyad}</div>
+                <div style="font-size:11px; color:#444;">${komisyonAyarlari.baskanUnvan}</div>
+                <div style="margin-top:25px; border-top:1px dotted #000; padding-top:3px;">İmza / Mühür</div>
             </div>
         </div>
     `;
@@ -2070,24 +2263,38 @@ function bosSablonuKur() {
     container.innerHTML = '<table id="sablonTablo"></table>';
     const tablo = $('sablonTablo');
 
-    sablonBaslik(tablo, 'BAŞVURU TÜRÜ VE KİŞİSEL BİLGİLER');
-    sablonBosSatir(tablo, 'Başvuru Türü (Kalfalık / Ustalık / Usta Öğreticilik)');
+    function sBaslik(t, metin) {
+        const tr = t.insertRow();
+        const th = document.createElement('th');
+        th.colSpan = 2; th.textContent = metin;
+        tr.appendChild(th);
+    }
+    function sBosSatir(t, etiket, yukseklik) {
+        const tr = t.insertRow();
+        const td1 = tr.insertCell(); td1.textContent = etiket; td1.style.verticalAlign = 'top'; td1.style.width = '35%';
+        const td2 = tr.insertCell(); td2.textContent = '\u00A0';
+        if (yukseklik) td2.style.height = yukseklik;
+        td2.style.verticalAlign = 'top';
+    }
+
+    sBaslik(tablo, 'BAŞVURU TÜRÜ VE KİŞİSEL BİLGİLER');
+    sBosSatir(tablo, 'Başvuru Türü (Kalfalık / Ustalık / Usta Öğreticilik)');
     ['Adı Soyadı', 'TC Kimlik No', 'Doğum Tarihi', 'Telefon', 'e-Posta', 'İkametgâh / Adres', 'Başvurduğu Alan', 'Başvurduğu Dal']
-        .forEach(e => sablonBosSatir(tablo, e));
+        .forEach(e => sBosSatir(tablo, e));
 
-    sablonBaslik(tablo, 'MEZUNİYET BİLGİLERİ');
+    sBaslik(tablo, 'MEZUNİYET BİLGİLERİ');
     ['En Son Mezuniyet (İlkokul / Ortaokul / Lise / Ön Lisans / Lisans)',
-     'Mezun Olduğu Okul', 'Getirdiği Belge ve Belge Tarihi', 'Öğrenim Süresi (3 / 4 Yıl)'].forEach(e => sablonBosSatir(tablo, e));
+     'Mezun Olduğu Okul', 'Getirdiği Belge ve Belge Tarihi', 'Öğrenim Süresi (3 / 4 Yıl)'].forEach(e => sBosSatir(tablo, e));
 
-    sablonBaslik(tablo, 'USTA ÖĞRETİCİLİK BİLGİLERİ (İş Pedagojisi İçin)');
-    ['Dayanak Belge Tipi', 'Belge Tarihi ve Sayısı', 'Kurs / Sınav Talebi'].forEach(e => sablonBosSatir(tablo, e));
+    sBaslik(tablo, 'USTA ÖĞRETİCİLİK BİLGİLERİ (İş Pedagojisi İçin)');
+    ['Dayanak Belge Tipi', 'Belge Tarihi ve Sayısı', 'Kurs / Sınav Talebi'].forEach(e => sBosSatir(tablo, e));
 
-    sablonBaslik(tablo, 'ÇALIŞMIŞLIK VE DENKLİK (Ustalık/Kalfalık İçin)');
-    sablonBosSatir(tablo, 'Kapsam (35. Madde, 28.c, 29. Madde vb.)');
-    sablonBosSatir(tablo, 'Çalışmışlık Belgesi / Kurum / Süre', '50px');
-    sablonBosSatir(tablo, 'Sınav / Belge Talebi', '40px');
+    sBaslik(tablo, 'ÇALIŞMIŞLIK VE DENKLİK (Ustalık/Kalfalık İçin)');
+    sBosSatir(tablo, 'Kapsam (35. Madde, 28.c, 29. Madde vb.)');
+    sBosSatir(tablo, 'Çalışmışlık Belgesi / Kurum / Süre', '45px');
+    sBosSatir(tablo, 'Sınav / Belge Talebi', '35px');
 
-    sablonUstYaziGuncelle('MESEM BAŞVURU FORMU', '(Bu formu eksiksiz doldurup fotoğrafınızı ekleyerek başvurunuzu yapabilirsiniz)', aktifKurum);
+    sablonUstYaziGuncelle('MESEM BAŞVURU FORMU', '(Bu formu eksiksiz doldurup fotoğrafınızı ekleyerek başvurunuzu yapabilirsiniz)', komisyonAyarlari.ilIlceMem);
     $('sablonFotoYazi').textContent = 'Kişi Fotoğrafı';
     $('sablonAltImza').innerHTML = `
         <div style="display:flex; justify-content:flex-end; gap:40px; margin-top:25px; font-size:14px; padding-right:10px;">
@@ -2456,9 +2663,9 @@ function emesemYerImiAdresi() {
         "(document.body||document.documentElement).appendChild(s);})();";
 }
 
-function tumKayitlariEmesemFormatindaKopyala() {
-    if (!kayitlar.length) { bildir('Aktarılacak aday kaydı bulunamadı.', 'hata'); return; }
-    const veriler = kayitlar.map(k => {
+function emesemFormatindaVeriOlustur() {
+    const liste = filtrelenmisKayitlar().length ? filtrelenmisKayitlar() : kayitlar;
+    return liste.map(k => {
         const alanlar = [{ id: 'basvuruNo', ad: 'Başvuru No', deger: k.basvuruNo || '' }];
         ALANLAR.forEach(a => {
             let d = k[a.id];
@@ -2494,7 +2701,21 @@ function tumKayitlariEmesemFormatindaKopyala() {
             alanlar: alanlar
         };
     });
+}
+
+function tumKayitlariEmesemFormatindaKopyala() {
+    if (!kayitlar.length) { bildir('Aktarılacak aday kaydı bulunamadı.', 'hata'); return; }
+    const veriler = emesemFormatindaVeriOlustur();
     panoyaYaz(JSON.stringify(veriler, null, 2), `Toplam ${veriler.length} aday verisi E-MESEM Robotu için panoya kopyalandı! E-MESEM sekmesinde robotu çalıştırıp Panodan Al deyin.`);
+}
+
+function emesemJsonIndir() {
+    if (!kayitlar.length) { bildir('İndirilecek aday kaydı bulunamadı.', 'hata'); return; }
+    const veriler = emesemFormatindaVeriOlustur();
+    const blob = new Blob([JSON.stringify(veriler, null, 2)], { type: 'application/json;charset=utf-8' });
+    const dosyaAdi = `emesem_robot_adaylar_${new Date().toISOString().slice(0, 10)}.json`;
+    saveAs(blob, dosyaAdi);
+    bildir(`Toplam ${veriler.length} aday verisi JSON dosyası olarak indirildi.`, 'ok');
 }
 
 /* ============================================================
@@ -2580,13 +2801,17 @@ function olaylariBagla() {
     $('btnTabloKopyala').addEventListener('click', tabloyuKopyala);
 
     // E-MESEM Robot Modalı
-    $('btnEmesemYardimci').addEventListener('click', () => {
+    function emesemModaliAc() {
         $('emesemYerImi').setAttribute('href', emesemYerImiAdresi());
         $('emesemModal').classList.add('active');
-    });
+    }
+    $('btnEmesemYardimci').addEventListener('click', emesemModaliAc);
+    if ($('btnHeaderEmesem')) $('btnHeaderEmesem').addEventListener('click', emesemModaliAc);
+
     $('btnEmesemKapat').addEventListener('click', () => $('emesemModal').classList.remove('active'));
     $('btnEmesemKapat2').addEventListener('click', () => $('emesemModal').classList.remove('active'));
     $('btnEmesemTumunuKopyala').addEventListener('click', tumKayitlariEmesemFormatindaKopyala);
+    $('btnEmesemJsonIndir').addEventListener('click', emesemJsonIndir);
     $('btnEmesemBetikKopyala').addEventListener('click', async () => {
         try {
             const r = await fetch(new URL(EMESEM_BETIK_ADRESI, location.href).href);
@@ -2601,6 +2826,46 @@ function olaylariBagla() {
             panoyaYaz(emesemYerImiAdresi(), 'Yer İmi (Bookmarklet) JavaScript adresi panoya kopyalandı. Tarayıcınızda yeni yer imi oluşturup URL kısmına yapıştırabilirsiniz.');
         });
     }
+
+    // Komisyon Ayarları Modalı
+    function komisyonModaliAc() {
+        komisyonFormunuDoldur();
+        $('komisyonAyarlarModal').classList.add('active');
+    }
+    $('btnKomisyonAyarlarAc').addEventListener('click', komisyonModaliAc);
+    if ($('btnSablonAyarAc')) $('btnSablonAyarAc').addEventListener('click', komisyonModaliAc);
+    $('btnKomisyonAyarKapat').addEventListener('click', () => $('komisyonAyarlarModal').classList.remove('active'));
+    $('btnKomisyonAyarKaydet').addEventListener('click', () => {
+        komisyonAyarlariniKaydet({
+            ilIlceMem: $('ayarIlIlceMem').value.trim() || VARSAYILAN_KOMISYON.ilIlceMem,
+            komisyonDonem: $('ayarKomisyonDonem').value.trim() || VARSAYILAN_KOMISYON.komisyonDonem,
+            noSablon: $('ayarNoSablon').value.trim() || VARSAYILAN_KOMISYON.noSablon,
+            baskanAdSoyad: $('ayarBaskanAdSoyad').value.trim() || VARSAYILAN_KOMISYON.baskanAdSoyad,
+            baskanUnvan: $('ayarBaskanUnvan').value.trim() || VARSAYILAN_KOMISYON.baskanUnvan,
+            uye1Kurum: $('ayarUye1Kurum').value.trim() || VARSAYILAN_KOMISYON.uye1Kurum,
+            uye1AdSoyad: $('ayarUye1AdSoyad').value.trim() || VARSAYILAN_KOMISYON.uye1AdSoyad,
+            uye1Unvan: $('ayarUye1Unvan').value.trim() || VARSAYILAN_KOMISYON.uye1Unvan,
+            uye2Kurum: $('ayarUye2Kurum').value.trim() || VARSAYILAN_KOMISYON.uye2Kurum,
+            uye2AdSoyad: $('ayarUye2AdSoyad').value.trim() || VARSAYILAN_KOMISYON.uye2AdSoyad,
+            uye2Unvan: $('ayarUye2Unvan').value.trim() || VARSAYILAN_KOMISYON.uye2Unvan
+        });
+        bildir('Komisyon ve kurum ayarları başarıyla kaydedildi.', 'ok');
+        $('komisyonAyarlarModal').classList.remove('active');
+        if ($('formSablonModal').classList.contains('active')) {
+            if (aktifRaporTuru === 'komisyon') komisyonListesiKur();
+            else if (aktifRaporTuru === 'defter') denklikDefteriKur();
+            else if (aktifRaporTuru === 'sonuc') sonucSablonuKur(kayitlar[0]);
+            else bosSablonuKur();
+        }
+    });
+    $('btnKomisyonAyarVarsayilan').addEventListener('click', () => {
+        if (confirm('Komisyon ayarları varsayılan değerlere sıfırlansın mı?')) {
+            komisyonAyarlari = Object.assign({}, VARSAYILAN_KOMISYON);
+            komisyonAyarlariniKaydet(komisyonAyarlari);
+            komisyonFormunuDoldur();
+            bildir('Varsayılan ayarlar yüklendi.', 'ok');
+        }
+    });
 
     // Kullanım Kılavuzu & İletişim
     $('btnKilavuzAc').addEventListener('click', () => $('kilavuzModal').classList.add('active'));
@@ -2634,7 +2899,7 @@ function olaylariBagla() {
 
     document.addEventListener('keydown', (e) => {
         if (e.key !== 'Escape') return;
-        ['formSablonModal', 'hizliGirisModal', 'emesemModal', 'kilavuzModal', 'iletisimModal'].forEach(m => $(m).classList.remove('active'));
+        ['formSablonModal', 'hizliGirisModal', 'emesemModal', 'komisyonAyarlarModal', 'kilavuzModal', 'iletisimModal'].forEach(m => $(m).classList.remove('active'));
     });
 
     window.addEventListener('online', () => kuyrugaGonder(true));
@@ -2644,6 +2909,7 @@ function olaylariBagla() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+    komisyonAyarlariniYukle();
     olaylariBagla();
     $('loginNot').textContent = 'Sürüm ' + SURUM + ' - bağlantı kontrol ediliyor...';
     sunucuyuYokla().then(() => {
