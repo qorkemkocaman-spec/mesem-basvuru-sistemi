@@ -84,6 +84,11 @@
 
         for (var i = 0; i < inputs.length; i++) {
             var inp = inputs[i];
+            // File, submit, button, reset vb. veri girişi yapılamayan öğeleri atla
+            if (inp.type === 'file' || inp.type === 'submit' || inp.type === 'button' || inp.type === 'reset' || inp.type === 'image') {
+                continue;
+            }
+
             var attrMetin = trTemizle([
                 inp.name, inp.id, inp.placeholder,
                 inp.getAttribute('aria-label'), inp.title,
@@ -117,42 +122,93 @@
 
     function degerYaz(hedef, deger) {
         if (!hedef) return false;
-        var etiket = hedef.tagName.toLowerCase();
+        
+        // Güvenlik Kuralı: HTMLInputElement type="file" öğelerine değer atanamaz (yalnızca boş string izinlidir)
+        if (hedef.type === 'file') return false;
+
+        var etiket = (hedef.tagName || '').toLowerCase();
 
         if (etiket === 'select') {
             var bulundu = false;
             var aranan = trTemizle(deger);
-            Array.prototype.forEach.call(hedef.options, function (o) {
-                if (bulundu) return;
+            
+            // 1. Aşama: Birebir tam eşleşme ara
+            for (var i = 0; i < hedef.options.length; i++) {
+                var o = hedef.options[i];
                 var m = trTemizle(o.textContent);
                 var v = trTemizle(o.value);
-                if (m === aranan || v === aranan || (aranan && (m.indexOf(aranan) !== -1 || aranan.indexOf(m) !== -1))) {
-                    hedef.value = o.value;
-                    bulundu = true;
+                if (aranan && (m === aranan || v === aranan)) {
+                    try {
+                        hedef.value = o.value;
+                        hedef.selectedIndex = i;
+                        bulundu = true;
+                        break;
+                    } catch (e) { }
                 }
-            });
+            }
+
+            // 2. Aşama: Kısmi içerme eşleşmesi ara
+            if (!bulundu && aranan) {
+                for (var j = 0; j < hedef.options.length; j++) {
+                    var opt = hedef.options[j];
+                    var optText = trTemizle(opt.textContent);
+                    var optVal = trTemizle(opt.value);
+                    if (optText && (optText.indexOf(aranan) !== -1 || aranan.indexOf(optText) !== -1 ||
+                                   (optVal && (optVal.indexOf(aranan) !== -1 || aranan.indexOf(optVal) !== -1)))) {
+                        try {
+                            hedef.value = opt.value;
+                            hedef.selectedIndex = j;
+                            bulundu = true;
+                            break;
+                        } catch (e) { }
+                    }
+                }
+            }
+
             if (!bulundu && hedef.options.length > 1 && !deger) {
                 return false;
             }
-        } else if (hedef.type === 'checkbox') {
-            var acik = deger === true || deger === 'Evet' || deger === 'true' || deger === '1';
-            if (hedef.checked !== acik) hedef.click();
+        } else if (hedef.type === 'checkbox' || hedef.type === 'radio') {
+            var acik = deger === true || deger === 'Evet' || deger === 'true' || deger === '1' || deger === 1;
+            try {
+                if (hedef.checked !== acik) {
+                    hedef.checked = acik;
+                    hedef.click();
+                }
+            } catch (e) { }
             return true;
         } else {
-            var yerlestirici = Object.getOwnPropertyDescriptor(
-                etiket === 'textarea' ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype,
-                'value'
-            );
-            if (yerlestirici && yerlestirici.set) yerlestirici.set.call(hedef, String(deger != null ? deger : ''));
-            else hedef.value = String(deger != null ? deger : '');
+            var strDeger = String(deger != null ? deger : '');
+            var atandi = false;
+
+            try {
+                var proto = etiket === 'textarea' ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
+                var yerlestirici = Object.getOwnPropertyDescriptor(proto, 'value');
+                if (yerlestirici && yerlestirici.set) {
+                    yerlestirici.set.call(hedef, strDeger);
+                    atandi = true;
+                }
+            } catch (e) { }
+
+            if (!atandi) {
+                try {
+                    hedef.value = strDeger;
+                } catch (e) {
+                    return false;
+                }
+            }
         }
 
-        ['input', 'change', 'blur'].forEach(function (tur) {
-            hedef.dispatchEvent(new Event(tur, { bubbles: true }));
-        });
+        try {
+            ['input', 'change', 'blur'].forEach(function (tur) {
+                hedef.dispatchEvent(new Event(tur, { bubbles: true }));
+            });
+        } catch (e) { }
+
         try {
             hedef.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, key: 'Enter' }));
         } catch (e) { }
+
         return true;
     }
 
@@ -218,7 +274,9 @@
             durum('Dosya okuma hatası oluştu.', '#f87171');
         };
         okuyucu.readAsText(dosya);
-        e.target.value = '';
+        try {
+            e.target.value = '';
+        } catch (err) { }
     }
 
     function kayitlariYukle(liste) {
