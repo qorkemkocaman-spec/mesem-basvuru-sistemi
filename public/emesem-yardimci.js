@@ -1,19 +1,19 @@
 /* ==================================================================
-   E-MESEM Sınav Öğrenci Ön Kayıt & Otomasyon Robotu (v6.0)
+   E-MESEM Sınav Öğrenci Ön Kayıt & Otomasyon Robotu (v7.0)
    Geliştirici: Görkem Kocaman © 2026
    ------------------------------------------------------------------
    MEB E-MESEM (emesem.meb.gov.tr) portalında "Sınav Öğrenci Ön Kayıt"
    ekranında tam otomatik, ASP.NET AJAX UpdatePanel & PostBack uyumlu,
-   evrensel çok katmanlı seçim motorlu (Select / Combobox / Div-Li / Select2 / DevExpress),
-   kademeli Alan -> Dal yükleme destekli, MERNİS korumalı,
-   canlı eleman analizörlü (Live DOM Inspector) ve hatasız kayıt motoru.
+   Telerik UI for ASP.NET AJAX RadComboBox (cmbOgrenimYili, cmbAlan, cmbDal)
+   yerel $find API & DropDown DOM motorlu, kademeli Alan -> Dal yükleme destekli,
+   MERNİS korumalı, canlı eleman analizörlü (Live DOM Inspector) ve hatasız kayıt motoru.
 
    Temel Yetenekler:
-     1. ⚡ Evrensel Çok Katmanlı Seçim Motoru (Standart Select, Combobox Input, Custom Div/Span/Li Dropdown)
-     2. 🔬 Canlı Eleman Analizörü & DOM Dumper (Tek Tıkla Kutu İnceleme & Pano Raporlayıcı)
-     3. 🌲 Kademeli (Cascading) Alan -> Dal Otomatik Seçim ve Bekleme Motoru (Kanonik Türkçe Eşleme)
-     4. 🛡️ Pre-Save Güvenlik Kilidi (Tüm Kritik Alanlar Doğrulanmadan Kaydetmez)
-     5. 🎯 Akıllı Alan Öğretici & Eşleme Modu (Otomatik Ebeveyn/Çocuk Select/Input Yakalayıcı)
+     1. ⚡ Telerik UI for ASP.NET AJAX RadComboBox Yerel Sürücüsü ($find API & DropDown DOM Motoru)
+     2. 🌲 Kademeli (Cascading) cmbAlan -> cmbDal Otomatik Seçim ve RadComboBox Senkronizasyon Motoru
+     3. 🛡️ Pre-Save Güvenlik Kilidi (Tüm Kritik Telerik ve Form Alanları Doğrulanmadan Kaydetmez)
+     4. 🔬 Canlı Eleman Analizörü & Telerik DOM Dumper (Tek Tıkla Kutu İnceleme & Pano Raporlayıcı)
+     5. 🎯 Akıllı Alan Öğretici & Eşleme Modu (Telerik RadComboBox & Standart Kontroller)
      6. 🐾 Adım Adım Manuel Denetim (Step-by-Step Test Modu)
      7. 📟 Canlı Log Konsolu & Web Audio Bildirim Sistemi
      8. 📅 Garantili Dönemli Öğrenim Yılı & Maskeli Telefon Girişi Simülatörü
@@ -26,8 +26,8 @@
         return;
     }
 
-    var SURUM = "6.0";
-    var STORAGE_ESLEME_ANAHTARI = "mesem_ogretilmis_alanlar_v6";
+    var SURUM = "7.0";
+    var STORAGE_ESLEME_ANAHTARI = "mesem_ogretilmis_alanlar_v7";
     
     var tumKayitlar = [];          // Sisteme yüklenen tüm adaylar
     var filtreliKayitlar = [];     // Seçili kategoriye göre filtrelenmiş liste
@@ -47,7 +47,10 @@
     // Özel Alan Eşlemeleri (localStorage)
     var ozelEslemeler = {};
     try {
-        var kayitliEslemeler = localStorage.getItem(STORAGE_ESLEME_ANAHTARI) || localStorage.getItem("mesem_ogretilmis_alanlar_v5") || localStorage.getItem("mesem_ogretilmis_alanlar_v4");
+        var kayitliEslemeler = localStorage.getItem(STORAGE_ESLEME_ANAHTARI) ||
+                               localStorage.getItem("mesem_ogretilmis_alanlar_v6") ||
+                               localStorage.getItem("mesem_ogretilmis_alanlar_v5") ||
+                               localStorage.getItem("mesem_ogretilmis_alanlar_v4");
         if (kayitliEslemeler) ozelEslemeler = JSON.parse(kayitliEslemeler);
     } catch (e) { ozelEslemeler = {}; }
 
@@ -60,7 +63,7 @@
         { id: 'yeniKayitBtn', ad: '"Yeni Kayıt" Butonu', tip: 'buton', grup: 'ANA_EKRAN', aciklama: 'Açılır kayıt penceresini açan buton' },
         
         // B. Açılır Kayıt Penceresi (Popup / Modal) Alanları
-        { id: 'ogrenimYili', ad: 'Öğrenim Yılı (Select/Combobox)', tip: 'select', grup: 'POPUP', aciklama: 'Örn: 2026 - 2027 I. Dönem açılır menüsü veya kutusu' },
+        { id: 'ogrenimYili', ad: 'Öğrenim Yılı (Telerik cmbOgrenimYili)', tip: 'select', grup: 'POPUP', aciklama: 'Örn: cmbOgrenimYili_Input (2026 - 2027 I. Dönem)' },
         { id: 'tc', ad: 'T.C. Kimlik No', tip: 'input', grup: 'POPUP', aciklama: 'Aday TC Kimlik No giriş kutusu' },
         { id: 'dogumTarihi', ad: 'Doğum Tarihi', tip: 'input', grup: 'POPUP', aciklama: 'Aday doğum tarihi kutusu (GG.AA.YYYY)' },
         { id: 'sorgulaBtn', ad: '"Sorgula" Butonu', tip: 'buton', grup: 'POPUP', aciklama: 'MERNİS kimlik sorgulama butonu' },
@@ -70,8 +73,8 @@
         { id: 'enSonMezuniyet', ad: 'En Son Mezuniyeti (Select/Combobox)', tip: 'select', grup: 'POPUP', aciklama: 'Öğrenim / Mezuniyet durumu seçimi' },
         { id: 'getirdigiBelge', ad: 'Getirdiği Belge (Select/Combobox)', tip: 'select', grup: 'POPUP', aciklama: 'Diploma / Tastikname belge seçimi' },
         { id: 'belgeTarihi', ad: 'Belge Tarihi', tip: 'input', grup: 'POPUP', aciklama: 'Belge veriliş tarihi kutusu (GG.AA.YYYY)' },
-        { id: 'alan', ad: 'Alan Seçimi (Select/Input/Combobox)', tip: 'select', grup: 'POPUP', aciklama: 'Mesleki alan açılır menüsü veya arama kutusu' },
-        { id: 'dal', ad: 'Dal Seçimi (Select/Input/Combobox)', tip: 'select', grup: 'POPUP', aciklama: 'Mesleki dal açılır menüsü veya arama kutusu' },
+        { id: 'alan', ad: 'Alan Seçimi (Telerik cmbAlan)', tip: 'select', grup: 'POPUP', aciklama: 'Telerik cmbAlan_Input / Mesleki alan seçimi' },
+        { id: 'dal', ad: 'Dal Seçimi (Telerik cmbDal)', tip: 'select', grup: 'POPUP', aciklama: 'Telerik cmbDal_Input / Mesleki dal seçimi' },
         { id: 'kaydetBtn', ad: '"Kaydet" Butonu', tip: 'buton', grup: 'POPUP', aciklama: 'Aday kaydını tamamlayan ana buton' }
     ];
 
@@ -355,14 +358,14 @@
         return null;
     }
 
-    /* Evrensel Input / Select Bulucu */
+    /* Evrensel Input / Select / Telerik RadComboBox Bulucu */
     function evrenselInputBul(anahtarListesi, hedefDoc) {
         var arananlar = anahtarListesi.map(trTemizle);
         var belgeler = hedefDoc ? [hedefDoc] : tumBelgeleriGetir();
 
         for (var b = 0; b < belgeler.length; b++) {
             var doc = belgeler[b];
-            var inputs = Array.prototype.slice.call(doc.querySelectorAll('input, select, textarea, div[role="combobox"], span.select2, div.dx-dropdowneditor'));
+            var inputs = Array.prototype.slice.call(doc.querySelectorAll('input, select, textarea, div[role="combobox"], span.select2, div.dx-dropdowneditor, .RadComboBox, input.rcbInput'));
 
             for (var i = 0; i < inputs.length; i++) {
                 var inp = inputs[i];
@@ -406,11 +409,378 @@
     }
 
     /* ============================================================
+       TELERIK RADCOMBOBOX CLIENT-SIDE JAVASCRIPT & DOM SÜRÜCÜSÜ
+       ============================================================ */
+
+    /**
+     * Verilen eleman veya kimlikten Telerik RadComboBox JavaScript kontrol nesnesini ($find) bulur.
+     */
+    function telerikComboNesnesiBul(hedefElVeyaId) {
+        if (!hedefElVeyaId) return null;
+        var comboId = '';
+        if (typeof hedefElVeyaId === 'string') {
+            comboId = hedefElVeyaId.replace(/_Input$/, '').replace(/_DropDown$/, '').replace(/_Arrow$/, '').replace(/_ClientState$/, '');
+        } else if (hedefElVeyaId.id) {
+            comboId = hedefElVeyaId.id.replace(/_Input$/, '').replace(/_DropDown$/, '').replace(/_Arrow$/, '').replace(/_ClientState$/, '');
+        } else if (hedefElVeyaId.name) {
+            comboId = hedefElVeyaId.name;
+        }
+
+        var belgeler = tumBelgeleriGetir();
+        for (var b = 0; b < belgeler.length; b++) {
+            try {
+                var doc = belgeler[b];
+                var win = doc.defaultView || doc.parentWindow || window;
+                if (!win) continue;
+
+                // 1. window.$find(comboId)
+                if (typeof win.$find === 'function') {
+                    var c = win.$find(comboId);
+                    if (c && typeof c.get_items === 'function') return { combo: c, win: win, doc: doc, comboId: comboId };
+                }
+
+                // 2. window.$telerik.findControl
+                if (win.$telerik && typeof win.$telerik.findControl === 'function') {
+                    var c2 = win.$telerik.findControl(doc, comboId);
+                    if (c2 && typeof c2.get_items === 'function') return { combo: c2, win: win, doc: doc, comboId: comboId };
+                }
+
+                // 3. ID sonu ile eşleşen $find taraması (ASP.NET MasterPage / UserControl önekleri için)
+                if (typeof win.$find === 'function' && doc.querySelectorAll) {
+                    var olasiInputlar = doc.querySelectorAll('input[id$="' + comboId + '_Input"], input[id*="' + comboId + '"]');
+                    for (var k = 0; k < olasiInputlar.length; k++) {
+                        var gercekId = olasiInputlar[k].id.replace(/_Input$/, '');
+                        var c3 = win.$find(gercekId);
+                        if (c3 && typeof c3.get_items === 'function') return { combo: c3, win: win, doc: doc, comboId: gercekId };
+                    }
+                }
+            } catch (e) { }
+        }
+        return null;
+    }
+
+    /**
+     * Telerik RadComboBox DropDown DOM elemanını (#comboId_DropDown) bulur.
+     */
+    function telerikDropDownBul(hedefElVeyaId) {
+        var comboId = '';
+        if (typeof hedefElVeyaId === 'string') {
+            comboId = hedefElVeyaId.replace(/_Input$/, '').replace(/_DropDown$/, '').replace(/_Arrow$/, '');
+        } else if (hedefElVeyaId && hedefElVeyaId.id) {
+            comboId = hedefElVeyaId.id.replace(/_Input$/, '').replace(/_DropDown$/, '').replace(/_Arrow$/, '');
+        }
+
+        var belgeler = tumBelgeleriGetir();
+        for (var b = 0; b < belgeler.length; b++) {
+            try {
+                var doc = belgeler[b];
+                // 1. Direkt #comboId_DropDown
+                if (comboId) {
+                    var dd = doc.querySelector('#' + CSS.escape(comboId + '_DropDown')) ||
+                             doc.querySelector('[id$="' + CSS.escape(comboId) + '_DropDown"]');
+                    if (dd) return { dropDown: dd, doc: doc };
+                }
+                // 2. RadComboBoxDropDown sınıfı
+                var allDds = doc.querySelectorAll('.RadComboBoxDropDown, .rcbSlide');
+                for (var j = 0; j < allDds.length; j++) {
+                    var dEl = allDds[j];
+                    if (comboId && dEl.id && dEl.id.indexOf(comboId) !== -1) {
+                        return { dropDown: dEl, doc: doc };
+                    }
+                }
+            } catch (e) { }
+        }
+        return null;
+    }
+
+    /**
+     * TELERİK RADCOMBOBOX GARANTİLİ SEÇİM MOTORU (Yöntem 1: $find API + Yöntem 2: DropDown DOM Simülasyonu)
+     */
+    async function telerikRadComboBoxSec(hedefEl, arananMetin, tetiklePostBack) {
+        if (!hedefEl) return false;
+        var aranan = String(arananMetin != null ? arananMetin : '').trim();
+        if (!aranan) return false;
+        var kAranan = kanonikMetin(aranan);
+
+        var doc = hedefEl.ownerDocument || document;
+        var win = doc.defaultView || window;
+        var comboId = (hedefEl.id || '').replace(/_Input$/, '').replace(/_DropDown$/, '').replace(/_Arrow$/, '').replace(/_ClientState$/, '');
+        if (!comboId && hedefEl.name) comboId = hedefEl.name;
+
+        logEkle('⚡ Telerik RadComboBox motoru devrede: [' + (comboId || 'RadComboBox') + '] -> "' + aranan + '"', 'islem');
+
+        // -----------------------------------------------------------------
+        // YÖNTEM 1: Telerik Client-Side JavaScript API ($find / $telerik)
+        // -----------------------------------------------------------------
+        var telerikObj = telerikComboNesnesiBul(hedefEl);
+        if (telerikObj && telerikObj.combo) {
+            var combo = telerikObj.combo;
+            var cWin = telerikObj.win || win;
+            var cDoc = telerikObj.doc || doc;
+            var cId = telerikObj.comboId || comboId;
+
+            if (typeof combo.get_items === 'function') {
+                var items = combo.get_items();
+                var count = items.get_count();
+                var hedefItem = null;
+
+                // 1. Tam Kanonik Eşleşme
+                for (var i = 0; i < count; i++) {
+                    var item = items.getItem(i);
+                    var itText = kanonikMetin(item.get_text());
+                    var itVal = kanonikMetin(item.get_value());
+                    if (itText === kAranan || itVal === kAranan) {
+                        hedefItem = item;
+                        break;
+                    }
+                }
+
+                // 2. Yıl ve Dönem Özel Eşleşmesi (Öğrenim Yılı: 2026 - 2027 I. Dönem)
+                if (!hedefItem) {
+                    var yillar = aranan.match(/\d{4}/g) || [];
+                    var donem1 = kAranan.indexOf('1') !== -1 || kAranan.indexOf('i') !== -1 || kAranan.indexOf('bir') !== -1;
+                    var donem2 = kAranan.indexOf('2') !== -1 || kAranan.indexOf('ii') !== -1 || kAranan.indexOf('iki') !== -1;
+
+                    if (yillar.length > 0) {
+                        for (var j = 0; j < count; j++) {
+                            var it2 = items.getItem(j);
+                            var t2 = kanonikMetin(it2.get_text());
+                            var v2 = kanonikMetin(it2.get_value());
+                            var yilUyumu = yillar.some(function (y) { return t2.indexOf(y) !== -1 || v2.indexOf(y) !== -1; });
+                            if (yilUyumu) {
+                                if (donem1 && (t2.indexOf('1') !== -1 || t2.indexOf('idonem') !== -1 || t2.indexOf('1donem') !== -1)) {
+                                    hedefItem = it2;
+                                    break;
+                                } else if (donem2 && (t2.indexOf('2') !== -1 || t2.indexOf('iidonem') !== -1 || t2.indexOf('2donem') !== -1)) {
+                                    hedefItem = it2;
+                                    break;
+                                } else {
+                                    hedefItem = it2;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // 3. Kısmi İçerme / Substring Eşleşmesi
+                if (!hedefItem && kAranan.length > 2) {
+                    for (var m = 0; m < count; m++) {
+                        var it3 = items.getItem(m);
+                        var t3 = kanonikMetin(it3.get_text());
+                        var v3 = kanonikMetin(it3.get_value());
+                        if ((t3 && (t3.indexOf(kAranan) !== -1 || kAranan.indexOf(t3) !== -1)) ||
+                            (v3 && (v3.indexOf(kAranan) !== -1 || kAranan.indexOf(v3) !== -1))) {
+                            hedefItem = it3;
+                            break;
+                        }
+                    }
+                }
+
+                // 4. Fallback (Seçiniz olmayan ilk geçerli seçenek)
+                if (!hedefItem && count > 0) {
+                    for (var k = 0; k < count; k++) {
+                        var it4 = items.getItem(k);
+                        var t4 = kanonikMetin(it4.get_text());
+                        var v4 = (it4.get_value() || '').trim();
+                        if (v4 !== '' && t4.indexOf('seciniz') === -1 && t4.indexOf('sec') === -1 && t4.indexOf('lutfen') === -1) {
+                            hedefItem = it4;
+                            break;
+                        }
+                    }
+                    if (!hedefItem && count > 1) {
+                        hedefItem = items.getItem(1);
+                    } else if (!hedefItem && count > 0) {
+                        hedefItem = items.getItem(0);
+                    }
+                }
+
+                if (hedefItem) {
+                    try {
+                        hedefItem.select();
+                        combo.set_text(hedefItem.get_text());
+                        combo.set_value(hedefItem.get_value());
+                        if (typeof combo.commitChanges === 'function') combo.commitChanges();
+                        if (typeof combo.hideDropDown === 'function') combo.hideDropDown();
+
+                        // DOM Input elementini de güncelle
+                        var inputDom = (typeof combo.get_inputDomElement === 'function' && combo.get_inputDomElement()) ||
+                                       cDoc.getElementById(cId + '_Input') ||
+                                       hedefEl;
+                        if (inputDom) {
+                            inputDom.value = hedefItem.get_text();
+                            inputDom.dispatchEvent(new Event('input', { bubbles: true }));
+                            inputDom.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+
+                        // PostBack Tetikleme
+                        var autoPostBack = (typeof combo.get_autoPostBack === 'function' && combo.get_autoPostBack());
+                        if ((tetiklePostBack || autoPostBack) && typeof cWin.__doPostBack === 'function') {
+                            cWin.__doPostBack(cId, '');
+                        }
+
+                        logEkle('✓ Telerik RadComboBox API ($find) ile seçildi: ' + hedefItem.get_text(), 'basari');
+                        return true;
+                    } catch (apiErr) {
+                        logEkle('Telerik API seçim çağrısında hata: ' + apiErr.message + ', DOM simülasyonuna geçiliyor...', 'uyari');
+                    }
+                }
+            }
+        }
+
+        // -----------------------------------------------------------------
+        // YÖNTEM 2: Telerik DOM & DropDown Simülasyonu (Kesin Çözüm)
+        // -----------------------------------------------------------------
+        try {
+            var cId2 = comboId;
+            var inputEl = doc.getElementById(cId2 + '_Input') || hedefEl;
+            var arrowEl = doc.getElementById(cId2 + '_Arrow') ||
+                          (inputEl.parentElement ? inputEl.parentElement.querySelector('.rcbArrowCell, .rcbArrowCellRight, a.rcbArrowCell') : null);
+
+            // 1. Dropdown'ı Aç
+            if (telerikObj && telerikObj.combo && typeof telerikObj.combo.showDropDown === 'function') {
+                try { telerikObj.combo.showDropDown(); } catch (e) { }
+            }
+            if (arrowEl) {
+                try { arrowEl.click(); } catch (e) { }
+            } else if (inputEl) {
+                try { inputEl.focus(); inputEl.click(); } catch (e) { }
+            }
+            await bekle(220);
+
+            // 2. DropDown Div ve Listesini Bul (#comboId_DropDown ul.rcbList li.rcbItem)
+            var ddObj = telerikDropDownBul(cId2 || hedefEl);
+            var dropDownDiv = ddObj ? ddObj.dropDown : (doc.getElementById(cId2 + '_DropDown') || doc.querySelector('.RadComboBoxDropDown'));
+            var targetDoc = ddObj ? ddObj.doc : doc;
+
+            var liItems = [];
+            if (dropDownDiv) {
+                liItems = Array.prototype.slice.call(dropDownDiv.querySelectorAll('ul.rcbList > li.rcbItem, ul.rcbList > li, li.rcbItem, li.rcbHovered, li'));
+            }
+            if (!liItems.length) {
+                // Tüm belgelerde açık DropDown listelerini tara
+                var belgeler = tumBelgeleriGetir();
+                for (var bIdx = 0; bIdx < belgeler.length; bIdx++) {
+                    var d = belgeler[bIdx];
+                    var acikListeler = d.querySelectorAll('.RadComboBoxDropDown ul.rcbList > li, .rcbSlide ul.rcbList > li, ul.rcbList > li');
+                    if (acikListeler.length) {
+                        liItems = Array.prototype.slice.call(acikListeler);
+                        targetDoc = d;
+                        break;
+                    }
+                }
+            }
+
+            if (liItems.length > 0) {
+                var secilenLi = null;
+
+                // 1. Tam Kanonik Eşleşme
+                for (var liIdx = 0; liIdx < liItems.length; liIdx++) {
+                    var li = liItems[liIdx];
+                    var lText = kanonikMetin(li.textContent);
+                    var lVal = kanonikMetin(li.getAttribute('data-value') || li.value || '');
+                    if (lText === kAranan || lVal === kAranan) {
+                        secilenLi = li;
+                        break;
+                    }
+                }
+
+                // 2. Yıl ve Dönem Eşleşmesi
+                if (!secilenLi) {
+                    var yillar2 = aranan.match(/\d{4}/g) || [];
+                    var don1 = kAranan.indexOf('1') !== -1 || kAranan.indexOf('i') !== -1 || kAranan.indexOf('bir') !== -1;
+                    var don2 = kAranan.indexOf('2') !== -1 || kAranan.indexOf('ii') !== -1 || kAranan.indexOf('iki') !== -1;
+
+                    if (yillar2.length > 0) {
+                        for (var liJ = 0; liJ < liItems.length; liJ++) {
+                            var li2 = liItems[liJ];
+                            var lt2 = kanonikMetin(li2.textContent);
+                            var yilUyumu2 = yillar2.some(function (y) { return lt2.indexOf(y) !== -1; });
+                            if (yilUyumu2) {
+                                if (don1 && (lt2.indexOf('1') !== -1 || lt2.indexOf('idonem') !== -1 || lt2.indexOf('1donem') !== -1)) {
+                                    secilenLi = li2;
+                                    break;
+                                } else if (don2 && (lt2.indexOf('2') !== -1 || lt2.indexOf('iidonem') !== -1 || lt2.indexOf('2donem') !== -1)) {
+                                    secilenLi = li2;
+                                    break;
+                                } else {
+                                    secilenLi = li2;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // 3. Substring Eşleşmesi
+                if (!secilenLi && kAranan.length > 2) {
+                    for (var liM = 0; liM < liItems.length; liM++) {
+                        var li3 = liItems[liM];
+                        var lt3 = kanonikMetin(li3.textContent);
+                        if (lt3 && (lt3.indexOf(kAranan) !== -1 || kAranan.indexOf(lt3) !== -1)) {
+                            secilenLi = li3;
+                            break;
+                        }
+                    }
+                }
+
+                // 4. Fallback
+                if (!secilenLi && liItems.length > 0) {
+                    for (var liK = 0; liK < liItems.length; liK++) {
+                        var li4 = liItems[liK];
+                        var lt4 = kanonikMetin(li4.textContent);
+                        if (lt4.indexOf('seciniz') === -1 && lt4.indexOf('sec') === -1 && lt4.indexOf('lutfen') === -1) {
+                            secilenLi = li4;
+                            break;
+                        }
+                    }
+                    if (!secilenLi && liItems.length > 1) secilenLi = liItems[1];
+                    else if (!secilenLi) secilenLi = liItems[0];
+                }
+
+                if (secilenLi) {
+                    vurgula(secilenLi, '#22c55e');
+                    var secilenMetin = secilenLi.textContent.trim();
+
+                    // Telerik DOM Event Simülasyonu
+                    secilenLi.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+                    secilenLi.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+                    secilenLi.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+                    secilenLi.click();
+                    secilenLi.dispatchEvent(new Event('change', { bubbles: true }));
+
+                    // Input'u doldur
+                    if (inputEl) {
+                        inputEl.value = secilenMetin;
+                        inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+                        inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+                        inputEl.dispatchEvent(new Event('blur', { bubbles: true }));
+                    }
+
+                    // PostBack Tetikleme
+                    if (tetiklePostBack && win.__doPostBack && cId2) {
+                        win.__doPostBack(cId2, '');
+                    }
+
+                    logEkle('✓ Telerik RadComboBox DropDown DOM simülasyonu ile seçildi: ' + secilenMetin, 'basari');
+                    await bekle(200);
+                    return true;
+                }
+            }
+        } catch (domErr) {
+            logEkle('Telerik DropDown DOM simülasyonunda hata: ' + domErr.message, 'uyari');
+        }
+
+        return false;
+    }
+
+    /* ============================================================
        EVRENSEL ÇOK KATMANLI SEÇİM MOTORU (UNIVERSAL SELECTION ENGINE)
        ============================================================ */
 
     /**
-     * MEB E-MESEM sayfasındaki Standart Select, Input/Combobox, Custom Div/Span/Li,
+     * MEB E-MESEM sayfasındaki Telerik RadComboBox (cmbOgrenimYili, cmbAlan, cmbDal),
+     * Standart Select, Input/Combobox, Custom Div/Span/Li,
      * DevExpress, Select2 ve jQuery UI gibi her türlü açılır kutudan garantili seçim yapar.
      */
     async function evrenselSecimYap(hedefEl, arananMetin, tetiklePostBack) {
@@ -421,6 +791,28 @@
         var kAranan = kanonikMetin(aranan);
         var doc = hedefEl.ownerDocument || document;
         var win = doc.defaultView || window;
+
+        // ----------------------------------------------------
+        // DURUM 0: Telerik UI for ASP.NET AJAX (RadComboBox)
+        // ----------------------------------------------------
+        var isTelerik = false;
+        if (hedefEl.classList && (hedefEl.classList.contains('rcbInput') || hedefEl.classList.contains('RadComboBox') || hedefEl.classList.contains('radPreventDecorate'))) {
+            isTelerik = true;
+        }
+        if (hedefEl.id && (hedefEl.id.indexOf('cmb') !== -1 || hedefEl.id.indexOf('_Input') !== -1 || hedefEl.id.indexOf('rcb') !== -1)) {
+            isTelerik = true;
+        }
+        if (hedefEl.closest && hedefEl.closest('.RadComboBox, .RadComboBoxDropDown')) {
+            isTelerik = true;
+        }
+        if (telerikComboNesnesiBul(hedefEl)) {
+            isTelerik = true;
+        }
+
+        if (isTelerik) {
+            var telerikSonuc = await telerikRadComboBoxSec(hedefEl, arananMetin, tetiklePostBack);
+            if (telerikSonuc) return true;
+        }
 
         // ----------------------------------------------------
         // DURUM A: Standart <select> veya Sarmalayan/Sarmalanan <select>
@@ -967,8 +1359,8 @@
     async function adim3_TcTarihDoldur(k) {
         logEkle('3. Adım: Öğrenim Yılı, TC ve Doğum Tarihi giriliyor...', 'islem');
 
-        // 3.1: Öğrenim Yılı (Evrensel Motor ile 2026 - 2027 I. Dönem garantili seçim)
-        var ogrenimYiliEl = ogretilmisAlanBul('ogrenimYili') || evrenselInputBul(['ogrenimyili', 'donem', 'ogretimyili', 'egitimyili', 'ddlogrenimyili']);
+        // 3.1: Öğrenim Yılı (Telerik cmbOgrenimYili / Evrensel Motor ile 2026 - 2027 I. Dönem garantili seçim)
+        var ogrenimYiliEl = ogretilmisAlanBul('ogrenimYili') || evrenselInputBul(['cmbogrenimyili', 'ogrenimyili', 'donem', 'ogretimyili', 'egitimyili', 'ddlogrenimyili']);
         if (ogrenimYiliEl) {
             var hedefYil = k.ogrenimYili || '2026 - 2027 I. Dönem';
             await ogrenimYiliSec(ogrenimYiliEl, hedefYil);
@@ -1056,8 +1448,8 @@
         logEkle('5. Adım: MERNİS sonrası güncellenen DOM üzerinden bilgiler dolduruluyor...', 'islem');
         var kat = k.kategori;
 
-        // 5.1: Öğrenim Yılı (MERNİS sonrası sıfırlandıysa tekrar doğrula ve garantili seç)
-        var ogrenimYiliEl = ogretilmisAlanBul('ogrenimYili') || evrenselInputBul(['ogrenimyili', 'donem', 'ogretimyili', 'egitimyili', 'ddlogrenimyili']);
+        // 5.1: Öğrenim Yılı (Telerik cmbOgrenimYili - MERNİS sonrası sıfırlandıysa tekrar doğrula ve garantili seç)
+        var ogrenimYiliEl = ogretilmisAlanBul('ogrenimYili') || evrenselInputBul(['cmbogrenimyili', 'ogrenimyili', 'donem', 'ogretimyili', 'egitimyili', 'ddlogrenimyili']);
         if (ogrenimYiliEl) {
             var hedefYil = k.ogrenimYili || '2026 - 2027 I. Dönem';
             await ogrenimYiliSec(ogrenimYiliEl, hedefYil);
@@ -1130,32 +1522,49 @@
             logEkle('✓ Belge Tarihi yazıldı: ' + bTStr, 'islem');
         }
 
-        // 5.7: KADEMELİ ALAN SEÇİMİ (Cascading Alan -> Dal, Evrensel Çok Katmanlı Seçim Motoru)
-        var alanEl = ogretilmisAlanBul('alan') || evrenselInputBul(['ddlalan', 'alan', 'alanadi', 'meslek', 'txtalan']);
+        // 5.7: KADEMELİ ALAN SEÇİMİ (Cascading Alan -> Dal, Telerik cmbAlan Motoru)
+        var alanEl = ogretilmisAlanBul('alan') || evrenselInputBul(['cmbalan', 'ddlalan', 'alan', 'alanadi', 'meslek', 'txtalan']);
         if (alanEl && k.alan) {
-            logEkle('Alan seçiliyor (Evrensel Çok Katmanlı): ' + k.alan, 'islem');
+            logEkle('Alan seçiliyor (Telerik cmbAlan / Evrensel Motor): ' + k.alan, 'islem');
             await evrenselSecimYap(alanEl, k.alan, true);
             vurgula(alanEl, '#38bdf8');
 
-            // Dal dropdown'ının AJAX ile dolmasını bekle
-            logEkle('Alan seçimi sonrası Dal listesinin yüklenmesi bekleniyor...', 'islem');
-            await postBackBitisiniBekle(3500, 'Dal Listesi Yükleme PostBack');
+            // Dal dropdown'ının AJAX & PostBack ile dolmasını bekle
+            logEkle('Alan seçimi sonrası Dal RadComboBox listesinin yüklenmesi bekleniyor...', 'islem');
+            await postBackBitisiniBekle(4000, 'cmbAlan Seçimi ve Dal PostBack');
             
-            // Dal select'inin options dolmasını polling ile bekle
+            // Dal RadComboBox / DropDown öğelerinin dolmasını akıllı polling ile bekle
             var baslangicDal = Date.now();
-            while (Date.now() - baslangicDal < 2500) {
-                var dalTestEl = ogretilmisAlanBul('dal') || evrenselInputBul(['ddldal', 'dal', 'daladi', 'txtdal']);
-                if (dalTestEl && dalTestEl.options && dalTestEl.options.length > 1) {
+            while (Date.now() - baslangicDal < 3500) {
+                // 1. Telerik API ile kontrol
+                var dalObj = telerikComboNesnesiBul('cmbDal') || telerikComboNesnesiBul('ddlDal') || telerikComboNesnesiBul('dal');
+                if (dalObj && dalObj.combo && typeof dalObj.combo.get_items === 'function' && dalObj.combo.get_items().get_count() > 1) {
+                    logEkle('✓ Dal seçenekleri Telerik API ile yüklendi (' + dalObj.combo.get_items().get_count() + ' seçenek).', 'basari');
+                    break;
+                }
+                // 2. DropDown DOM ile kontrol
+                var dalDd = telerikDropDownBul('cmbDal') || telerikDropDownBul('dal');
+                if (dalDd && dalDd.dropDown) {
+                    var liSayisi = dalDd.dropDown.querySelectorAll('li.rcbItem, li').length;
+                    if (liSayisi > 1) {
+                        logEkle('✓ Dal seçenekleri Telerik DropDown DOM ile yüklendi (' + liSayisi + ' seçenek).', 'basari');
+                        break;
+                    }
+                }
+                // 3. Standart Select kontrolü
+                var dalSelect = evrenselInputBul(['ddldal', 'cmbdal', 'dal']);
+                if (dalSelect && dalSelect.options && dalSelect.options.length > 1) {
+                    logEkle('✓ Dal seçenekleri select ile yüklendi (' + dalSelect.options.length + ' seçenek).', 'basari');
                     break;
                 }
                 await bekle(200);
             }
         }
 
-        // 5.8: KADEMELİ DAL SEÇİMİ (Cascading Dal, Evrensel Çok Katmanlı Seçim Motoru)
-        var dalEl = ogretilmisAlanBul('dal') || evrenselInputBul(['ddldal', 'dal', 'daladi', 'txtdal']);
+        // 5.8: KADEMELİ DAL SEÇİMİ (Cascading Dal, Telerik cmbDal Motoru)
+        var dalEl = ogretilmisAlanBul('dal') || evrenselInputBul(['cmbdal', 'ddldal', 'dal', 'daladi', 'txtdal']);
         if (dalEl && k.dal) {
-            logEkle('Dal seçiliyor (Evrensel Çok Katmanlı): ' + k.dal, 'islem');
+            logEkle('Dal seçiliyor (Telerik cmbDal / Evrensel Motor): ' + k.dal, 'islem');
             await evrenselSecimYap(dalEl, k.dal, true);
             vurgula(dalEl, '#38bdf8');
             await bekle(300);
@@ -1178,11 +1587,16 @@
             eksikler.push('TC Kimlik No (11 hane)');
         }
 
-        // 2. Öğrenim Yılı
-        var ogrenimYiliEl = ogretilmisAlanBul('ogrenimYili') || evrenselInputBul(['ogrenimyili', 'donem', 'ogretimyili', 'ddlogrenimyili']);
-        if (ogrenimYiliEl && (ogrenimYiliEl.tagName || '').toLowerCase() === 'select') {
-            var oyVal = ogrenimYiliEl.value;
-            var oyTxt = trTemizle(ogrenimYiliEl.options[ogrenimYiliEl.selectedIndex] ? ogrenimYiliEl.options[ogrenimYiliEl.selectedIndex].textContent : '');
+        // 2. Öğrenim Yılı (Telerik cmbOgrenimYili / Select)
+        var ogrenimYiliEl = ogretilmisAlanBul('ogrenimYili') || evrenselInputBul(['cmbogrenimyili', 'ogrenimyili', 'donem', 'ogretimyili', 'ddlogrenimyili']);
+        if (ogrenimYiliEl) {
+            var oyVal = ogrenimYiliEl.value ? ogrenimYiliEl.value.trim() : '';
+            var oyTxt = '';
+            if (ogrenimYiliEl.options && ogrenimYiliEl.selectedIndex >= 0) {
+                oyTxt = trTemizle(ogrenimYiliEl.options[ogrenimYiliEl.selectedIndex].textContent);
+            } else {
+                oyTxt = trTemizle(oyVal);
+            }
             if (!oyVal || oyTxt.indexOf('seciniz') !== -1 || oyTxt === '') {
                 eksikler.push('Öğrenim Yılı');
             }
@@ -1190,16 +1604,21 @@
 
         // 3. Kapsam
         var kapsamEl = ogretilmisAlanBul('kapsam') || evrenselInputBul(['kapsam', 'madde', 'kapsamturu', 'ddlkapsam']);
-        if (kapsamEl && (kapsamEl.tagName || '').toLowerCase() === 'select') {
-            var kVal = kapsamEl.value;
-            var kTxt = trTemizle(kapsamEl.options[kapsamEl.selectedIndex] ? kapsamEl.options[kapsamEl.selectedIndex].textContent : '');
+        if (kapsamEl) {
+            var kVal = kapsamEl.value ? kapsamEl.value.trim() : '';
+            var kTxt = '';
+            if (kapsamEl.options && kapsamEl.selectedIndex >= 0) {
+                kTxt = trTemizle(kapsamEl.options[kapsamEl.selectedIndex].textContent);
+            } else {
+                kTxt = trTemizle(kVal);
+            }
             if (!kVal || kTxt.indexOf('seciniz') !== -1 || kTxt === '') {
                 eksikler.push('Kapsam Maddesi');
             }
         }
 
-        // 4. Alan
-        var alanEl = ogretilmisAlanBul('alan') || evrenselInputBul(['ddlalan', 'alan', 'alanadi', 'meslek']);
+        // 4. Alan (Telerik cmbAlan / Select)
+        var alanEl = ogretilmisAlanBul('alan') || evrenselInputBul(['cmbalan', 'ddlalan', 'alan', 'alanadi', 'meslek']);
         if (alanEl) {
             var aVal = alanEl.value ? alanEl.value.trim() : '';
             if (!aVal || trTemizle(aVal).indexOf('seciniz') !== -1) {
@@ -1207,8 +1626,8 @@
             }
         }
 
-        // 5. Dal
-        var dalEl = ogretilmisAlanBul('dal') || evrenselInputBul(['ddldal', 'dal', 'daladi']);
+        // 5. Dal (Telerik cmbDal / Select)
+        var dalEl = ogretilmisAlanBul('dal') || evrenselInputBul(['cmbdal', 'ddldal', 'dal', 'daladi']);
         if (dalEl) {
             var dVal = dalEl.value ? dalEl.value.trim() : '';
             if (!dVal || trTemizle(dVal).indexOf('seciniz') !== -1) {
@@ -1218,9 +1637,9 @@
 
         // 6. En Son Mezuniyet
         var mezuniyetEl = ogretilmisAlanBul('enSonMezuniyet') || evrenselInputBul(['ensonmezuniyet', 'mezuniyet', 'ddlmezuniyet']);
-        if (mezuniyetEl && (mezuniyetEl.tagName || '').toLowerCase() === 'select') {
-            var mVal = mezuniyetEl.value;
-            var mTxt = trTemizle(mezuniyetEl.options[mezuniyetEl.selectedIndex] ? mezuniyetEl.options[mezuniyetEl.selectedIndex].textContent : '');
+        if (mezuniyetEl) {
+            var mVal = mezuniyetEl.value ? mezuniyetEl.value.trim() : '';
+            var mTxt = (mezuniyetEl.options && mezuniyetEl.selectedIndex >= 0) ? trTemizle(mezuniyetEl.options[mezuniyetEl.selectedIndex].textContent) : trTemizle(mVal);
             if (!mVal || mTxt.indexOf('seciniz') !== -1 || mTxt === '') {
                 eksikler.push('En Son Mezuniyet');
             }
@@ -1228,9 +1647,9 @@
 
         // 7. Getirdiği Belge
         var belgeEl = ogretilmisAlanBul('getirdigiBelge') || evrenselInputBul(['getirdigibelge', 'belgeturu', 'ddlbelge']);
-        if (belgeEl && (belgeEl.tagName || '').toLowerCase() === 'select') {
-            var bVal = belgeEl.value;
-            var bTxt = trTemizle(belgeEl.options[belgeEl.selectedIndex] ? belgeEl.options[belgeEl.selectedIndex].textContent : '');
+        if (belgeEl) {
+            var bVal = belgeEl.value ? belgeEl.value.trim() : '';
+            var bTxt = (belgeEl.options && belgeEl.selectedIndex >= 0) ? trTemizle(belgeEl.options[belgeEl.selectedIndex].textContent) : trTemizle(bVal);
             if (!bVal || bTxt.indexOf('seciniz') !== -1 || bTxt === '') {
                 eksikler.push('Getirdiği Belge');
             }
@@ -1744,13 +2163,30 @@
         var txt = (el.textContent || '').trim().slice(0, 100);
 
         var optionsList = [];
-        if (el.options) {
+        var telerikBilgisi = null;
+
+        // Telerik RadComboBox Analizi
+        var tObj = telerikComboNesnesiBul(el);
+        if (tObj && tObj.combo && typeof tObj.combo.get_items === 'function') {
+            var tItems = tObj.combo.get_items();
+            var tCount = tItems.get_count();
+            telerikBilgisi = {
+                comboId: tObj.comboId,
+                itemSayisi: tCount,
+                items: []
+            };
+            for (var ti = 0; ti < Math.min(tCount, 25); ti++) {
+                var itm = tItems.getItem(ti);
+                telerikBilgisi.items.push({ index: ti, text: itm.get_text(), value: itm.get_value() });
+                optionsList.push({ index: ti, text: itm.get_text(), value: itm.get_value() });
+            }
+        } else if (el.options) {
             for (var i = 0; i < el.options.length; i++) {
                 var o = el.options[i];
                 optionsList.push({ index: i, value: o.value, text: o.textContent.trim(), selected: o.selected });
             }
         } else if (targetEl.querySelectorAll) {
-            var altOptions = targetEl.querySelectorAll('option, li, div[role="option"]');
+            var altOptions = targetEl.querySelectorAll('option, li.rcbItem, li, div[role="option"]');
             for (var j = 0; j < altOptions.length; j++) {
                 var ao = altOptions[j];
                 optionsList.push({ index: j, text: ao.textContent.trim() });
@@ -1768,8 +2204,10 @@
                 value: val,
                 textContentOzet: txt,
                 selector: selector,
+                isTelerik: !!telerikBilgisi,
+                telerikDetay: telerikBilgisi,
                 secenekSayisi: optionsList.length,
-                secenekler: optionsList.slice(0, 20),
+                secenekler: optionsList.slice(0, 25),
                 outerHTML: (el.outerHTML || '').slice(0, 500)
             },
             ebeveyn: el.parentElement ? {
@@ -1785,12 +2223,15 @@
         // Canlı Log Konsoluna Dök
         logEkle('=== 🔬 ELEMAN ANALİZ RAPORU ===', 'mor');
         logEkle('🏷️ Tag: <' + tag + '> | ID: #' + id + ' | Name: ' + name, 'mor');
+        if (telerikBilgisi) {
+            logEkle('⚡ TELERIK RADCOMBOBOX TESPİT EDİLDİ: [' + telerikBilgisi.comboId + '] (' + telerikBilgisi.itemSayisi + ' öğe)', 'basari');
+        }
         logEkle('📌 Selector: ' + selector, 'islem');
         logEkle('📝 Değer: "' + val + '" | Sınıf: ' + cls, 'islem');
         if (optionsList.length > 0) {
             logEkle('📋 Seçenekler (' + optionsList.length + ' adet): ' + optionsList.slice(0, 5).map(function (o) { return '"' + o.text + '"'; }).join(', ') + (optionsList.length > 5 ? ' ...' : ''), 'basari');
         } else {
-            logEkle('ℹ️ Standart select options listesi bulunamadı (Input/Custom div olabilir).', 'uyari');
+            logEkle('ℹ️ Standart select/combobox options listesi bulunamadı.', 'uyari');
         }
 
         // Panoya JSON Formatında Kopyala
@@ -1835,7 +2276,7 @@
             } else if (alanId === 'sorgulaBtn') {
                 el = evrenselMetinleBul('button, a, input[type="button"], .btn', ['Sorgula', 'MERNİS Sorgula', 'Mernis', 'Getir'], false);
             } else if (alanId === 'ogrenimYili') {
-                el = evrenselInputBul(['ogrenimyili', 'donem', 'ogretimyili', 'egitimyili', 'ddlogrenimyili']);
+                el = evrenselInputBul(['cmbogrenimyili', 'ogrenimyili', 'donem', 'ogretimyili', 'egitimyili', 'ddlogrenimyili']);
             } else if (alanId === 'tc') {
                 el = evrenselInputBul(['tc', 'kimlikno', 'tckimlikno', 'txttc']);
             } else if (alanId === 'dogumTarihi') {
@@ -1853,9 +2294,9 @@
             } else if (alanId === 'belgeTarihi') {
                 el = evrenselInputBul(['belgetarihi', 'diplomatarihi']);
             } else if (alanId === 'alan') {
-                el = evrenselInputBul(['ddlalan', 'alan', 'alanadi', 'meslek']);
+                el = evrenselInputBul(['cmbalan', 'ddlalan', 'alan', 'alanadi', 'meslek']);
             } else if (alanId === 'dal') {
-                el = evrenselInputBul(['ddldal', 'dal', 'daladi']);
+                el = evrenselInputBul(['cmbdal', 'ddldal', 'dal', 'daladi']);
             }
         }
 
@@ -2072,7 +2513,7 @@
         };
 
         belgeler.forEach(function (doc, docIdx) {
-            var inputs = doc.querySelectorAll('input, select, textarea, button, a.btn');
+            var inputs = doc.querySelectorAll('input, select, textarea, button, a.btn, .RadComboBox, input.rcbInput');
             for (var i = 0; i < inputs.length; i++) {
                 var el = inputs[i];
                 var etiket = el.tagName.toLowerCase();
@@ -2083,6 +2524,7 @@
                 var val = (el.value || '').slice(0, 30);
                 var txt = (el.textContent || '').trim().slice(0, 30);
                 var selector = benzersizSelectorUret(el);
+                var tObj = telerikComboNesnesiBul(el);
 
                 rapor.elemanlar.push({
                     docIndex: docIdx,
@@ -2093,7 +2535,9 @@
                     class: cls,
                     value: val,
                     text: txt,
-                    selector: selector
+                    selector: selector,
+                    isTelerik: !!tObj,
+                    telerikComboId: tObj ? tObj.comboId : null
                 });
             }
         });
@@ -2453,6 +2897,9 @@
         elemanIncelemeModunuBaslat: elemanIncelemeModunuBaslat,
         kanonikMetin: kanonikMetin,
         evrenselSecimYap: evrenselSecimYap,
+        telerikRadComboBoxSec: telerikRadComboBoxSec,
+        telerikComboNesnesiBul: telerikComboNesnesiBul,
+        telerikDropDownBul: telerikDropDownBul,
         ogrenimYiliSec: ogrenimYiliSec,
         telefonuYaz: telefonuYaz
     };
