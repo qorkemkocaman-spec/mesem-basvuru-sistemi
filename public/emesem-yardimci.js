@@ -1,37 +1,91 @@
 /* ==================================================================
-   E-MESEM Sınav Öğrenci Ön Kayıt & Doldurma Otomasyon Robotu (v3.5)
+   E-MESEM Sınav Öğrenci Ön Kayıt & Otomasyon Robotu (v4.0)
    Geliştirici: Görkem Kocaman © 2026
    ------------------------------------------------------------------
-   E-MESEM Sınav Öğrenci Ön Kayıt ekranında tam otomatik veya adım
-   adım başvuru ve denklik veri girişini gerçekleştirir:
-     1. Başvuru ve seviye türüne göre ilgili sekmeyi seçer
-        (Kalfalık / Ustalık / İş Pedagojisi Kursu)
-     2. "Yeni Kayıt" butonuna tıklar
-     3. Açılır formda Öğrenim Yılını seçer
-     4. TC Kimlik No ve Doğum Tarihini girip "Sorgula"ya basar
-     5. MERNİS yanıtını akıllıca bekler (Ad, Soyad, Cinsiyet vb.)
-     6. Kapsam seçimini yapar (35. Madde, 28/c, 31. Madde vb.)
-     7. e-Posta, Cep Telefonu ve İkametgâh adresini doldurur
-     8. En Son Mezuniyet, Belge Türü, Belge Tarihi, Alan ve Dal bilgilerini doldurur
-     9. "Kaydet" butonuna tıklar
-    10. Toplu aktarım modunda sıradaki adaya otomatik geçer.
+   MEB E-MESEM (emesem.meb.gov.tr) portalında "Sınav Öğrenci Ön Kayıt"
+   ekranında tam otomatik, hatasız ve adım adım kayıt motoru.
+
+   Kesin İş Akışı:
+     1. İlgili kategori sekmesini seçer (Kalfalık Sınavı / Ustalık Sınavı / İş Pedagojisi Kursu)
+     2. Üst bardaki "Yeni Kayıt" butonuna tıklar
+     3. Açılan formda:
+        - Öğrenim Yılını seçer (2025-2026 vb.)
+        - Kimlik No ve Doğum Tarihini girip "Sorgula"ya tıklar
+        - MERNİS sorgusunun tamamlanmasını bekler (Ad, Soyad, Cinsiyet vb. otomatik gelir)
+        - Kapsam seçer (Kalfalık: 35. Madde | Ustalık: 28.c, 35.Madde, 29.Madde, G.1.b.2 | İş Pedagojisi: 31.Madde)
+        - Telefon, e-Posta ve Adres bilgilerini doldurur
+        - En Son Mezuniyeti seçer (İlkokul, İlköğretim (Ortaokul), Lise, Meslek Lisesi, Ön Lisans, Lisans, Yüksek Lisans, Doktora)
+        - Getirdiği Belgeyi seçer (Diploma, Tastikname, Diğer)
+        - Belge Tarihini doldurur
+     4. Sağ üstteki "Kaydet" butonuna tıklar
+     5. Onay/kapanış sonrası sıradaki adaya geçer.
 ================================================================== */
 (function () {
     'use strict';
 
     if (window.__mesemYardimci) {
-        window.__mesemYardimci.gorunurluk();
+        window.__mesemYardimci.gosterGizle();
         return;
     }
 
-    var SURUM = "3.5";
-    var kayitlar = [];             // Aday kayıtları listesi
-    var aktifIndeks = 0;           // Aktif işlenen kayıt sırası
+    var SURUM = "4.0";
+    var tumKayitlar = [];          // Sisteme yüklenen tüm adaylar
+    var filtreliKayitlar = [];     // Seçili kategoriye göre filtrelenmiş liste
+    var aktifKategori = 'TUMU';    // 'KALFALIK', 'USTALIK', 'PEDAGOJI', 'TUMU'
+    var aktifIndeks = 0;           // Filtreli listedeki aktif aday sırası
     var otomatikCalisiyor = false; // Toplu aktarım döngü durumu
-    var beklemeSuresi = 2200;      // MERNİS sorgu sonrası bekleme süresi (ms)
-    var panel, listeKutusu, durumYazi, yapistirmaKutusu, yapistirmaAlani, btnToplu, dosyaGirdi;
+    var manuelOnayModu = false;    // Kaydetmeden önce duraklayıp kullanıcı onayı bekleme
+    var mernisBeklemeSuresi = 2200;// MERNİS sorgu bekleme süresi (ms)
+    var genelBeklemeSuresi = 1000; // Adımlar arası bekleme süresi (ms)
+    
+    // UI Bileşenleri
+    var panel, listeKutusu, durumYazi, sayacKutusu, btnToplu, btnManuelOnay, dosyaGirdi;
+    var yapistirmaKutusu, yapistirmaAlani;
+    var tabBtnKalfalik, tabBtnUstalik, tabBtnPedagoji, tabBtnTumu;
 
-    /* ---------------- HTML & DOM Yardımcıları ---------------- */
+    /* ---------------- Sesli Bildirim Sistemi (Web Audio API) ---------------- */
+    var sesContext = null;
+    function sesCal(tur) {
+        try {
+            var AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) return;
+            if (!sesContext) sesContext = new AudioCtx();
+            if (sesContext.state === 'suspended') sesContext.resume();
+
+            var osc = sesContext.createOscillator();
+            var gain = sesContext.createGain();
+            osc.connect(gain);
+            gain.connect(sesContext.destination);
+
+            var simdi = sesContext.currentTime;
+            if (tur === 'basari') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, simdi); // D5
+                osc.frequency.setValueAtTime(880, simdi + 0.1); // A5
+                gain.gain.setValueAtTime(0.15, simdi);
+                gain.gain.exponentialRampToValueAtTime(0.01, simdi + 0.3);
+                osc.start(simdi);
+                osc.stop(simdi + 0.3);
+            } else if (tur === 'hata') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, simdi);
+                osc.frequency.setValueAtTime(160, simdi + 0.15);
+                gain.gain.setValueAtTime(0.2, simdi);
+                gain.gain.exponentialRampToValueAtTime(0.01, simdi + 0.4);
+                osc.start(simdi);
+                osc.stop(simdi + 0.4);
+            } else if (tur === 'tik') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(700, simdi);
+                gain.gain.setValueAtTime(0.08, simdi);
+                gain.gain.exponentialRampToValueAtTime(0.01, simdi + 0.08);
+                osc.start(simdi);
+                osc.stop(simdi + 0.08);
+            }
+        } catch (e) { }
+    }
+
+    /* ---------------- DOM & Metin Yardımcıları ---------------- */
     function el(etiket, stil, metin) {
         var e = document.createElement(etiket);
         if (stil) e.setAttribute('style', stil);
@@ -57,73 +111,111 @@
             .trim();
     }
 
-    /* Akıllı Öğe Bulucu */
-    function ogeleriBul(secici) {
-        return Array.prototype.slice.call(document.querySelectorAll(secici));
-    }
-
-    function metinleBul(etiketler, metinListesi) {
-        var arananlar = metinListesi.map(trTemizle);
-        var adaylar = ogeleriBul(etiketler);
-        for (var i = 0; i < adaylar.length; i++) {
-            var a = adaylar[i];
-            var t = trTemizle(a.textContent || a.value || a.placeholder || a.getAttribute('aria-label') || a.title || a.name || a.id || '');
-            for (var j = 0; j < arananlar.length; j++) {
-                if (t === arananlar[j] || (arananlar[j].length > 3 && t.indexOf(arananlar[j]) !== -1)) {
-                    return a;
-                }
-            }
-        }
-        return null;
-    }
-
-    function inputBul(anahtarListesi, ebeveyn) {
-        var root = ebeveyn || document;
-        var inputs = Array.prototype.slice.call(root.querySelectorAll('input, select, textarea'));
-        var arananlar = anahtarListesi.map(trTemizle);
-
-        for (var i = 0; i < inputs.length; i++) {
-            var inp = inputs[i];
-            // File, submit, button, reset vb. veri girişi yapılamayan öğeleri atla
-            if (inp.type === 'file' || inp.type === 'submit' || inp.type === 'button' || inp.type === 'reset' || inp.type === 'image') {
-                continue;
-            }
-
-            var attrMetin = trTemizle([
-                inp.name, inp.id, inp.placeholder,
-                inp.getAttribute('aria-label'), inp.title,
-                inp.getAttribute('data-field'), inp.className
-            ].join(' '));
-
-            var labelMetin = '';
-            if (inp.id) {
+    /* Tüm DOM Ağacını (Iframe'ler Dahil) Tarayan Kapsam Bulucu */
+    function tumBelgeleriGetir() {
+        var belgeler = [document];
+        try {
+            var iframeler = document.querySelectorAll('iframe, frame');
+            for (var i = 0; i < iframeler.length; i++) {
                 try {
-                    var lbl = root.querySelector('label[for="' + CSS.escape(inp.id) + '"]');
-                    if (lbl) labelMetin = trTemizle(lbl.textContent);
-                } catch (e) { }
+                    var doc = iframeler[i].contentDocument || (iframeler[i].contentWindow && iframeler[i].contentWindow.document);
+                    if (doc && doc.body) {
+                        belgeler.push(doc);
+                        // İç içe iframe kontrolü
+                        var icIframeler = doc.querySelectorAll('iframe, frame');
+                        for (var j = 0; j < icIframeler.length; j++) {
+                            try {
+                                var icDoc = icIframeler[j].contentDocument || (icIframeler[j].contentWindow && icIframeler[j].contentWindow.document);
+                                if (icDoc && icDoc.body) belgeler.push(icDoc);
+                            } catch (e2) { }
+                        }
+                    }
+                } catch (e1) { }
             }
-            if (!labelMetin && inp.closest('label')) {
-                labelMetin = trTemizle(inp.closest('label').textContent);
-            }
-            if (!labelMetin && inp.parentElement) {
-                var prev = inp.previousElementSibling;
-                if (prev) labelMetin = trTemizle(prev.textContent);
-            }
+        } catch (e) { }
+        return belgeler;
+    }
 
-            for (var j = 0; j < arananlar.length; j++) {
-                var k = arananlar[j];
-                if (attrMetin.indexOf(k) !== -1 || labelMetin.indexOf(k) !== -1) {
-                    return inp;
+    /* Evrensel Element Arayıcı: Metin, ID, Name, Placeholder veya Label üzerinden arar */
+    function evrenselMetinleBul(etiketSecici, metinListesi, sadeceGorunur) {
+        var arananlar = metinListesi.map(trTemizle);
+        var belgeler = tumBelgeleriGetir();
+
+        for (var b = 0; b < belgeler.length; b++) {
+            var doc = belgeler[b];
+            var adaylar = Array.prototype.slice.call(doc.querySelectorAll(etiketSecici));
+
+            for (var i = 0; i < adaylar.length; i++) {
+                var a = adaylar[i];
+                if (sadeceGorunur && (a.offsetParent === null && a.offsetWidth === 0 && a.offsetHeight === 0)) {
+                    continue;
+                }
+
+                var t = trTemizle(a.textContent || a.value || a.placeholder || a.getAttribute('aria-label') || a.title || a.name || a.id || '');
+                for (var j = 0; j < arananlar.length; j++) {
+                    var aranan = arananlar[j];
+                    if (t === aranan || (aranan.length > 3 && t.indexOf(aranan) !== -1)) {
+                        return a;
+                    }
                 }
             }
         }
         return null;
     }
 
+    /* Evrensel Input / Select Bulucu */
+    function evrenselInputBul(anahtarListesi, hedefDoc) {
+        var arananlar = anahtarListesi.map(trTemizle);
+        var belgeler = hedefDoc ? [hedefDoc] : tumBelgeleriGetir();
+
+        for (var b = 0; b < belgeler.length; b++) {
+            var doc = belgeler[b];
+            var inputs = Array.prototype.slice.call(doc.querySelectorAll('input, select, textarea'));
+
+            for (var i = 0; i < inputs.length; i++) {
+                var inp = inputs[i];
+                if (inp.type === 'file' || inp.type === 'submit' || inp.type === 'button' || inp.type === 'reset' || inp.type === 'image') {
+                    continue;
+                }
+
+                var attrMetin = trTemizle([
+                    inp.name, inp.id, inp.placeholder,
+                    inp.getAttribute('aria-label'), inp.title,
+                    inp.getAttribute('data-field'), inp.className
+                ].join(' '));
+
+                var labelMetin = '';
+                if (inp.id) {
+                    try {
+                        var lbl = doc.querySelector('label[for="' + CSS.escape(inp.id) + '"]');
+                        if (lbl) labelMetin = trTemizle(lbl.textContent);
+                    } catch (e) { }
+                }
+                if (!labelMetin && inp.closest && inp.closest('label')) {
+                    labelMetin = trTemizle(inp.closest('label').textContent);
+                }
+                if (!labelMetin && inp.parentElement) {
+                    var prev = inp.previousElementSibling;
+                    if (prev) labelMetin = trTemizle(prev.textContent);
+                    if (!labelMetin && inp.parentElement.previousElementSibling) {
+                        labelMetin = trTemizle(inp.parentElement.previousElementSibling.textContent);
+                    }
+                }
+
+                for (var j = 0; j < arananlar.length; j++) {
+                    var k = arananlar[j];
+                    if (attrMetin.indexOf(k) !== -1 || labelMetin.indexOf(k) !== -1) {
+                        return inp;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    /* Form Elemanına Değer Atama ve Olayları Tetikleme */
     function degerYaz(hedef, deger) {
         if (!hedef) return false;
-        
-        // Güvenlik Kuralı: HTMLInputElement type="file" öğelerine değer atanamaz (yalnızca boş string izinlidir)
         if (hedef.type === 'file') return false;
 
         var etiket = (hedef.tagName || '').toLowerCase();
@@ -131,8 +223,8 @@
         if (etiket === 'select') {
             var bulundu = false;
             var aranan = trTemizle(deger);
-            
-            // 1. Aşama: Birebir tam eşleşme ara
+
+            // 1. Adım: Tam eşleşme
             for (var i = 0; i < hedef.options.length; i++) {
                 var o = hedef.options[i];
                 var m = trTemizle(o.textContent);
@@ -147,7 +239,7 @@
                 }
             }
 
-            // 2. Aşama: Kısmi içerme eşleşmesi ara
+            // 2. Adım: Kısmi eşleşme
             if (!bulundu && aranan) {
                 for (var j = 0; j < hedef.options.length; j++) {
                     var opt = hedef.options[j];
@@ -191,11 +283,7 @@
             } catch (e) { }
 
             if (!atandi) {
-                try {
-                    hedef.value = strDeger;
-                } catch (e) {
-                    return false;
-                }
+                try { hedef.value = strDeger; } catch (e) { return false; }
             }
         }
 
@@ -214,12 +302,28 @@
 
     function vurgula(hedef, renk) {
         if (!hedef) return;
-        var eski = hedef.style.outline;
-        hedef.style.outline = '3px solid ' + (renk || '#f59e0b');
-        setTimeout(function () { hedef.style.outline = eski; }, 1600);
+        try {
+            var eski = hedef.style.outline;
+            hedef.style.outline = '3px solid ' + (renk || '#f59e0b');
+            setTimeout(function () { hedef.style.outline = eski; }, 1800);
+        } catch (e) { }
     }
 
-    /* ---------------- Pano ve Veri Yükleme ---------------- */
+    /* ---------------- Kategori & Veri Normalizasyonu ---------------- */
+    function kategoriBelirle(k) {
+        var tur = trTemizle(k.basvuruTuru || '');
+        if (tur.indexOf('pedagoji') !== -1 || tur.indexOf('ustaogretici') !== -1) return 'PEDAGOJI';
+        if (tur.indexOf('ustalik') !== -1 || k.ustalikSinav || k.dogrudanUstalik) return 'USTALIK';
+        return 'KALFALIK';
+    }
+
+    function kategoriAdiTr(kat) {
+        if (kat === 'PEDAGOJI') return 'İş Pedagojisi Kursu';
+        if (kat === 'USTALIK') return 'Ustalık Sınavı';
+        if (kat === 'KALFALIK') return 'Kalfalık Sınavı';
+        return 'Tüm Kayıtlar';
+    }
+
     function veriyiCoz(metin) {
         try {
             if (!metin || typeof metin !== 'string') return null;
@@ -234,6 +338,60 @@
         }
     }
 
+    function kayitlariYukle(liste) {
+        tumKayitlar = liste.map(function (k) {
+            var duz = { durum: 'bekliyor' };
+            if (k.alanlar && Array.isArray(k.alanlar)) {
+                duz.baslik = k.baslik || '';
+                k.alanlar.forEach(function (a) { duz[a.id] = a.deger; });
+            }
+            ['id', 'basvuruNo', 'tc', 'ad', 'soyad', 'dogumTarihi', 'basvuruTuru', 'ogrenimYili', 'kapsam',
+             'eposta', 'telefon', 'adres', 'enSonMezuniyet', 'mezunOlduguOkul', 'getirdigiBelge', 'belgeTarihi',
+             'alan', 'dal', 'kalfalikSinav', 'dogrudanKalfalik', 'kalfalikVeUstalik', 'kalfalikVeBasariliUstalik',
+             'ustalikSinav', 'dogrudanUstalik', 'ustaTalepTuru', 'ustaDayanakBelge', 'ustaBelgeSayisi'].forEach(function (anahtar) {
+                if (k[anahtar] !== undefined && duz[anahtar] === undefined) {
+                    duz[anahtar] = k[anahtar];
+                }
+            });
+            duz.kategori = kategoriBelirle(duz);
+            return duz;
+        });
+
+        aktifIndeks = 0;
+        kategoriFiltrele(aktifKategori);
+        sesCal('basari');
+        durum(`✓ Toplam ${tumKayitlar.length} aday robot paneline yüklendi.`, '#4ade80');
+    }
+
+    function kategoriFiltrele(kat) {
+        aktifKategori = kat;
+        if (kat === 'TUMU') {
+            filtreliKayitlar = tumKayitlar;
+        } else {
+            filtreliKayitlar = tumKayitlar.filter(function (k) { return k.kategori === kat; });
+        }
+        aktifIndeks = 0;
+
+        // Sekme butonlarını güncelle
+        [tabBtnKalfalik, tabBtnUstalik, tabBtnPedagoji, tabBtnTumu].forEach(function (btn) {
+            if (btn) btn.style.background = '#1e293b';
+        });
+        if (kat === 'KALFALIK' && tabBtnKalfalik) tabBtnKalfalik.style.background = '#0284c7';
+        if (kat === 'USTALIK' && tabBtnUstalik) tabBtnUstalik.style.background = '#d97706';
+        if (kat === 'PEDAGOJI' && tabBtnPedagoji) tabBtnPedagoji.style.background = '#7c3aed';
+        if (kat === 'TUMU' && tabBtnTumu) tabBtnTumu.style.background = '#334155';
+
+        // Sayaçları güncelle
+        var kSayi = tumKayitlar.filter(function (k) { return k.kategori === 'KALFALIK'; }).length;
+        var uSayi = tumKayitlar.filter(function (k) { return k.kategori === 'USTALIK'; }).length;
+        var pSayi = tumKayitlar.filter(function (k) { return k.kategori === 'PEDAGOJI'; }).length;
+        if (sayacKutusu) {
+            sayacKutusu.textContent = `Kalfalık: ${kSayi} | Ustalık: ${uSayi} | Pedagoji: ${pSayi} | Aktif: ${filtreliKayitlar.length}`;
+        }
+
+        listeyiCiz();
+    }
+
     async function panodanAl() {
         durum('Pano kontrol ediliyor...', '#38bdf8');
         try {
@@ -246,59 +404,10 @@
                     return;
                 }
             }
-            yapistirmaKutusuAc('Panodan veri alınamadı veya izin verilmedi. Lütfen veriyi aşağıdaki kutuya yapıştırıp "Yükle" butonuna basın.');
+            yapistirmaKutusuAc('Panodan otomatik okunamadı. Veriyi aşağıdaki alana yapıştırıp "Yükle" butonuna basın.');
         } catch (e) {
-            yapistirmaKutusuAc('Pano erişim izni tarayıcı tarafından engellendi. Veriyi aşağıdaki alana yapıştırın (Ctrl+V).');
+            yapistirmaKutusuAc('Tarayıcı pano erişimine izin vermedi. Lütfen Ctrl+V ile aşağıdaki kutuya yapıştırın.');
         }
-    }
-
-    function dosyaYukleTetikle() {
-        if (dosyaGirdi) dosyaGirdi.click();
-    }
-
-    function dosyaSecildi(e) {
-        var dosya = e.target.files && e.target.files[0];
-        if (!dosya) return;
-        var okuyucu = new FileReader();
-        okuyucu.onload = function (evt) {
-            var icerik = evt.target.result;
-            var veri = veriyiCoz(icerik);
-            if (veri && veri.length) {
-                kayitlariYukle(veri);
-                if (yapistirmaKutusu) yapistirmaKutusu.style.display = 'none';
-            } else {
-                durum('Seçilen JSON dosyasında geçerli aday kaydı bulunamadı.', '#f87171');
-            }
-        };
-        okuyucu.onerror = function () {
-            durum('Dosya okuma hatası oluştu.', '#f87171');
-        };
-        okuyucu.readAsText(dosya);
-        try {
-            e.target.value = '';
-        } catch (err) { }
-    }
-
-    function kayitlariYukle(liste) {
-        kayitlar = liste.map(function (k) {
-            var duz = { durum: 'bekliyor' };
-            if (k.alanlar && Array.isArray(k.alanlar)) {
-                duz.baslik = k.baslik || '';
-                k.alanlar.forEach(function (a) { duz[a.id] = a.deger; });
-            }
-            ['id', 'basvuruNo', 'tc', 'ad', 'soyad', 'dogumTarihi', 'basvuruTuru', 'kapsam', 'eposta', 'telefon', 'adres',
-             'enSonMezuniyet', 'mezunOlduguOkul', 'getirdigiBelge', 'belgeTarihi', 'alan', 'dal',
-             'kalfalikSinav', 'dogrudanKalfalik', 'kalfalikVeUstalik', 'kalfalikVeBasariliUstalik',
-             'ustalikSinav', 'dogrudanUstalik', 'ustaTalepTuru', 'ustaDayanakBelge', 'ustaBelgeSayisi'].forEach(function (anahtar) {
-                if (k[anahtar] !== undefined && duz[anahtar] === undefined) {
-                    duz[anahtar] = k[anahtar];
-                }
-            });
-            return duz;
-        });
-        aktifIndeks = 0;
-        listeyiCiz();
-        durum(`✓ ${kayitlar.length} aday verisi başarıyla yüklendi. Aktarıma hazır.`, '#4ade80');
     }
 
     function yapistirmaKutusuAc(mesaj) {
@@ -312,206 +421,230 @@
         }
     }
 
-    function seviyeMetni(k) {
-        if (k.kalfalikVeUstalik || k.kalfalikVeBasariliUstalik) return 'Kalfalık + Ustalık';
-        if (k.dogrudanKalfalik) return 'Doğrudan Kalfalık';
-        if (k.kalfalikSinav) return 'Kalfalık Sınavı';
-        if (k.dogrudanUstalik) return 'Doğrudan Ustalık';
-        if (k.ustalikSinav) return 'Ustalık Sınavı';
-        if (k.basvuruTuru === 'Usta Öğreticilik') return 'İş Pedagojisi';
-        return k.basvuruTuru || 'Kalfalık/Ustalık';
+    function dosyaSecildi(e) {
+        var dosya = e.target.files && e.target.files[0];
+        if (!dosya) return;
+        var okuyucu = new FileReader();
+        okuyucu.onload = function (evt) {
+            var veri = veriyiCoz(evt.target.result);
+            if (veri && veri.length) {
+                kayitlariYukle(veri);
+                if (yapistirmaKutusu) yapistirmaKutusu.style.display = 'none';
+            } else {
+                durum('Seçilen dosyada aday kaydı bulunamadı.', '#f87171');
+            }
+        };
+        okuyucu.readAsText(dosya);
+        try { e.target.value = ''; } catch (err) { }
     }
 
-    /* ---------------- E-MESEM EKRAN AKIŞI OTOMASYONU ---------------- */
+    /* ============================================================
+       MEB E-MESEM TAM OTOMATİK İŞ AKIŞI MOTORU
+       ============================================================ */
     async function adimiIsle(k) {
-        if (!k) throw new Error('İşlenecek aday kaydı yok.');
+        if (!k) throw new Error('İşlenecek aday kaydı bulunamadı.');
 
-        durum(`[${k.basvuruNo || k.tc || 'Aday'}] Başvuru sekmesi seçiliyor...`, '#38bdf8');
+        var kat = k.kategori;
+        durum(`[${k.tc || k.ad}] 1. Adım: ${kategoriAdiTr(kat)} sekmesi seçiliyor...`, '#38bdf8');
+        sesCal('tik');
 
-        // 1. ADIM: Başvuru Türü ve Sekme Seçimi
-        var tur = String(k.basvuruTuru || '').toLowerCase();
-        var arananSekmeMetni = ['Kalfalık Sınavı', 'Kalfalık'];
-
-        if (tur.indexOf('usta öğreticilik') !== -1 || tur.indexOf('iş pedagojisi') !== -1) {
-            arananSekmeMetni = ['İş Pedagojisi Kursu', 'İş Pedagojisi', 'Usta Öğreticilik'];
-        } else if (k.ustalikSinav || k.dogrudanUstalik || tur.indexOf('ustalık') !== -1) {
-            arananSekmeMetni = ['Ustalık Sınavı', 'Ustalık'];
-        } else if (k.kalfalikVeUstalik || k.kalfalikVeBasariliUstalik) {
-            arananSekmeMetni = ['Kalfalık Sınavı', 'Kalfalık'];
+        // ADIM 1: Kategori Sekmesini Seç (Kalfalık / Ustalık / İş Pedagojisi)
+        var arananSekmeler = [];
+        if (kat === 'PEDAGOJI') {
+            arananSekmeler = ['İş Pedagojisi Kursu', 'İş Pedagojisi', 'Usta Öğreticilik Kursu', 'Usta Öğreticilik'];
+        } else if (kat === 'USTALIK') {
+            arananSekmeler = ['Ustalık Sınavı', 'Ustalık'];
+        } else {
+            arananSekmeler = ['Kalfalık Sınavı', 'Kalfalık'];
         }
 
-        var sekmeDugme = metinleBul('button, a, input[type="button"], .tab, span, td, div', arananSekmeMetni);
-        if (sekmeDugme) {
-            vurgula(sekmeDugme, '#38bdf8');
-            sekmeDugme.click();
-            await bekle(700);
+        var sekmeDugmesi = evrenselMetinleBul('button, a, input[type="button"], input[type="radio"], .tab, span, td, div', arananSekmeler, false);
+        if (sekmeDugmesi) {
+            vurgula(sekmeDugmesi, '#38bdf8');
+            sekmeDugmesi.click();
+            await bekle(genelBeklemeSuresi);
         }
 
-        // 2. ADIM: "Yeni Kayıt" Butonuna Basma
-        durum(`[${k.tc}] "Yeni Kayıt" butonuna tıklanıyor...`, '#38bdf8');
-        var yeniKayitBtn = metinleBul('button, a, input[type="button"], .btn', ['Yeni Kayıt', 'Yeni Ekle', 'Yeni']);
+        // ADIM 2: Üst Bardaki "Yeni Kayıt" Butonuna Bas
+        durum(`[${k.tc}] 2. Adım: "Yeni Kayıt" butonuna tıklanıyor...`, '#38bdf8');
+        var yeniKayitBtn = evrenselMetinleBul('button, a, input[type="button"], .btn', ['Yeni Kayıt', 'Yeni Ekle', 'Yeni'], true);
+        if (!yeniKayitBtn) {
+            yeniKayitBtn = evrenselMetinleBul('button, a, input[type="button"], .btn', ['Yeni Kayıt', 'Yeni Ekle', 'Yeni'], false);
+        }
+
         if (yeniKayitBtn) {
             vurgula(yeniKayitBtn, '#22c55e');
             yeniKayitBtn.click();
-            await bekle(1000);
+            await bekle(genelBeklemeSuresi + 300);
         }
 
-        var modalVeyaForm = document.querySelector('.modal.show, .modal.active, .popup, .ui-dialog, [role="dialog"]') || document;
+        // ADIM 3: Açılan Pencere/Modal İçi Alanları Doldur
+        durum(`[${k.tc}] 3. Adım: Öğrenim Yılı ve Kimlik bilgileri dolduruluyor...`, '#38bdf8');
 
-        // 3. ADIM: Öğrenim Yılı Seçimi
-        var ogrenimYili = inputBul(['ogrenimyili', 'donem', 'ogretimyili', 'egitimyili'], modalVeyaForm);
-        if (ogrenimYili && ogrenimYili.tagName.toLowerCase() === 'select' && ogrenimYili.options.length > 1) {
-            if (!ogrenimYili.value) {
-                ogrenimYili.selectedIndex = 1;
-                degerYaz(ogrenimYili, ogrenimYili.value);
-            }
+        // 3.1: Öğrenim Yılı Seçimi
+        var ogrenimYiliInput = evrenselInputBul(['ogrenimyili', 'donem', 'ogretimyili', 'egitimyili']);
+        if (ogrenimYiliInput) {
+            var yilDegeri = k.ogrenimYili || '2025-2026';
+            degerYaz(ogrenimYiliInput, yilDegeri);
+            vurgula(ogrenimYiliInput, '#38bdf8');
         }
 
-        // 4. ADIM: TC Kimlik No ve Doğum Tarihi Yazma
-        durum(`[${k.tc}] Kimlik No ve Doğum Tarihi giriliyor...`, '#38bdf8');
-        var tcInput = inputBul(['tc', 'kimlikno', 'tckimlikno', 'txttc'], modalVeyaForm);
-        if (tcInput) {
+        // 3.2: TC Kimlik No
+        var tcInput = evrenselInputBul(['tc', 'kimlikno', 'tckimlikno', 'txttc']);
+        if (tcInput && k.tc) {
             degerYaz(tcInput, k.tc);
             vurgula(tcInput, '#38bdf8');
         }
 
-        var dogumInput = inputBul(['dogumtarihi', 'dogum', 'txtdogum'], modalVeyaForm);
-        if (dogumInput) {
-            var dogumDeger = k.dogumTarihi || '';
-            if (/^\d{4}-\d{2}-\d{2}$/.test(dogumDeger)) {
-                var p = dogumDeger.split('-');
-                dogumDeger = p[2] + '.' + p[1] + '.' + p[0];
+        // 3.3: Doğum Tarihi
+        var dogumInput = evrenselInputBul(['dogumtarihi', 'dogum', 'txtdogum']);
+        if (dogumInput && k.dogumTarihi) {
+            var dStr = k.dogumTarihi;
+            if (/^\d{4}-\d{2}-\d{2}$/.test(dStr)) {
+                var dp = dStr.split('-');
+                dStr = dp[2] + '.' + dp[1] + '.' + dp[0];
             }
-            degerYaz(dogumInput, dogumDeger);
+            degerYaz(dogumInput, dStr);
             vurgula(dogumInput, '#38bdf8');
         }
 
-        // 5. ADIM: "Sorgula" Butonuna Basma ve MERNİS Bekleme
+        // 3.4: "Sorgula" Butonuna Bas & MERNİS Bekle
         await bekle(400);
-        var sorgulaBtn = metinleBul('button, a, input[type="button"], .btn', ['Sorgula', 'MERNİS Sorgula', 'Getir']);
+        var sorgulaBtn = evrenselMetinleBul('button, a, input[type="button"], .btn', ['Sorgula', 'MERNİS Sorgula', 'Mernis', 'Getir'], false);
         if (sorgulaBtn) {
-            durum(`[${k.tc}] MERNİS sorgulanıyor...`, '#fbbf24');
+            durum(`[${k.tc}] MERNİS sorgulanıyor (${mernisBeklemeSuresi / 1000} sn bekleniyor)...`, '#fbbf24');
             vurgula(sorgulaBtn, '#eab308');
             sorgulaBtn.click();
-            await bekle(beklemeSuresi);
+            await bekle(mernisBeklemeSuresi);
         }
 
-        // 6. ADIM: Kapsam Seçimi
-        durum(`[${k.tc}] Kapsam ve İletişim bilgileri giriliyor...`, '#38bdf8');
-        var kapsamDegeri = k.kapsam || '';
-        if (arananSekmeMetni[0].indexOf('Kalfalık') !== -1) {
-            kapsamDegeri = kapsamDegeri || '35.Madde';
-        } else if (arananSekmeMetni[0].indexOf('Pedagoji') !== -1) {
-            kapsamDegeri = kapsamDegeri || '31.Madde';
-        } else if (!kapsamDegeri) {
-            kapsamDegeri = '35.Madde';
+        // 3.5: Kapsam Seçimi
+        durum(`[${k.tc}] Kapsam, İletişim ve Mezuniyet bilgileri dolduruluyor...`, '#38bdf8');
+        var kapsamDeger = k.kapsam;
+        if (!kapsamDeger) {
+            if (kat === 'PEDAGOJI') kapsamDeger = '31.Madde';
+            else if (kat === 'USTALIK') kapsamDeger = '35.Madde';
+            else kapsamDeger = '35. Madde';
         }
-        var kapsamInput = inputBul(['kapsam', 'madde', 'kapsamturu'], modalVeyaForm);
+
+        var kapsamInput = evrenselInputBul(['kapsam', 'madde', 'kapsamturu']);
         if (kapsamInput) {
-            degerYaz(kapsamInput, kapsamDegeri);
+            degerYaz(kapsamInput, kapsamDeger);
             vurgula(kapsamInput, '#38bdf8');
         }
 
-        // 7. ADIM: e-Posta, Telefon, Adres
-        var epostaInput = inputBul(['eposta', 'email', 'mail'], modalVeyaForm);
-        if (epostaInput && k.eposta) {
-            degerYaz(epostaInput, k.eposta);
-        }
+        // 3.6: e-Posta & Telefon & Adres
+        var epostaInput = evrenselInputBul(['eposta', 'email', 'mail']);
+        if (epostaInput && k.eposta) degerYaz(epostaInput, k.eposta);
 
-        var telInput = inputBul(['telefon', 'tel', 'cep', 'gsm'], modalVeyaForm);
-        if (telInput && k.telefon) {
-            degerYaz(telInput, k.telefon);
-        }
+        var telInput = evrenselInputBul(['telefon', 'tel', 'cep', 'gsm']);
+        if (telInput && k.telefon) degerYaz(telInput, k.telefon);
 
-        var adresInput = inputBul(['adres', 'ikametgah'], modalVeyaForm);
-        if (adresInput && k.adres) {
-            degerYaz(adresInput, k.adres);
-        }
+        var adresInput = evrenselInputBul(['adres', 'ikametgah']);
+        if (adresInput && k.adres) degerYaz(adresInput, k.adres);
 
-        // 8. ADIM: Mezuniyet ve Belge Bilgileri
-        var mezuniyetInput = inputBul(['mezuniyet', 'ensonmezuniyet', 'ogrenimdurumu', 'mezuniyetdurumu'], modalVeyaForm);
+        // 3.7: En Son Mezuniyeti
+        var mezuniyetInput = evrenselInputBul(['ensonmezuniyet', 'mezuniyet', 'ogrenimdurumu', 'mezuniyetdurumu']);
         if (mezuniyetInput) {
-            degerYaz(mezuniyetInput, k.enSonMezuniyet || k.mezuniyetDurumu || 'Lise');
+            degerYaz(mezuniyetInput, k.enSonMezuniyet || 'Lise');
             vurgula(mezuniyetInput, '#38bdf8');
         }
 
-        var belgeInput = inputBul(['getirdigibelge', 'belgeturu', 'ogrenimbelgesi'], modalVeyaForm);
+        // 3.8: Getirdiği Belge (Diploma, Tastikname, Diğer)
+        var belgeInput = evrenselInputBul(['getirdigibelge', 'belgeturu', 'ogrenimbelgesi']);
         if (belgeInput) {
-            degerYaz(belgeInput, k.getirdigiBelge || 'Diploma');
+            var bTur = k.getirdigiBelge || 'Diploma';
+            // Tasdikname / Tastikname MEB eşleme
+            if (trTemizle(bTur).indexOf('tas') !== -1) bTur = 'Tastikname';
+            degerYaz(belgeInput, bTur);
+            vurgula(belgeInput, '#38bdf8');
         }
 
-        var belgeTarihiInput = inputBul(['belgetarihi', 'diplomatarihi'], modalVeyaForm);
-        if (belgeTarihiInput && k.belgeTarihi) {
-            var bTarih = k.belgeTarihi;
-            if (/^\d{4}-\d{2}-\d{2}$/.test(bTarih)) {
-                var bp = bTarih.split('-');
-                bTarih = bp[2] + '.' + bp[1] + '.' + bp[0];
+        // 3.9: Belge Tarihi
+        var belgeTarihInput = evrenselInputBul(['belgetarihi', 'diplomatarihi']);
+        if (belgeTarihInput && k.belgeTarihi) {
+            var bTStr = k.belgeTarihi;
+            if (/^\d{4}-\d{2}-\d{2}$/.test(bTStr)) {
+                var btp = bTStr.split('-');
+                bTStr = btp[2] + '.' + btp[1] + '.' + btp[0];
             }
-            degerYaz(belgeTarihiInput, bTarih);
+            degerYaz(belgeTarihInput, bTStr);
         }
 
-        // Alan / Dal Bilgileri
-        var alanInput = inputBul(['alan', 'alanadi', 'meslek'], modalVeyaForm);
+        // 3.10: Alan & Dal
+        var alanInput = evrenselInputBul(['alan', 'alanadi', 'meslek']);
         if (alanInput && k.alan) degerYaz(alanInput, k.alan);
 
-        var dalInput = inputBul(['dal', 'daladi'], modalVeyaForm);
+        var dalInput = evrenselInputBul(['dal', 'daladi']);
         if (dalInput && k.dal) degerYaz(dalInput, k.dal);
 
-        // 9. ADIM: "Kaydet" Butonuna Basma
         await bekle(600);
-        durum(`[${k.tc}] Kayıt onaylanıyor...`, '#22c55e');
-        var kaydetBtn = metinleBul('button, a, input[type="submit"], input[type="button"], .btn-success, .btn-primary', ['Kaydet', 'Ön Kaydı Tamamla', 'Kaydet ve Kapat']);
+
+        // Manuel Onay Modu Kontrolü
+        if (manuelOnayModu) {
+            durum(`[${k.tc}] Bilgiler dolduruldu. Lütfen formu inceleyip E-MESEM'de Kaydet'e basın veya panelden Devam Edin.`, '#fbbf24');
+            k.durum = 'onay_bekliyor';
+            return;
+        }
+
+        // ADIM 4: "Kaydet" Butonuna Bas
+        durum(`[${k.tc}] 4. Adım: Kaydet butonuna tıklanıyor...`, '#22c55e');
+        var kaydetBtn = evrenselMetinleBul('button, a, input[type="submit"], input[type="button"], .btn-success, .btn-primary', ['Kaydet', 'Ön Kaydı Tamamla', 'Kaydet ve Kapat'], false);
         if (kaydetBtn) {
             vurgula(kaydetBtn, '#22c55e');
             kaydetBtn.click();
-            await bekle(1400);
+            await bekle(genelBeklemeSuresi + 500);
         }
 
         k.durum = 'tamamlandi';
+        sesCal('basari');
         durum(`✓ [${k.tc}] ${k.ad || ''} ${k.soyad || ''} başarıyla kaydedildi.`, '#4ade80');
     }
 
     async function seciliKaydiDoldur() {
-        if (!kayitlar.length) {
-            durum('Önce başvuru yönetim sisteminden aday listesini aktarın.', '#f87171');
+        if (!filtreliKayitlar.length) {
+            durum('Aktarılacak aday bulunamadı.', '#f87171');
             return;
         }
-        var k = kayitlar[aktifIndeks];
+        var k = filtreliKayitlar[aktifIndeks];
         try {
             await adimiIsle(k);
             listeyiCiz();
-            if (aktifIndeks < kayitlar.length - 1) {
+            if (aktifIndeks < filtreliKayitlar.length - 1) {
                 aktifIndeks++;
                 listeyiCiz();
             }
         } catch (e) {
             if (k) k.durum = 'hata';
+            sesCal('hata');
             listeyiCiz();
             durum('Hata: ' + e.message, '#f87171');
         }
     }
 
     async function topluAktarimBaslat() {
-        if (!kayitlar.length) {
-            durum('Aktarılacak kayıt yok. "📋 Panodan Al" veya "📂 JSON Yükle" ile aktarın.', '#f87171');
+        if (!filtreliKayitlar.length) {
+            durum('Aktarılacak aday yok. Panodan veya JSON dosyasından aktarın.', '#f87171');
             return;
         }
+
         otomatikCalisiyor = true;
         cubukBtnGuncelle();
-        durum(`Toplu aktarım başlatıldı (${kayitlar.length} aday)...`, '#38bdf8');
+        durum(`Toplu aktarım başlatıldı (${filtreliKayitlar.length} aday)...`, '#38bdf8');
 
-        for (var i = aktifIndeks; i < kayitlar.length; i++) {
+        for (var i = aktifIndeks; i < filtreliKayitlar.length; i++) {
             if (!otomatikCalisiyor) break;
             aktifIndeks = i;
             listeyiCiz();
             try {
-                await adimiIsle(kayitlar[i]);
+                await adimiIsle(filtreliKayitlar[i]);
                 listeyiCiz();
-                await bekle(1800);
+                await bekle(genelBeklemeSuresi + 600);
             } catch (err) {
-                if (kayitlar[i]) kayitlar[i].durum = 'hata';
+                if (filtreliKayitlar[i]) filtreliKayitlar[i].durum = 'hata';
+                sesCal('hata');
                 listeyiCiz();
-                durum(`HATA (${kayitlar[i].tc}): ${err.message}. Durduruldu.`, '#f87171');
+                durum(`HATA (${filtreliKayitlar[i].tc}): ${err.message}. Durduruldu.`, '#f87171');
                 otomatikCalisiyor = false;
                 break;
             }
@@ -519,8 +652,9 @@
 
         otomatikCalisiyor = false;
         cubukBtnGuncelle();
-        if (aktifIndeks >= kayitlar.length - 1 && kayitlar[aktifIndeks].durum === 'tamamlandi') {
-            durum(`🎉 Tüm adayların (${kayitlar.length} kişi) E-MESEM kayıtları tamamlandı!`, '#4ade80');
+        if (aktifIndeks >= filtreliKayitlar.length - 1 && filtreliKayitlar[aktifIndeks].durum === 'tamamlandi') {
+            sesCal('basari');
+            durum(`🎉 Seçili kategorideki tüm adayların (${filtreliKayitlar.length} kişi) E-MESEM kayıtları tamamlandı!`, '#4ade80');
         }
     }
 
@@ -530,9 +664,19 @@
         durum('Toplu aktarım duraklatıldı.', '#fbbf24');
     }
 
-    /* ---------------- Panel Arayüzü ---------------- */
+    function siradakiniGec() {
+        if (aktifIndeks < filtreliKayitlar.length - 1) {
+            aktifIndeks++;
+            listeyiCiz();
+            durum(`Sıradaki adaya geçildi (${aktifIndeks + 1} / ${filtreliKayitlar.length}).`, '#60a5fa');
+        }
+    }
+
+    /* ============================================================
+       PANEL VE ARAYÜZ OLUŞTURMA
+       ============================================================ */
     panel = el('div', [
-        'position:fixed', 'top:16px', 'right:16px', 'width:420px', 'max-height:90vh',
+        'position:fixed', 'top:16px', 'right:16px', 'width:440px', 'max-height:92vh',
         'background:#0f172a', 'color:#f8fafc', 'border:1px solid #334155', 'border-radius:12px',
         'box-shadow:0 25px 50px -12px rgba(0,0,0,0.85)', 'z-index:2147483647',
         'font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
@@ -540,6 +684,7 @@
     ].join(';'));
     panel.id = 'mesemYardimciPanel';
 
+    // Header
     var baslik = el('div', 'display:flex; align-items:center; gap:8px; padding:12px 14px; background:#1e293b; cursor:move; user-select:none; border-bottom:1px solid #334155;');
     baslik.appendChild(el('strong', 'flex:1; font-size:13.5px; color:#f59e0b; display:flex; align-items:center; gap:6px;', '⚡ E-MESEM Robotu v' + SURUM));
     var kucultDugme = el('button', 'border:0; background:#334155; color:#f8fafc; width:26px; height:26px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:14px;', '–');
@@ -548,28 +693,52 @@
 
     var govde = el('div', 'display:flex; flex-direction:column; min-height:0;');
 
-    // Gizli Dosya Seçici
+    // Dosya Seçici
     dosyaGirdi = el('input');
     dosyaGirdi.type = 'file';
     dosyaGirdi.accept = '.json';
     dosyaGirdi.style.display = 'none';
     dosyaGirdi.addEventListener('change', dosyaSecildi);
 
-    var dugmeCubugu = el('div', 'display:flex; flex-wrap:wrap; gap:6px; padding:10px 12px; border-bottom:1px solid #334155; background:#1e293b;');
+    // Kategori Sekmeleri Barı
+    var kategoriBar = el('div', 'display:flex; gap:4px; padding:8px 10px; background:#0b1120; border-bottom:1px solid #334155;');
     
-    var btnPano = el('button', 'padding:7px 11px; font-size:12px; font-weight:600; cursor:pointer; background:#2563eb; color:#fff; border:0; border-radius:6px;', '📋 Panodan Al');
+    function sekmeBtnOlustur(metin, kat) {
+        var b = el('button', 'flex:1; padding:6px 4px; font-size:11px; font-weight:700; border:0; border-radius:4px; cursor:pointer; color:#fff; background:#1e293b; transition:background .15s;', metin);
+        b.onclick = function () { kategoriFiltrele(kat); };
+        return b;
+    }
+
+    tabBtnKalfalik = sekmeBtnOlustur('Kalfalık', 'KALFALIK');
+    tabBtnUstalik = sekmeBtnOlustur('Ustalık', 'USTALIK');
+    tabBtnPedagoji = sekmeBtnOlustur('İş Pedagojisi', 'PEDAGOJI');
+    tabBtnTumu = sekmeBtnOlustur('Tümü', 'TUMU');
+
+    kategoriBar.appendChild(tabBtnKalfalik);
+    kategoriBar.appendChild(tabBtnUstalik);
+    kategoriBar.appendChild(tabBtnPedagoji);
+    kategoriBar.appendChild(tabBtnTumu);
+
+    // Ana Butonlar
+    var dugmeCubugu = el('div', 'display:flex; flex-wrap:wrap; gap:6px; padding:8px 10px; border-bottom:1px solid #334155; background:#1e293b;');
+    
+    var btnPano = el('button', 'padding:6px 10px; font-size:11.5px; font-weight:600; cursor:pointer; background:#2563eb; color:#fff; border:0; border-radius:6px;', '📋 Panodan Al');
     btnPano.onclick = panodanAl;
 
-    var btnJson = el('button', 'padding:7px 11px; font-size:12px; font-weight:600; cursor:pointer; background:#0d9488; color:#fff; border:0; border-radius:6px;', '📂 JSON Yükle');
-    btnJson.onclick = dosyaYukleTetikle;
+    var btnJson = el('button', 'padding:6px 10px; font-size:11.5px; font-weight:600; cursor:pointer; background:#0d9488; color:#fff; border:0; border-radius:6px;', '📂 JSON Yükle');
+    btnJson.onclick = function () { if (dosyaGirdi) dosyaGirdi.click(); };
 
-    var btnTekDoldur = el('button', 'padding:7px 11px; font-size:12px; font-weight:600; cursor:pointer; background:#16a34a; color:#fff; border:0; border-radius:6px;', '▶ Bu Adayı Kaydet');
+    var btnTekDoldur = el('button', 'padding:6px 10px; font-size:11.5px; font-weight:600; cursor:pointer; background:#16a34a; color:#fff; border:0; border-radius:6px;', '▶ Bu Adayı Kaydet');
     btnTekDoldur.onclick = seciliKaydiDoldur;
 
-    btnToplu = el('button', 'padding:7px 11px; font-size:12px; font-weight:600; cursor:pointer; background:#8b5cf6; color:#fff; border:0; border-radius:6px;', '⏩ Hepsini Sırayla Kaydet');
+    btnToplu = el('button', 'padding:6px 10px; font-size:11.5px; font-weight:600; cursor:pointer; background:#8b5cf6; color:#fff; border:0; border-radius:6px;', '⏩ Sırayla Kaydet');
     btnToplu.onclick = function () {
         if (otomatikCalisiyor) topluAktarimDurdur(); else topluAktarimBaslat();
     };
+
+    var btnGec = el('button', 'padding:6px 8px; font-size:11.5px; font-weight:600; cursor:pointer; background:#475569; color:#fff; border:0; border-radius:6px;', '⏭ Geç');
+    btnGec.title = 'Sıradaki adaya geç';
+    btnGec.onclick = siradakiniGec;
 
     function cubukBtnGuncelle() {
         if (!btnToplu) return;
@@ -577,7 +746,7 @@
             btnToplu.textContent = '⏸ Duraklat';
             btnToplu.style.background = '#dc2626';
         } else {
-            btnToplu.textContent = '⏩ Hepsini Sırayla Kaydet';
+            btnToplu.textContent = '⏩ Sırayla Kaydet';
             btnToplu.style.background = '#8b5cf6';
         }
     }
@@ -586,19 +755,22 @@
     dugmeCubugu.appendChild(btnJson);
     dugmeCubugu.appendChild(btnTekDoldur);
     dugmeCubugu.appendChild(btnToplu);
+    dugmeCubugu.appendChild(btnGec);
 
-    durumYazi = el('div', 'padding:9px 12px; font-size:12px; color:#cbd5e1; border-bottom:1px solid #334155; line-height:1.4; background:#090d16;',
-        'Robot hazır. Başvuru verilerini aktarmak için "📋 Panodan Al" veya "📂 JSON Yükle" butonuna basın.');
+    // Durum ve Sayaç
+    durumYazi = el('div', 'padding:8px 10px; font-size:11.5px; color:#cbd5e1; border-bottom:1px solid #334155; line-height:1.4; background:#090d16;',
+        'Robot hazır. Başvuru verilerini aktarmak için "📋 Panodan Al" veya "📂 JSON Yükle"ye tıklayın.');
 
-    // Yedek / Güvenli Yapıştırma Kutusu
-    yapistirmaKutusu = el('div', 'display:none; padding:10px 12px; background:#1e293b; border-bottom:1px solid #334155;');
-    var yapistirmaBaslik = el('div', 'font-size:11.5px; color:#fbbf24; margin-bottom:6px; font-weight:600;', '📝 Pano Verisini Buraya Yapıştırın:');
-    yapistirmaAlani = el('textarea',
-        'width:100%; box-sizing:border-box; height:65px; background:#0f172a; color:#e2e8f0; border:1px solid #475569; border-radius:6px; font-size:11px; padding:6px; resize:vertical;');
-    yapistirmaAlani.placeholder = 'Kayıt JSON verisini buraya yapıştırın (Ctrl+V)...';
-    var yapistirmaButonlar = el('div', 'display:flex; justify-content:flex-end; gap:6px; margin-top:6px;');
-    var btnYukleText = el('button', 'padding:5px 12px; background:#16a34a; color:#fff; border:0; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;', '✓ Yükle');
-    var btnIptalText = el('button', 'padding:5px 10px; background:#475569; color:#fff; border:0; border-radius:4px; font-size:11px; cursor:pointer;', 'İptal');
+    sayacKutusu = el('div', 'padding:4px 10px; font-size:10.5px; color:#94a3b8; background:#0b1120; border-bottom:1px solid #1e293b;',
+        'Kalfalık: 0 | Ustalık: 0 | Pedagoji: 0 | Aktif: 0');
+
+    // Yapıştırma Kutusu
+    yapistirmaKutusu = el('div', 'display:none; padding:8px 10px; background:#1e293b; border-bottom:1px solid #334155;');
+    var yapistirmaBaslik = el('div', 'font-size:11px; color:#fbbf24; margin-bottom:4px; font-weight:600;', '📝 Pano Verisini Buraya Yapıştırın (Ctrl+V):');
+    yapistirmaAlani = el('textarea', 'width:100%; box-sizing:border-box; height:60px; background:#0f172a; color:#e2e8f0; border:1px solid #475569; border-radius:6px; font-size:11px; padding:6px; resize:vertical;');
+    var yapistirmaButonlar = el('div', 'display:flex; justify-content:flex-end; gap:6px; margin-top:4px;');
+    var btnYukleText = el('button', 'padding:4px 10px; background:#16a34a; color:#fff; border:0; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;', '✓ Yükle');
+    var btnIptalText = el('button', 'padding:4px 8px; background:#475569; color:#fff; border:0; border-radius:4px; font-size:11px; cursor:pointer;', 'İptal');
     
     btnYukleText.onclick = function () {
         var v = veriyiCoz(yapistirmaAlani.value);
@@ -607,7 +779,7 @@
             yapistirmaKutusu.style.display = 'none';
             yapistirmaAlani.value = '';
         } else {
-            durum('Yapıştırılan metin geçerli JSON adayı verisi içermiyor.', '#f87171');
+            durum('Yapıştırılan metin geçerli aday JSON verisi içermiyor.', '#f87171');
         }
     };
     btnIptalText.onclick = function () { yapistirmaKutusu.style.display = 'none'; };
@@ -618,18 +790,19 @@
     yapistirmaKutusu.appendChild(yapistirmaAlani);
     yapistirmaKutusu.appendChild(yapistirmaButonlar);
 
-    listeKutusu = el('div', 'overflow-y:auto; min-height:90px; max-height:42vh; padding:4px 0; background:#0b1120;');
+    // Aday Listesi
+    listeKutusu = el('div', 'overflow-y:auto; min-height:80px; max-height:42vh; padding:4px 0; background:#0b1120;');
 
     function listeyiCiz() {
         listeKutusu.textContent = '';
-        if (!kayitlar.length) {
-            listeKutusu.appendChild(el('div', 'padding:18px 12px; color:#94a3b8; text-align:center; font-size:12px; line-height:1.5;',
-                'Henüz aday verisi yüklenmedi. Başvuru yönetim sisteminde "Tüm Kayıtları Robot İçin Kopyala"ya basıp buradaki "📋 Panodan Al"a tıklayın ya da JSON dosyasını yükleyin.'));
+        if (!filtreliKayitlar.length) {
+            listeKutusu.appendChild(el('div', 'padding:16px 12px; color:#94a3b8; text-align:center; font-size:12px; line-height:1.5;',
+                'Seçili kategoride aday bulunamadı. Başvuru yönetim sisteminden verileri panoya kopyalayıp buradaki "📋 Panodan Al"a tıklayın.'));
             return;
         }
 
-        kayitlar.forEach(function (k, i) {
-            var satir = el('div', 'display:flex; align-items:center; gap:8px; padding:8px 12px; border-bottom:1px solid #1e293b; cursor:pointer; background:' + (i === aktifIndeks ? '#1e3a8a' : 'transparent') + ';');
+        filtreliKayitlar.forEach(function (k, i) {
+            var satir = el('div', 'display:flex; align-items:center; gap:8px; padding:7px 10px; border-bottom:1px solid #1e293b; cursor:pointer; background:' + (i === aktifIndeks ? '#1e3a8a' : 'transparent') + ';');
             
             var durumRozet = el('span', 'font-size:10px; padding:2px 5px; border-radius:4px; font-weight:bold; color:#fff;', (i + 1));
             if (k.durum === 'tamamlandi') {
@@ -638,20 +811,23 @@
             } else if (k.durum === 'hata') {
                 durumRozet.textContent = '! ' + (i + 1);
                 durumRozet.style.background = '#dc2626';
+            } else if (k.durum === 'onay_bekliyor') {
+                durumRozet.textContent = '? ' + (i + 1);
+                durumRozet.style.background = '#f59e0b';
             } else {
                 durumRozet.style.background = (i === aktifIndeks ? '#3b82f6' : '#334155');
             }
             
             var icerikKutu = el('div', 'flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;');
-            var adSoyad = el('div', 'font-weight:600; color:#f8fafc; font-size:12.5px;', `${k.ad || ''} ${k.soyad || ''} (${k.tc || '-'})`);
-            var detay = el('div', 'font-size:11px; color:#94a3b8;', `${k.alan || '-'} / ${k.dal || '-'} • [${seviyeMetni(k)}]`);
+            var adSoyad = el('div', 'font-weight:600; color:#f8fafc; font-size:12px;', `${k.ad || ''} ${k.soyad || ''} (${k.tc || '-'})`);
+            var detay = el('div', 'font-size:10.5px; color:#94a3b8;', `${k.alan || '-'} / ${k.dal || '-'} • [${k.kapsam || '35. Madde'}]`);
             icerikKutu.appendChild(adSoyad);
             icerikKutu.appendChild(detay);
 
             satir.onclick = function () {
                 aktifIndeks = i;
                 listeyiCiz();
-                durum(`Seçili aday: ${k.ad || ''} ${k.soyad || ''} (${k.tc}) - ${seviyeMetni(k)}`, '#60a5fa');
+                durum(`Seçili: ${k.ad || ''} ${k.soyad || ''} (${k.tc}) - ${kategoriAdiTr(k.kategori)}`, '#60a5fa');
             };
             satir.appendChild(durumRozet);
             satir.appendChild(icerikKutu);
@@ -659,30 +835,45 @@
         });
     }
 
-    var ayarSatiri = el('div', 'display:flex; align-items:center; justify-content:space-between; padding:8px 12px; font-size:11px; color:#94a3b8; border-top:1px solid #334155; background:#1e293b;');
-    var lblGecikme = el('span', null, 'MERNİS Bekleme Süresi:');
-    var selGecikme = el('select', 'background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:3px 6px; font-size:11px;');
-    [['1200', '1.2 sn (Hızlı)'], ['2200', '2.2 sn (Önerilen)'], ['3200', '3.2 sn (Yavaş İnternet)'], ['4800', '4.8 sn (Yoğun Saatler)']].forEach(function (opt) {
+    // Ayarlar Barı (Bekleme Süresi & Manuel Onay)
+    var ayarSatiri = el('div', 'display:flex; align-items:center; justify-content:space-between; padding:6px 10px; font-size:11px; color:#94a3b8; border-top:1px solid #334155; background:#1e293b; flex-wrap:wrap; gap:6px;');
+    
+    var solAyar = el('div', 'display:flex; align-items:center; gap:6px;');
+    solAyar.appendChild(el('span', null, 'MERNİS:'));
+    var selGecikme = el('select', 'background:#0f172a; color:#fff; border:1px solid #475569; border-radius:4px; padding:2px 4px; font-size:11px;');
+    [['1200', '1.2s'], ['2200', '2.2s'], ['3200', '3.2s'], ['4800', '4.8s']].forEach(function (opt) {
         var o = el('option', null, opt[1]);
         o.value = opt[0];
         if (opt[0] === '2200') o.selected = true;
         selGecikme.appendChild(o);
     });
-    selGecikme.onchange = function () { beklemeSuresi = Number(selGecikme.value) || 2200; };
-    ayarSatiri.appendChild(lblGecikme);
-    ayarSatiri.appendChild(selGecikme);
+    selGecikme.onchange = function () { mernisBeklemeSuresi = Number(selGecikme.value) || 2200; };
+    solAyar.appendChild(selGecikme);
 
+    var sagAyar = el('label', 'display:inline-flex; align-items:center; gap:4px; cursor:pointer; user-select:none; font-size:11px;');
+    var chkManuel = el('input');
+    chkManuel.type = 'checkbox';
+    chkManuel.onchange = function () { manuelOnayModu = chkManuel.checked; };
+    sagAyar.appendChild(chkManuel);
+    sagAyar.appendChild(el('span', null, 'Kaydetmeden Önce Dur'));
+
+    ayarSatiri.appendChild(solAyar);
+    ayarSatiri.appendChild(sagAyar);
+
+    govde.appendChild(kategoriBar);
     govde.appendChild(dugmeCubugu);
     govde.appendChild(durumYazi);
+    govde.appendChild(sayacKutusu);
     govde.appendChild(yapistirmaKutusu);
     govde.appendChild(listeKutusu);
     govde.appendChild(ayarSatiri);
+
     panel.appendChild(baslik);
     panel.appendChild(govde);
     document.body.appendChild(panel);
     document.body.appendChild(dosyaGirdi);
 
-    /* Küçültme / Kapatma */
+    // Panel kontrolleri
     kucultDugme.onclick = function () {
         var kapali = govde.style.display === 'none';
         govde.style.display = kapali ? 'flex' : 'none';
@@ -694,7 +885,7 @@
         window.__mesemYardimci = null;
     };
 
-    /* Sürükleme Mantığı */
+    // Sürükleme Mantığı
     (function () {
         var suruklu = false, bx = 0, by = 0;
         baslik.addEventListener('mousedown', function (o) {
@@ -713,10 +904,10 @@
         document.addEventListener('mouseup', function () { suruklu = false; });
     })();
 
-    listeyiCiz();
+    kategoriFiltrele('TUMU');
 
     window.__mesemYardimci = {
-        gorunurluk: function () {
+        gosterGizle: function () {
             panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
         },
         kayitlariYukle: kayitlariYukle,

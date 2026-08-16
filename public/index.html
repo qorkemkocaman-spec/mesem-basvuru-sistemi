@@ -3,51 +3,52 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>E-MESEM Başvuru, Denklik ve Otomasyon Sistemi</title>
+<title>E-MESEM Başvuru, Denklik ve Otomasyon Sistemi v4.0</title>
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 <style>
     :root {
-        --bg-dark: #1b2431;
-        --bg-card: #242f3e;
-        --bg-input: #171f2a;
-        --border-color: #37465b;
-        --primary: #f5a623;
-        --primary-hover: #e59512;
+        --bg-dark: #111827;
+        --bg-card: #1f2937;
+        --bg-input: #0f172a;
+        --border-color: #374151;
+        --primary: #f59e0b;
+        --primary-hover: #d97706;
         --accent: #3b82f6;
+        --accent-hover: #2563eb;
         --success: #10b981;
         --danger: #ef4444;
         --info: #06b6d4;
         --purple: #8b5cf6;
-        --text-main: #f1f5f9;
-        --text-muted: #94a3b8;
+        --text-main: #f9fafb;
+        --text-muted: #9ca3af;
     }
 
     * { box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Tahoma, system-ui, -apple-system, sans-serif; background: var(--bg-dark); color: #cbd5e1; margin: 0; padding: 0; line-height: 1.5; }
+    body { font-family: 'Segoe UI', Tahoma, system-ui, -apple-system, sans-serif; background: var(--bg-dark); color: #e5e7eb; margin: 0; padding: 0; line-height: 1.5; }
 
     /* GİRİŞ EKRANI */
-    #loginOverlay { position: fixed; inset: 0; background: rgba(20, 27, 38, 0.98); display: flex; justify-content: center; align-items: center; z-index: 9999; padding: 20px; }
-    .login-box { background: var(--bg-card); padding: 35px 30px; border-radius: 12px; border: 1px solid var(--border-color); width: 100%; max-width: 440px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+    #loginOverlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.98); display: flex; justify-content: center; align-items: center; z-index: 9999; padding: 20px; }
+    .login-box { background: var(--bg-card); padding: 35px 30px; border-radius: 12px; border: 1px solid var(--border-color); width: 100%; max-width: 450px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
     .login-box h2 { color: var(--primary); margin-top: 0; font-size: 24px; font-weight: 700; }
     .login-box p { color: var(--text-muted); font-size: 13px; margin-bottom: 22px; line-height: 1.6; }
     .login-input { width: 100%; padding: 12px 14px; margin-bottom: 14px; border: 1px solid var(--border-color); background: var(--bg-input); color: #fff; border-radius: 6px; font-size: 14px; transition: border-color .2s; }
-    .login-input:focus { border-color: var(--primary); outline: none; }
-    .login-btn { width: 100%; padding: 12px; background: var(--primary); color: #1a222c; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; transition: background .2s; }
+    .login-input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25); }
+    .login-btn { width: 100%; padding: 12px; background: var(--primary); color: #111827; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; transition: background .2s; }
     .login-btn:hover { background: var(--primary-hover); }
     .login-btn:disabled { opacity: .6; cursor: default; }
     .login-hata { color: var(--danger); font-size: 13px; min-height: 18px; margin-top: 10px; }
-    .login-note { font-size: 11px; color: #64748b; margin-top: 18px; line-height: 1.5; }
+    .login-note { font-size: 11.5px; color: #64748b; margin-top: 18px; line-height: 1.5; }
 
     #mainApp { display: none; padding: 15px 20px; }
-    .container { max-width: 1650px; margin: 0 auto; }
+    .container { max-width: 1680px; margin: 0 auto; }
     h1, h2, h3 { color: var(--primary); margin-top: 0; }
 
     /* HEADER */
-    .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+    .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 18px; flex-wrap: wrap; gap: 12px; }
     .header-title-box { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
     .header-title-box h1 { margin: 0; font-size: 22px; color: #fff; font-weight: 700; letter-spacing: -0.5px; }
-    .kurum-bilgi { font-weight: 600; color: var(--primary); background: #1f2937; padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 13px; }
+    .kurum-bilgi { font-weight: 600; color: var(--primary); background: #111827; padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 13px; }
 
     /* Rozetler */
     #syncBadge { font-size: 12px; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-muted); font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
@@ -55,6 +56,23 @@
     #syncBadge.bekliyor { color: #fbbf24; border-color: #92400e; background: #78350f33; }
     #syncBadge.hata { color: #f87171; border-color: #991b1b; background: #7f1d1d33; }
     #syncBadge.yerel { color: #a78bfa; border-color: #5b21b6; background: #4c1d9533; }
+
+    /* ANA SEKME ÇUBUĞU (KALFALIK / USTALIK / İŞ PEDAGOJİSİ / TÜMÜ) */
+    .main-nav-tabs { display: flex; gap: 8px; margin-bottom: 18px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; flex-wrap: wrap; }
+    .nav-tab-btn {
+        display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 8px 8px 0 0;
+        font-weight: 700; font-size: 14px; border: 1px solid transparent; border-bottom: none; cursor: pointer;
+        background: #1e293b; color: #94a3b8; transition: all .2s;
+    }
+    .nav-tab-btn:hover { color: #fff; background: #273549; }
+    .nav-tab-btn.active {
+        background: var(--bg-card); color: #fbbf24; border-color: var(--border-color);
+        border-bottom: 3px solid var(--primary); transform: translateY(2px);
+    }
+    .nav-tab-btn .tab-count {
+        background: rgba(255,255,255,0.12); padding: 2px 7px; border-radius: 12px; font-size: 11px; color: #fff;
+    }
+    .nav-tab-btn.active .tab-count { background: var(--primary); color: #111827; }
 
     /* BUTONLAR */
     .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 16px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px; transition: all .15s ease-in-out; text-decoration: none; }
@@ -92,7 +110,7 @@
     .form-group { display: flex; align-items: center; margin-bottom: 10px; }
     .form-group label { flex: 0 0 145px; text-align: right; margin-right: 14px; font-size: 12.5px; color: var(--primary); font-weight: 500; }
     .form-group input, .form-group select, .form-group textarea { flex: 1; padding: 7px 12px; border: 1px solid var(--border-color); border-radius: 5px; font-size: 13px; background: var(--bg-input); color: #fff; min-width: 0; transition: border-color .15s; }
-    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 2px rgba(245, 166, 35, 0.2); }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2); }
     .form-group textarea { resize: vertical; min-height: 44px; }
     .form-group input.hatali { border-color: var(--danger); background: #3b181e; }
     .alan-uyari { font-size: 11px; color: #f87171; padding-left: 160px; margin: -6px 0 8px; min-height: 14px; }
@@ -107,14 +125,14 @@
 
     .actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 20px; align-items: center; padding: 16px 20px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; }
 
-    .table-wrapper { max-height: 460px; overflow: auto; border: 1px solid var(--border-color); margin-bottom: 24px; background: var(--bg-card); border-radius: 8px; }
+    .table-wrapper { max-height: 520px; overflow: auto; border: 1px solid var(--border-color); margin-bottom: 24px; background: var(--bg-card); border-radius: 8px; }
     table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-    th { background: #17202d; color: var(--primary); text-align: left; padding: 10px 12px; position: sticky; top: 0; z-index: 2; border-bottom: 1px solid var(--border-color); white-space: nowrap; font-weight: 600; }
+    th { background: #0f172a; color: var(--primary); text-align: left; padding: 10px 12px; position: sticky; top: 0; z-index: 2; border-bottom: 1px solid var(--border-color); white-space: nowrap; font-weight: 600; }
     td { padding: 8px 12px; border-bottom: 1px solid var(--border-color); color: #fff; vertical-align: middle; }
-    .table-wrapper tr:hover td, .summary-table tr:hover td { background: #2d3b4e; }
+    .table-wrapper tr:hover td, .summary-table tr:hover td { background: #273549; }
     tr.duzenleniyor td { background: #3d331a; }
 
-    .summary-table th { background: #17202d; color: #fff; font-weight: bold; text-align: center; border: 1px solid var(--border-color); padding: 8px; font-size: 12px; }
+    .summary-table th { background: #0f172a; color: #fff; font-weight: bold; text-align: center; border: 1px solid var(--border-color); padding: 8px; font-size: 12px; }
     .summary-table td { border: 1px solid var(--border-color); text-align: center; font-size: 12px; }
     .summary-table td:nth-child(1), .summary-table td:nth-child(2) { text-align: left; }
 
@@ -169,14 +187,17 @@
         #mykSuggestions { width: 100%; }
         .actions .btn, .actions { width: 100%; }
         .header-bar h1 { font-size: 18px; }
+        .main-nav-tabs { flex-direction: column; }
     }
 
     #mykSuggestions { background: var(--bg-input); border: 1px solid var(--border-color); max-height: 190px; overflow-y: auto; display: none; position: absolute; z-index: 20; width: calc(100% - 160px); right: 0; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); border-radius: 6px; }
     #mykSuggestions div { padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #2a3544; font-size: 12px; color: #fff; }
     #mykSuggestions div:hover, #mykSuggestions div.secili { background: #323f50; color: var(--primary); }
 
-    .badge-usta { background: var(--primary); color: #111827; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-    .badge-kalust { background: #475569; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+    .badge-tur { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+    .badge-kalfalik { background: #0284c7; color: #fff; }
+    .badge-ustalik { background: #f59e0b; color: #111827; }
+    .badge-pedagoji { background: #8b5cf6; color: #fff; }
     .badge-bekliyor { background: #854d0e; color: #fef08a; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; margin-left: 5px; }
 
     #toast { position: fixed; right: 24px; bottom: 24px; z-index: 10001; display: flex; flex-direction: column; gap: 10px; }
@@ -191,7 +212,7 @@
 <div id="loginOverlay">
     <div class="login-box">
         <h2>E-MESEM Başvuru Sistemi</h2>
-        <p>Kurumunuzun başvuru ve denklik kayıtlarını yönetmek için giriş yapınız. Kullanıcı adı ve şifre temini için iletişim sekmesini kullanabilirsiniz.</p>
+        <p>Kurumunuzun başvuru, denklik ve otomasyon kayıtlarını yönetmek için giriş yapınız.</p>
         <form id="loginForm" autocomplete="on">
             <input type="text" id="loginKurum" class="login-input" placeholder="Kurum Adı (Örn: MKE_MESEM)" autocomplete="username">
             <input type="password" id="loginSifre" class="login-input" placeholder="Kurum Şifresi" autocomplete="current-password">
@@ -224,6 +245,26 @@
             </div>
         </div>
 
+        <!-- ANA KATEGORİ SEKMELERİ (KALFALIK / USTALIK / İŞ PEDAGOJİSİ / TÜMÜ) -->
+        <div class="main-nav-tabs">
+            <button class="nav-tab-btn active" id="tabKalfalik" type="button">
+                <span>🔹 Kalfalık Sınavı</span>
+                <span class="tab-count" id="countKalfalik">0</span>
+            </button>
+            <button class="nav-tab-btn" id="tabUstalik" type="button">
+                <span>🔹 Ustalık Sınavı</span>
+                <span class="tab-count" id="countUstalik">0</span>
+            </button>
+            <button class="nav-tab-btn" id="tabPedagoji" type="button">
+                <span>🔹 İş Pedagojisi Kursu (Usta Öğreticilik)</span>
+                <span class="tab-count" id="countPedagoji">0</span>
+            </button>
+            <button class="nav-tab-btn" id="tabTumu" type="button">
+                <span>📚 Tüm Kayıtlar / Arşiv</span>
+                <span class="tab-count" id="countTumu">0</span>
+            </button>
+        </div>
+
         <!-- KAYIT ARAMA VE SORGULAMA -->
         <div class="sorgula-box">
             <span style="font-weight:bold; font-size:14px; color:var(--primary); display:flex; align-items:center; gap:6px;">🔍 Kayıt Ara</span>
@@ -236,25 +277,38 @@
                 <input type="date" id="sorgulaDogum">
             </div>
             <div class="form-group">
-                <label for="sorgulaMetin">Ad / Soyad / No</label>
+                <label for="sorgulaMetin">Ad / Soyad / Alan</label>
                 <input type="text" id="sorgulaMetin" placeholder="Ad, soyad, başvuru no, alan...">
             </div>
             <button class="btn btn-primary" id="btnBulGetir" type="button">Bul ve Getir</button>
             <button class="btn btn-secondary" id="btnTemizleSorgu" type="button">Temizle</button>
             <span style="margin-left:auto; font-size:13px; color:var(--primary);" id="sorgulaSonuc"></span>
-            <div id="bulSonucBar" style="display:none; width:100%; margin-top:8px; padding:10px 14px; background:#172230; border:1px solid var(--border-color); border-radius:6px; font-size:13px; align-items:center; gap:10px; flex-wrap:wrap;"></div>
+            <div id="bulSonucBar" style="display:none; width:100%; margin-top:8px; padding:10px 14px; background:#0f172a; border:1px solid var(--border-color); border-radius:6px; font-size:13px; align-items:center; gap:10px; flex-wrap:wrap;"></div>
         </div>
 
         <!-- BAŞVURU FORMU -->
         <form id="basvuruForm" onsubmit="return false;">
             <div class="form-section">
+                <h3>📌 Başvuru ve Öğrenim Yılı Bilgileri</h3>
                 <div class="row">
                     <div class="col">
                         <div class="form-group">
-                            <label for="basvuruTuru" style="font-weight:bold;">Başvuru Türü</label>
+                            <label for="basvuruTuru" style="font-weight:bold;">Kayıt / Sınav Türü *</label>
                             <select id="basvuruTuru" style="font-weight:bold;">
-                                <option value="Ustalık/Kalfalık">Kalfalık / Ustalık Başvurusu</option>
-                                <option value="Usta Öğreticilik">Usta Öğreticilik (İş Pedagojisi)</option>
+                                <option value="Kalfalık Sınavı">Kalfalık Sınavı</option>
+                                <option value="Ustalık Sınavı">Ustalık Sınavı</option>
+                                <option value="İş Pedagojisi Kursu">İş Pedagojisi Kursu (Usta Öğreticilik)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="ogrenimYili">Öğrenim Yılı *</label>
+                            <select id="ogrenimYili" style="font-weight:bold;">
+                                <option value="2025-2026">2025-2026</option>
+                                <option value="2026-2027">2026-2027</option>
+                                <option value="2024-2025">2024-2025</option>
+                                <option value="2027-2028">2027-2028</option>
                             </select>
                         </div>
                     </div>
@@ -262,7 +316,7 @@
             </div>
 
             <div class="form-section">
-                <h3>👤 Öğrenci / Aday Kişisel Bilgileri</h3>
+                <h3>👤 Öğrenci / Aday Kişisel Bilgileri (MEB E-MESEM Uyumlu)</h3>
                 <div class="row">
                     <div class="col">
                         <div class="form-group"><label for="ad">Adı *</label><input type="text" id="ad" placeholder="Aday Adı"></div>
@@ -276,15 +330,19 @@
                         <div class="form-group"><label for="adres">İkametgâh / Adres</label><textarea id="adres" rows="2" placeholder="Adayın ikamet adresi"></textarea></div>
                     </div>
                     <div class="col">
-                        <div class="form-group" id="kapsamGrup"><label for="kapsam">Kapsam</label>
-                            <select id="kapsam">
-                                <option value="">-- Seçiniz --</option>
-                                <option value="28.c">28.c</option>
-                                <option value="35.Madde">35.Madde</option>
-                                <option value="29.Madde">29.Madde</option>
-                                <option value="G.1.b.2">G.1.b.2</option>
+                        <div class="form-group" id="kapsamGrup">
+                            <label for="kapsam">Kapsam *</label>
+                            <select id="kapsam" style="font-weight:600;">
+                                <!-- Dinamik doldurulur -->
                             </select>
                         </div>
+                        <div class="form-group"><label for="alan">Alan *</label><input type="text" id="alan" placeholder="Örn: Makine Teknolojisi"></div>
+                        <div class="form-group"><label for="dal">Dal *</label><input type="text" id="dal" placeholder="Örn: Bilgisayarlı Makine İmalatı"></div>
+                        <div class="form-group" style="position:relative;"><label for="mykAra">MYK Yeterlilik</label>
+                            <input type="text" id="mykAra" placeholder="Kod/Meslek ara..." autocomplete="off">
+                            <div id="mykSuggestions"></div>
+                        </div>
+                        <div class="form-group"><label for="kod">KOD</label><input type="text" id="kod" placeholder="MYK Kodu"></div>
                         <div class="form-group"><label for="ogrenciEgitimTuru">Öğrenci Eğitim Türü</label>
                             <select id="ogrenciEgitimTuru">
                                 <option value="">-- Seçiniz --</option>
@@ -297,38 +355,37 @@
                                 <option>MESEM Çerçeve Öğretim Programı</option>
                             </select>
                         </div>
-                        <div class="form-group"><label for="alan">Alan</label><input type="text" id="alan" placeholder="Örn: Makine Teknolojisi"></div>
-                        <div class="form-group"><label for="dal">Dal</label><input type="text" id="dal" placeholder="Örn: Bilgisayarlı Makine İmalatı"></div>
-                        <div class="form-group" style="position:relative;"><label for="mykAra">MYK Yeterlilik</label>
-                            <input type="text" id="mykAra" placeholder="Kod/Meslek ara..." autocomplete="off">
-                            <div id="mykSuggestions"></div>
-                        </div>
-                        <div class="form-group"><label for="kod">KOD</label><input type="text" id="kod" placeholder="MYK Kodu"></div>
                     </div>
                 </div>
             </div>
 
             <div class="form-section">
-                <h3>🎓 Mezuniyet & Öğrenim Bilgileri</h3>
+                <h3>🎓 Mezuniyet & Getirdiği Belge Bilgileri (MEB Standartları)</h3>
                 <div class="row">
                     <div class="col">
-                        <div class="form-group"><label for="enSonMezuniyet">En Son Mezuniyet</label>
-                            <select id="enSonMezuniyet">
+                        <div class="form-group"><label for="enSonMezuniyet">En Son Mezuniyeti *</label>
+                            <select id="enSonMezuniyet" style="font-weight:600;">
                                 <option value="">-- Seçiniz --</option>
-                                <option>İlkokul</option><option>İlköğretim (Ortaokul)</option>
-                                <option>Lise</option><option>Meslek Lisesi</option>
-                                <option>Ön Lisans</option><option>Lisans</option>
-                                <option>Yüksek Lisans</option><option>Doktora</option>
+                                <option value="İlkokul">İlkokul</option>
+                                <option value="İlköğretim (Ortaokul)">İlköğretim (Ortaokul)</option>
+                                <option value="Lise">Lise</option>
+                                <option value="Meslek Lisesi">Meslek Lisesi</option>
+                                <option value="Ön Lisans">Ön Lisans</option>
+                                <option value="Lisans">Lisans</option>
+                                <option value="Yüksek Lisans">Yüksek Lisans</option>
+                                <option value="Doktora">Doktora</option>
                             </select>
                         </div>
-                        <div class="form-group"><label for="mezunOlduguOkul">Mezun Olduğu Okul</label><input type="text" id="mezunOlduguOkul" placeholder="En son mezun olunan okul adı"></div>
-                        <div class="form-group"><label for="getirdigiBelge">Getirdiği Belge</label>
-                            <select id="getirdigiBelge">
+                        <div class="form-group"><label for="getirdigiBelge">Getirdiği Belge *</label>
+                            <select id="getirdigiBelge" style="font-weight:600;">
                                 <option value="">-- Seçiniz --</option>
-                                <option>Diploma</option><option>Tasdikname</option><option>Diğer</option>
+                                <option value="Diploma">Diploma</option>
+                                <option value="Tastikname">Tastikname</option>
+                                <option value="Diğer">Diğer</option>
                             </select>
                         </div>
                         <div class="form-group"><label for="belgeTarihi">Belge Tarihi</label><input type="date" id="belgeTarihi"></div>
+                        <div class="form-group"><label for="mezunOlduguOkul">Mezun Olduğu Okul</label><input type="text" id="mezunOlduguOkul" placeholder="En son mezun olunan okul adı"></div>
                     </div>
                     <div class="col">
                         <div class="form-group"><label for="ilkogretimOkul">İlköğretim Okul</label><input type="text" id="ilkogretimOkul" placeholder="İlköğretim okul adı"></div>
@@ -337,11 +394,7 @@
                                 <input type="date" id="ilkogretimBelgeTarihi" style="flex:1;"><input type="text" id="ilkogretimBelgeSayisi" placeholder="Belge Sayısı" style="flex:1;">
                             </div>
                         </div>
-                    </div>
-                </div>
-                <div class="row" style="margin-top:10px;">
-                    <div class="col">
-                        <div class="form-group"><label for="liseOkul">Lise Okul / Alan / Süre</label>
+                        <div class="form-group"><label for="liseOkul">Lise Okul / Alan</label>
                             <div style="display:flex; gap:6px; width:100%;">
                                 <input type="text" id="liseOkul" placeholder="Lise Adı" style="flex:2;"><input type="text" id="liseAlan" placeholder="Alan" style="flex:2;">
                                 <select id="liseSure" style="flex:1; min-width:85px;" title="Öğrenim süresi">
@@ -351,12 +404,9 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="form-group"><label for="liseBelgeTarihi">Lise Belge Tarih/Sayı</label>
-                            <div style="display:flex; gap:6px; width:100%;">
-                                <input type="date" id="liseBelgeTarihi" style="flex:1;"><input type="text" id="liseBelgeSayisi" placeholder="Belge Sayısı" style="flex:1;">
-                            </div>
-                        </div>
                     </div>
+                </div>
+                <div class="row" style="margin-top:10px;">
                     <div class="col">
                         <div class="form-group"><label for="onlisansOkul">Üniv. Okul / Alan</label>
                             <div style="display:flex; gap:6px; width:100%;">
@@ -369,16 +419,12 @@
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="row" style="margin-top:10px;">
                     <div class="col">
                         <div class="form-group"><label for="lisansustuOkul">Lisansüstü Okul / Alan</label>
                             <div style="display:flex; gap:6px; width:100%;">
                                 <input type="text" id="lisansustuOkul" placeholder="Üniversite / Enstitü" style="flex:1;"><input type="text" id="lisansustuAlan" placeholder="Program / Alan" style="flex:1;">
                             </div>
                         </div>
-                    </div>
-                    <div class="col">
                         <div class="form-group"><label for="lisansustuBelgeTarihi">Lisansüstü Tarih/Sayı</label>
                             <div style="display:flex; gap:6px; width:100%;">
                                 <input type="date" id="lisansustuBelgeTarihi" style="flex:1;"><input type="text" id="lisansustuBelgeSayisi" placeholder="Belge Sayısı" style="flex:1;">
@@ -396,10 +442,10 @@
                 </div>
             </div>
 
-            <!-- USTA ÖĞRETİCİLİK ALANLARI -->
+            <!-- USTA ÖĞRETİCİLİK DETAYLARI -->
             <div id="ustaOgreticilikAlanlari" style="display:none;">
                 <div class="form-section">
-                    <h3>🎖️ Usta Öğreticilik Belge Bilgileri</h3>
+                    <h3>🎖️ Usta Öğreticilik Belge Bilgileri (İş Pedagojisi)</h3>
                     <div class="row">
                         <div class="col">
                             <div class="form-group"><label for="ustaDayanakBelge">Dayanak Belge</label>
@@ -435,7 +481,7 @@
             <!-- KALFALIK / USTALIK ÇALIŞMIŞLIK VE DENKLİK -->
             <div id="ustalikKalfalikAlanlari">
                 <div class="form-section">
-                    <h3>💼 Çalışmışlık Belgeleri</h3>
+                    <h3>💼 Çalışmışlık Belgeleri (Hizmet / SGK)</h3>
                     <div class="row">
                         <div class="col">
                             <div style="border-bottom:1px solid var(--border-color); margin-bottom:10px; color:var(--primary); font-weight:600;">2. Çalışmışlık</div>
@@ -453,16 +499,6 @@
                             <div class="alan-uyari" id="calisma3Uyari"></div>
                             <div class="form-group"><label for="calisma3Aciklama">Açıklamalar</label><textarea id="calisma3Aciklama" rows="1"></textarea></div>
                         </div>
-                    </div>
-                    <div class="row" style="margin-top:10px;">
-                        <div class="col">
-                            <div style="border-bottom:1px solid var(--border-color); margin-bottom:10px; color:var(--primary); font-weight:600;">4. Çalışmışlık</div>
-                            <div class="form-group"><label for="calisma4Kurum">Kurum / Sayı</label><div style="display:flex; gap:6px; width:100%;"><input type="text" id="calisma4Kurum" placeholder="Kurum Adı" style="flex:2;"><input type="text" id="calisma4Sayi" placeholder="Sayı" style="flex:1;"></div></div>
-                            <div class="form-group"><label for="calisma4Baslangic">Başlangıç/Bitiş</label><div style="display:flex; gap:6px; width:100%;"><input type="date" id="calisma4Baslangic" style="flex:1;"><input type="date" id="calisma4Bitis" style="flex:1;"></div></div>
-                            <div class="alan-uyari" id="calisma4Uyari"></div>
-                            <div class="form-group"><label for="calisma4Aciklama">Açıklamalar</label><textarea id="calisma4Aciklama" rows="1"></textarea></div>
-                        </div>
-                        <div class="col"></div>
                     </div>
                 </div>
 
@@ -502,17 +538,20 @@
         </div>
 
         <!-- BAŞVURU TABLOSU -->
-        <h3>📚 Öğrenci Kayıt ve Başvuru Listesi</h3>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <h3 style="margin:0;" id="tabloBaslikYazi">📚 Öğrenci Kayıt ve Başvuru Listesi</h3>
+            <div style="font-size:13px; color:var(--primary); font-weight:600;" id="tabloSayacYazi"></div>
+        </div>
         <div class="table-wrapper">
             <table id="basvuruTablosu">
-                <thead><tr><th>Başvuru No</th><th>Program Türü</th><th>TC / Ad Soyad</th><th>Doğum Tarihi / İletişim</th><th>Alan / Dal Adı</th><th>Mezuniyet</th><th>İşlem</th></tr></thead>
+                <thead><tr><th>Başvuru No</th><th>Öğrenim Yılı</th><th>Kayıt Türü</th><th>TC / Ad Soyad</th><th>Doğum / İletişim</th><th>Alan / Dal Adı</th><th>Kapsam / Mezuniyet</th><th>İşlem</th></tr></thead>
                 <tbody id="tabloBody"></tbody>
             </table>
         </div>
 
         <!-- İSTATİSTİKLER TABLOSU -->
         <h3>📊 Denklik ve Sınav İstatistikleri</h3>
-        <div style="overflow-x:auto; background:var(--bg-card); border:1px solid var(--border-color); border-radius:8px; padding:12px;">
+        <div style="overflow-x:auto; background:var(--bg-card); border:1px solid var(--border-color); border-radius:8px; padding:12px; margin-bottom:20px;">
             <table class="summary-table" id="ozetTablo">
                 <thead>
                     <tr>
@@ -531,7 +570,7 @@
 
         <!-- FOOTER & COPYRIGHT -->
         <div class="footer">
-            <strong>E-MESEM Başvuru, Denklik ve Otomasyon Sistemi</strong> &copy; 2026<br>
+            <strong>E-MESEM Başvuru, Denklik ve Otomasyon Sistemi v4.0</strong> &copy; 2026<br>
             Tasarım & Geliştirme: <strong>Görkem Kocaman</strong> | Tüm Hakları Saklıdır.<br>
             İletişim & Destek: <a href="mailto:gorkemkocaman.tr@gmail.com" style="color:var(--primary); text-decoration:none;">gorkemkocaman.tr@gmail.com</a>
         </div>
@@ -582,11 +621,11 @@
         <button class="close-btn" id="btnKomisyonAyarKapat" type="button">&#10005;</button>
         <h2 style="color:var(--primary); margin-top:0; display:flex; align-items:center; gap:8px;">⚙️ Kurum & Komisyon Ayarları</h2>
         <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">
-            Resmi evraklarda (EK-2, EK-3 ve Belge Denklik Defteri) yer alan kurum adları, komisyon dönemi, komisyon başkanı ve üyelerin unvanlarını bu ekrandan özelleştirebilirsiniz. Bilgiler tarayıcınızda ve oturumunuzda otomatik saklanır.
+            Resmi evraklarda (EK-2, EK-3 ve Belge Denklik Defteri) yer alan kurum adları, komisyon dönemi, komisyon başkanı ve üyelerin unvanlarını bu ekrandan özelleştirebilirsiniz.
         </p>
 
         <form id="komisyonAyarForm" onsubmit="return false;">
-            <div style="background:#17202d; padding:14px 18px; border-radius:8px; border:1px solid var(--border-color); margin-bottom:14px;">
+            <div style="background:#0f172a; padding:14px 18px; border-radius:8px; border:1px solid var(--border-color); margin-bottom:14px;">
                 <h4 style="color:#38bdf8; margin:0 0 10px 0; font-size:14px;">🏢 Üst Kurum & Dönem Bilgileri</h4>
                 <div class="row">
                     <div class="col">
@@ -613,7 +652,7 @@
                 </div>
             </div>
 
-            <div style="background:#17202d; padding:14px 18px; border-radius:8px; border:1px solid var(--border-color); margin-bottom:14px;">
+            <div style="background:#0f172a; padding:14px 18px; border-radius:8px; border:1px solid var(--border-color); margin-bottom:14px;">
                 <h4 style="color:#f59e0b; margin:0 0 10px 0; font-size:14px;">👤 Komisyon Başkanı / Onay Makamı</h4>
                 <div class="row">
                     <div class="col">
@@ -631,7 +670,7 @@
                 </div>
             </div>
 
-            <div style="background:#17202d; padding:14px 18px; border-radius:8px; border:1px solid var(--border-color); margin-bottom:14px;">
+            <div style="background:#0f172a; padding:14px 18px; border-radius:8px; border:1px solid var(--border-color); margin-bottom:14px;">
                 <h4 style="color:#10b981; margin:0 0 10px 0; font-size:14px;">👥 Komisyon Üyesi 1 (Mesleki Eğitim Merkezi)</h4>
                 <div class="row">
                     <div class="col">
@@ -658,7 +697,7 @@
                 </div>
             </div>
 
-            <div style="background:#17202d; padding:14px 18px; border-radius:8px; border:1px solid var(--border-color); margin-bottom:14px;">
+            <div style="background:#0f172a; padding:14px 18px; border-radius:8px; border:1px solid var(--border-color); margin-bottom:14px;">
                 <h4 style="color:#a78bfa; margin:0 0 10px 0; font-size:14px;">👥 Komisyon Üyesi 2 (Mesleki ve Teknik Anadolu Lisesi)</h4>
                 <div class="row">
                     <div class="col">
@@ -695,37 +734,43 @@
 
 <!-- MODAL: E-MESEM ÖN KAYIT ROBOTU KÖPRÜSÜ VE REHBERİ -->
 <div class="modal-overlay" id="emesemModal">
-    <div class="modal-box dark" style="max-width:920px;">
+    <div class="modal-box dark" style="max-width:960px;">
         <button class="close-btn" id="btnEmesemKapat" type="button">&#10005;</button>
         <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
-            <div style="font-size:28px;">🤖</div>
-            <h2 style="margin:0; color:#c084fc;">E-MESEM Sınav Ön Kayıt Robotu & Veri Köprüsü</h2>
+            <div style="font-size:32px;">🤖</div>
+            <div>
+                <h2 style="margin:0; color:#c084fc;">MEB E-MESEM Sınav Ön Kayıt Otomasyon Robotu</h2>
+                <div style="font-size:12.5px; color:#94a3b8;">Kalfalık Sınavı, Ustalık Sınavı ve İş Pedagojisi Kursu Tam Otomatik Kayıt Motoru</div>
+            </div>
         </div>
         <p style="font-size:13.5px; color:#cbd5e1; line-height:1.6; margin-bottom:18px;">
-            Bu robot, MEB E-MESEM (<code>emesem.meb.gov.tr</code>) portalındaki <strong>Sınav Öğrenci Ön Kayıt</strong> ekranında formları tam otomatik veya tek tıkla doldurur. Veri kaybını ve manuel giriş hatalarını sıfıra indirir.
+            Bu robot, MEB E-MESEM (<code>emesem.meb.gov.tr</code>) portalındaki <strong>Sınav Öğrenci Ön Kayıt</strong> ekranında formları tam otomatik, hata kabul etmeyen sıra ile doldurur ve kaydeder.
         </p>
 
-        <!-- 1. ADIM: VERİ HAZIRLAMA -->
-        <div style="background:#17202d; border:1px solid #334155; border-radius:8px; padding:16px; margin-bottom:14px;">
+        <!-- 1. ADIM: KATEGORİ BAZLI VERİ KOPYALAMA -->
+        <div style="background:#0f172a; border:1px solid #334155; border-radius:8px; padding:16px; margin-bottom:14px;">
             <div style="font-weight:700; color:#38bdf8; font-size:14px; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
-                <span>📋 1. Adım: Aday Verilerini Hazırlayın</span>
+                <span>📋 1. Adım: Aday Verilerini Hazırlayın ve Kopyalayın</span>
             </div>
             <p style="font-size:12.5px; color:#94a3b8; margin:0 0 12px 0;">
-                Sistemdeki aktif aday kayıtlarını panoya kopyalayabilir ya da JSON dosyası olarak indirip robota tek tıkla yükleyebilirsiniz.
+                Kayıtları kategori bazında veya toplu olarak panoya kopyalayabilir ya da JSON dosyası olarak indirip robota yükleyebilirsiniz.
             </p>
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                <button class="btn btn-success" id="btnEmesemTumunuKopyala" type="button" style="font-weight:bold;">📋 1. Adım: Tüm Kayıtları Robot İçin Kopyala</button>
-                <button class="btn btn-teal" id="btnEmesemJsonIndir" type="button">💾 JSON Olarak İndir (Yedek/Robot İçin)</button>
+                <button class="btn btn-primary btn-sm" id="btnEmesemKalfalikKopyala" type="button" style="font-weight:bold;">🔹 Kalfalık Adaylarını Kopyala</button>
+                <button class="btn btn-primary btn-sm" id="btnEmesemUstalikKopyala" type="button" style="font-weight:bold;">🔹 Ustalık Adaylarını Kopyala</button>
+                <button class="btn btn-primary btn-sm" id="btnEmesemPedagojiKopyala" type="button" style="font-weight:bold;">🔹 İş Pedagojisi Adaylarını Kopyala</button>
+                <button class="btn btn-success btn-sm" id="btnEmesemTumunuKopyala" type="button" style="font-weight:bold;">📋 Tümünü Kopyala</button>
+                <button class="btn btn-teal btn-sm" id="btnEmesemJsonIndir" type="button">💾 JSON Olarak İndir</button>
             </div>
         </div>
 
-        <!-- 2. ADIM: ROBOTU BAŞLATMA (YER İMİ / KOD) -->
-        <div style="background:#17202d; border:1px solid #334155; border-radius:8px; padding:16px; margin-bottom:14px;">
+        <!-- 2. ADIM: ROBOTU ÇALIŞTIRMA (YER İMİ / TAMPERMONKEY / KONSOL) -->
+        <div style="background:#0f172a; border:1px solid #334155; border-radius:8px; padding:16px; margin-bottom:14px;">
             <div style="font-weight:700; color:#c084fc; font-size:14px; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
-                <span>🔗 2. Adım: E-MESEM Robotunu Başlatın (Yer İmi / Kod)</span>
+                <span>🔗 2. Adım: E-MESEM Robotunu Başlatın (Yer İmi / Betik)</span>
             </div>
             <p style="font-size:12.5px; color:#94a3b8; margin:0 0 12px 0;">
-                Aşağıdaki butonu farenizle tutup tarayıcınızın <strong>Yer İmleri (Favoriler) Çubuğuna</strong> sürükleyin. MEB E-MESEM sayfasındayken bu yer imine tıklamanız yeterlidir.
+                Aşağıdaki butonu farenizle tutup tarayıcınızın <strong>Yer İmleri (Favoriler) Çubuğuna</strong> sürükleyin. MEB E-MESEM sayfasındayken tıklamanız yeterlidir.
             </p>
             
             <div style="padding:14px; background:#1e293b; border:2px dashed #8b5cf6; border-radius:8px; text-align:center; margin-bottom:12px;">
@@ -734,21 +779,25 @@
             </div>
 
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                <button class="btn btn-warning" id="btnEmesemBetikKopyala" type="button">💻 Konsol Betiğini Kopyala (F12 Yöntemi)</button>
-                <button class="btn btn-secondary" id="btnEmesemYerImiKopyala" type="button">🔗 Yer İmi Kodunu Kopyala</button>
+                <button class="btn btn-warning btn-sm" id="btnEmesemBetikKopyala" type="button">💻 Konsol Betiğini Kopyala (F12)</button>
+                <button class="btn btn-secondary btn-sm" id="btnEmesemYerImiKopyala" type="button">🔗 Yer İmi Kodunu Kopyala</button>
+                <button class="btn btn-teal btn-sm" id="btnEmesemUserscriptKopyala" type="button">🐵 Tampermonkey Betiğini Kopyala</button>
             </div>
         </div>
 
-        <!-- 3. ADIM: REHBER -->
-        <div style="background:#17202d; border:1px solid #334155; border-radius:8px; padding:16px;">
+        <!-- 3. ADIM: MEB İŞ AKIŞI REHBERİ -->
+        <div style="background:#0f172a; border:1px solid #334155; border-radius:8px; padding:16px;">
             <div style="font-weight:700; color:#fbbf24; font-size:14px; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
-                <span>📖 3. Adım: MEB E-MESEM'de Nasıl Kullanılır?</span>
+                <span>⚙️ Otomasyon Motorunun Kesin İş Akışı:</span>
             </div>
-            <ol style="font-size:12.5px; color:#e2e8f0; line-height:1.8; margin:0; padding-left:20px;">
-                <li>MEB E-MESEM portalında (<code>emesem.meb.gov.tr</code>) <strong>Sınav Öğrenci Ön Kayıt</strong> ekranını açın.</li>
-                <li>Tarayıcınızın yer imlerindeki <strong>"E-MESEM Ön Kayıt Robotu"</strong>na tıklayın (veya F12 > Console sekmesine betiği yapıştırıp Enter'a basın).</li>
-                <li>Ekranda açılan robot panelinde <strong>"📋 Panodan Al"</strong> veya <strong>"📂 JSON Yükle"</strong> butonuna basarak adayları yükleyin.</li>
-                <li>Robot adayları sırayla listeler; <strong>"▶ Bu Adayı Kaydet"</strong> ile tekil veya <strong>"⏩ Hepsini Sırayla Kaydet"</strong> ile otomatik olarak arka arkaya kaydedebilirsiniz.</li>
+            <ol style="font-size:12px; color:#e2e8f0; line-height:1.8; margin:0; padding-left:20px;">
+                <li><strong>Kategori Seçimi:</strong> Aday türüne göre E-MESEM ekranındaki <em>Kalfalık Sınavı</em>, <em>Ustalık Sınavı</em> veya <em>İş Pedagojisi Kursu</em> sekmesine tıklar.</li>
+                <li><strong>Yeni Kayıt:</strong> Üst bardaki <em>Yeni Kayıt</em> butonuna basarak kayıt modalını/penceresini açar.</li>
+                <li><strong>Öğrenim Yılı:</strong> Açılan pencerede en üstteki Öğrenim Yılını seçer.</li>
+                <li><strong>MERNİS Sorgusu:</strong> Kimlik No ve Doğum Tarihini yazıp <em>Sorgula</em> butonuna basar, 1-3 saniye MERNİS verisinin dolmasını bekler.</li>
+                <li><strong>Kapsam & İletişim:</strong> Kapsam maddesini (35. Madde, 28.c, 31.Madde vb.), Telefon, e-Posta ve Adres bilgilerini doldurur.</li>
+                <li><strong>Mezuniyet & Belge:</strong> En Son Mezuniyeti, Getirdiği Belgeyi (Diploma/Tastikname/Diğer) ve Belge Tarihini doldurur.</li>
+                <li><strong>Kaydet & Sıradakine Geç:</strong> Sağ üstteki <em>Kaydet</em> butonuna tıklar, onay sonrası sonraki adaya geçer.</li>
             </ol>
         </div>
 
@@ -764,17 +813,17 @@
         <button class="close-btn" id="btnKilavuzKapat" type="button">&#10005;</button>
         <h2 style="color:var(--primary); margin-top:0;">📖 E-MESEM Başvuru Sistemi Kullanım Kılavuzu</h2>
         <div style="font-size:13.5px; line-height:1.7; color:#cbd5e1; max-height:70vh; overflow-y:auto; padding-right:10px;">
-            <h4 style="color:#60a5fa; margin-bottom:4px;">1. Aday Başvurusu Ekleme ve Güncelleme</h4>
-            <p>Formdaki zorunlu alanları (Ad, Soyad, 11 haneli geçerli TC Kimlik No, Doğum Tarihi) ve ilgili öğrenim/çalışmışlık bilgilerini doldurarak <strong>"Kaydet (Başvuru Ekle)"</strong> butonuna basın. Başvuruda doğum tarihi, mezuniyet durumu/okulu, e-posta, telefon ve ikametgâh adresi tam olarak saklanır.</p>
+            <h4 style="color:#60a5fa; margin-bottom:4px;">1. Sekmeli Mimari ve Aday Kaydı</h4>
+            <p>Ana ekrandaki <strong>Kalfalık Sınavı</strong>, <strong>Ustalık Sınavı</strong> ve <strong>İş Pedagojisi Kursu</strong> sekmeleriyle başvurularınızı kategorilere ayırarak yönetebilirsiniz. Sekme seçildiğinde formun başvuru türü ve kapsam seçenekleri otomatik uyarlanır.</p>
 
-            <h4 style="color:#60a5fa; margin-bottom:4px;">2. Denklik ve Sınav Durumları</h4>
-            <p>Adayın denklik komisyonu kararına göre; <strong>"Kalfalık sınavlarına girmesi ve başarılı olması halinde ustalık sınavlarına alınması"</strong> seçeneği ile doğrudan ve aşamalı sınav hakları tek kutuyla belirlenebilir. İstatistik tablosu bu verilere göre anlık güncellenir.</p>
+            <h4 style="color:#60a5fa; margin-bottom:4px;">2. MEB E-MESEM Uyumlu Seçenekler</h4>
+            <p>En Son Mezuniyeti (İlkokul, İlköğretim (Ortaokul), Lise, Meslek Lisesi, Ön Lisans, Lisans, Yüksek Lisans, Doktora) ve Getirdiği Belge (Diploma, Tastikname, Diğer) alanları resmi MEB E-MESEM seçenekleriyle %100 birebirdir.</p>
 
             <h4 style="color:#60a5fa; margin-bottom:4px;">3. Excel İçe / Dışa Aktarma & Hızlı Giriş</h4>
             <p>Tüm listeyi Excel (.xlsx) olarak indirebilir, elinizdeki Excel veya Google Sheets listelerini <strong>"Excel'den İçe Aktar"</strong> veya <strong>"Hızlı Giriş (Excel'den Yapıştır)"</strong> ile sisteme tek hamlede yükleyebilirsiniz. Aynı TC numaralı kayıt varsa güncellenir.</p>
 
             <h4 style="color:#60a5fa; margin-bottom:4px;">4. E-MESEM Ön Kayıt Robotu</h4>
-            <p>E-MESEM sayfasında <em>Sınav Öğrenci Ön Kayıt</em> ekranını açın. Yardımcı robot adayın başvuru türüne göre sekmeyi seçer, <strong>"Yeni Kayıt"</strong> butonuna tıklar, TC ve Doğum Tarihini yazıp <strong>"Sorgula"</strong> butonuna basarak MERNİS'ten Ad/Soyad/Cinsiyet/Doğum Yeri bilgilerinin gelmesini bekler. Kapsam, iletişim ve mezuniyet bilgilerini doldurup sağ üstteki <strong>"Kaydet"</strong> butonuna tıklar. Hepsini sırayla veya tek tek kaydedebilirsiniz.</p>
+            <p>MEB E-MESEM portalında açılan formlarda sekme seçimi, Yeni Kayıt, TC/Doğum tarihi girişi, MERNİS sorgulama, kapsam, mezuniyet ve belge bilgilerini tam otomatik doldurur ve kaydeder.</p>
 
             <h4 style="color:#60a5fa; margin-bottom:4px;">5. Resmi Raporlar ve Çıktılar</h4>
             <p><strong>"Resmi Rapor & Çıktılar"</strong> menüsünden EK-2 İl Denklik Komisyonu Değerlendirme Listesi, EK-3 Başvuru Sonuç Belgesi ve Belge Denklik Defteri şablonlarını resmi standartlara birebir uygun formatta görüntüleyip yazdırabilirsiniz.</p>
@@ -794,7 +843,7 @@
         <p style="color:#cbd5e1; font-size:13.5px; line-height:1.6;">
             E-MESEM Başvuru Sistemi'ni kurumunuzda kullanmak, yeni kurum tanımlatmak, kullanıcı adı & şifre temin etmek veya teknik destek almak için geliştirici ile doğrudan iletişime geçebilirsiniz.
         </p>
-        <div style="background:#17202d; border:1px solid var(--border-color); border-radius:8px; padding:16px; margin:20px 0; text-align:left;">
+        <div style="background:#0f172a; border:1px solid var(--border-color); border-radius:8px; padding:16px; margin:20px 0; text-align:left;">
             <div style="font-size:12px; color:var(--text-muted);">Geliştirici & Sistem Yöneticisi</div>
             <div style="font-size:16px; font-weight:bold; color:#fff; margin-top:2px;">Görkem Kocaman</div>
             <div style="margin-top:10px; display:flex; align-items:center; justify-content:space-between; background:#111827; padding:8px 12px; border-radius:6px; border:1px solid #374151;">
@@ -881,11 +930,10 @@ const mykData = [
    UYGULAMA MANTIĞI & SABİTLER
    ============================================================ */
 const API_ADRESI = "/api/veri";
-const SURUM = "3.5";
+const SURUM = "4.0";
 let YEREL_MOD = true;
 let sunucuSorgusu = null;
 
-/* Sunucu kontrolü */
 async function sunucuyuYokla() {
     if (sunucuSorgusu) return sunucuSorgusu;
     sunucuSorgusu = (async () => {
@@ -911,7 +959,8 @@ async function sunucuyuYokla() {
    ALAN TANIMLARI
    ============================================================ */
 const ALANLAR = [
-    { id: 'basvuruTuru', ad: 'Başvuru Türü', tip: 'metin' },
+    { id: 'basvuruTuru', ad: 'Başvuru / Kayıt Türü', tip: 'metin' },
+    { id: 'ogrenimYili', ad: 'Öğrenim Yılı', tip: 'metin' },
     { id: 'ad', ad: 'Ad', tip: 'metin' },
     { id: 'soyad', ad: 'Soyad', tip: 'metin' },
     { id: 'tc', ad: 'TC Kimlik No', tip: 'metin' },
@@ -926,7 +975,7 @@ const ALANLAR = [
     { id: 'kod', ad: 'KOD', tip: 'metin' },
     { id: 'ogrenciEgitimTuru', ad: 'Öğrenci Eğitim Türü', tip: 'metin' },
     { id: 'cerceveProgrami', ad: 'Çerçeve Programı', tip: 'metin' },
-    { id: 'enSonMezuniyet', ad: 'En Son Mezuniyet', tip: 'metin' },
+    { id: 'enSonMezuniyet', ad: 'En Son Mezuniyeti', tip: 'metin' },
     { id: 'mezunOlduguOkul', ad: 'Mezun Olduğu Okul', tip: 'metin' },
     { id: 'getirdigiBelge', ad: 'Getirdiği Belge', tip: 'metin' },
     { id: 'belgeTarihi', ad: 'Belge Tarihi', tip: 'tarih' },
@@ -963,11 +1012,6 @@ const ALANLAR = [
     { id: 'calisma3Baslangic', ad: '3.Çalışma Başlangıç', tip: 'tarih' },
     { id: 'calisma3Bitis', ad: '3.Çalışma Bitiş', tip: 'tarih' },
     { id: 'calisma3Aciklama', ad: '3.Çalışma Açıklama', tip: 'metin' },
-    { id: 'calisma4Kurum', ad: '4.Çalışma Kurum', tip: 'metin' },
-    { id: 'calisma4Sayi', ad: '4.Çalışma Sayı', tip: 'metin' },
-    { id: 'calisma4Baslangic', ad: '4.Çalışma Başlangıç', tip: 'tarih' },
-    { id: 'calisma4Bitis', ad: '4.Çalışma Bitiş', tip: 'tarih' },
-    { id: 'calisma4Aciklama', ad: '4.Çalışma Açıklama', tip: 'metin' },
     { id: 'denklikBelgeTarihi', ad: 'Denklik Belge Tarihi', tip: 'tarih' },
     { id: 'kalfalikSinav', ad: 'Kalfalık Sınavlarına Girmesi', tip: 'onay' },
     { id: 'dogrudanKalfalik', ad: 'Doğrudan Kalfalık Belgesi Düzenlenmesi', tip: 'onay' },
@@ -987,10 +1031,10 @@ let duzenlenenId = null;
 let esitlemeZamanlayici = null;
 let esitlemeCalisiyor = false;
 let aktifRaporTuru = 'sonuc';
+let aktifNavSekme = 'Kalfalık Sınavı'; // 'Kalfalık Sınavı' | 'Ustalık Sınavı' | 'İş Pedagojisi Kursu' | 'Tumu'
 
 const $ = (id) => document.getElementById(id);
 
-/* Komisyon ve Kurum Ayarları Yapısı */
 const VARSAYILAN_KOMISYON = {
     ilIlceMem: "KIRIKKALE İL MİLLİ EĞİTİM MÜDÜRLÜĞÜ",
     komisyonDonem: "2026/4.DÖNEM AĞUSTOS",
@@ -1010,9 +1054,7 @@ let komisyonAyarlari = Object.assign({}, VARSAYILAN_KOMISYON);
 function komisyonAyarlariniYukle() {
     try {
         const kayitli = localStorage.getItem('mesem_komisyon_ayarlar');
-        if (kayitli) {
-            komisyonAyarlari = Object.assign({}, VARSAYILAN_KOMISYON, JSON.parse(kayitli));
-        }
+        if (kayitli) komisyonAyarlari = Object.assign({}, VARSAYILAN_KOMISYON, JSON.parse(kayitli));
     } catch (e) {
         komisyonAyarlari = Object.assign({}, VARSAYILAN_KOMISYON);
     }
@@ -1020,9 +1062,7 @@ function komisyonAyarlariniYukle() {
 
 function komisyonAyarlariniKaydet(yeniAyarlar) {
     komisyonAyarlari = Object.assign({}, komisyonAyarlari, yeniAyarlar);
-    try {
-        localStorage.setItem('mesem_komisyon_ayarlar', JSON.stringify(komisyonAyarlari));
-    } catch (e) { }
+    try { localStorage.setItem('mesem_komisyon_ayarlar', JSON.stringify(komisyonAyarlari)); } catch (e) { }
 }
 
 function komisyonFormunuDoldur() {
@@ -1275,8 +1315,8 @@ function uygulamayiAc() {
     esitlemeDurumu(YEREL_MOD ? 'yerel' : 'ok', YEREL_MOD ? 'Yerel mod' : 'Bulutla eşit');
     komisyonAyarlariniYukle();
     yeredenOku();
+    navSekmeDegistir('Kalfalık Sınavı');
     tumunuYenile();
-    basvuruTuruTetikle();
     esitlemeyiPlanla();
 }
 
@@ -1289,6 +1329,96 @@ function oturumKapat(zorunlu) {
 }
 
 /* ============================================================
+   KATEGORİ / SEKME YÖNETİMİ VE DİNAMİK ALANLAR
+   ============================================================ */
+function basvuruTurunuNormalizeEt(tur) {
+    const s = aramaAnahtari(tur);
+    if (s.includes('pedagoji') || s.includes('usta ogretici') || s.includes('usta öğretici')) return 'İş Pedagojisi Kursu';
+    if (s.includes('ustalik') || s.includes('ustalık')) return 'Ustalık Sınavı';
+    return 'Kalfalık Sınavı';
+}
+
+function kapsamSecenekleriniGuncelle(secilenTur, mevcutDeger) {
+    const kapsamSelect = $('kapsam');
+    if (!kapsamSelect) return;
+    kapsamSelect.innerHTML = '';
+
+    let secenekler = [];
+    if (secilenTur === 'Kalfalık Sınavı') {
+        secenekler = [{ val: '35. Madde', label: '35. Madde' }];
+    } else if (secilenTur === 'Ustalık Sınavı') {
+        secenekler = [
+            { val: '28.c', label: '28.c' },
+            { val: '35.Madde', label: '35.Madde' },
+            { val: '29.Madde', label: '29.Madde' },
+            { val: 'G.1.b.2', label: 'G.1.b.2' }
+        ];
+    } else { // İş Pedagojisi Kursu
+        secenekler = [{ val: '31.Madde', label: '31.Madde' }];
+    }
+
+    secenekler.forEach(opt => {
+        const o = document.createElement('option');
+        o.value = opt.val;
+        o.textContent = opt.label;
+        if (mevcutDeger && (opt.val === mevcutDeger || aramaAnahtari(opt.val) === aramaAnahtari(mevcutDeger))) {
+            o.selected = true;
+        }
+        kapsamSelect.appendChild(o);
+    });
+
+    if (!kapsamSelect.value && secenekler.length > 0) {
+        kapsamSelect.value = secenekler[0].val;
+    }
+}
+
+function basvuruTuruTetikle() {
+    const tur = $('basvuruTuru').value;
+    const isPedagoji = (tur === 'İş Pedagojisi Kursu');
+    $('ustalikKalfalikAlanlari').style.display = isPedagoji ? 'none' : 'block';
+    $('ustaOgreticilikAlanlari').style.display = isPedagoji ? 'block' : 'none';
+    kapsamSecenekleriniGuncelle(tur, $('kapsam').value);
+}
+
+function navSekmeDegistir(sekmeAdi) {
+    aktifNavSekme = sekmeAdi;
+
+    $('tabKalfalik').classList.toggle('active', sekmeAdi === 'Kalfalık Sınavı');
+    $('tabUstalik').classList.toggle('active', sekmeAdi === 'Ustalık Sınavı');
+    $('tabPedagoji').classList.toggle('active', sekmeAdi === 'İş Pedagojisi Kursu');
+    $('tabTumu').classList.toggle('active', sekmeAdi === 'Tumu');
+
+    if (sekmeAdi !== 'Tumu' && !duzenlenenId) {
+        $('basvuruTuru').value = sekmeAdi;
+        basvuruTuruTetikle();
+    }
+
+    const baslikMap = {
+        'Kalfalık Sınavı': '🔹 Kalfalık Sınavı Başvuru Listesi',
+        'Ustalık Sınavı': '🔹 Ustalık Sınavı Başvuru Listesi',
+        'İş Pedagojisi Kursu': '🔹 İş Pedagojisi Kursu Başvuru Listesi',
+        'Tumu': '📚 Tüm Kayıtlar / Arşiv Listesi'
+    };
+    $('tabloBaslikYazi').textContent = baslikMap[sekmeAdi] || '📚 Öğrenci Kayıt ve Başvuru Listesi';
+
+    tabloYenile();
+}
+
+function sekmeSayaclariniGuncelle() {
+    let kalfalik = 0, ustalik = 0, pedagoji = 0;
+    kayitlar.forEach(k => {
+        const tur = basvuruTurunuNormalizeEt(k.basvuruTuru);
+        if (tur === 'Kalfalık Sınavı') kalfalik++;
+        else if (tur === 'Ustalık Sınavı') ustalik++;
+        else if (tur === 'İş Pedagojisi Kursu') pedagoji++;
+    });
+    $('countKalfalik').textContent = kalfalik;
+    $('countUstalik').textContent = ustalik;
+    $('countPedagoji').textContent = pedagoji;
+    $('countTumu').textContent = kayitlar.length;
+}
+
+/* ============================================================
    BULUTTAN YÜKLEME VE NORMALİZASYON
    ============================================================ */
 function kaydiNormalize(k) {
@@ -1296,6 +1426,7 @@ function kaydiNormalize(k) {
         id: k.id || yeniId(),
         sira: Number(k.sira) || 0,
         basvuruNo: k.basvuruNo || '',
+        ogrenimYili: k.ogrenimYili || '2025-2026',
         kayitTarihi: k.kayitTarihi || '',
         guncelleme: k.guncelleme || ''
     };
@@ -1308,9 +1439,15 @@ function kaydiNormalize(k) {
         else if (a.tip === 'tarih') y[a.id] = formatTarih(d);
         else y[a.id] = d == null ? '' : String(d);
     });
+    y.basvuruTuru = basvuruTurunuNormalizeEt(y.basvuruTuru);
+    if (!y.ogrenimYili) y.ogrenimYili = '2025-2026';
+    if (!y.enSonMezuniyet) y.enSonMezuniyet = 'Lise';
+    if (!y.getirdigiBelge) y.getirdigiBelge = 'Diploma';
+    if (!y.kapsam) {
+        y.kapsam = (y.basvuruTuru === 'İş Pedagojisi Kursu') ? '31.Madde' : '35. Madde';
+    }
     if (y.kalfalikVeUstalik) y.kalfalikVeBasariliUstalik = true;
     if (k.kalfalikVeBasariliUstalik && !y.kalfalikVeUstalik) y.kalfalikVeUstalik = true;
-    if (!y.basvuruTuru) y.basvuruTuru = 'Ustalık/Kalfalık';
     if (!y.sira) y.sira = sonrakiSira();
     if (!y.kayitTarihi) y.kayitTarihi = new Date().toISOString();
     if (!y.basvuruNo) y.basvuruNo = basvuruNoUret(y.kayitTarihi, y.sira);
@@ -1348,6 +1485,7 @@ function formuOku() {
         if (!el) { k[a.id] = a.tip === 'onay' ? false : ''; return; }
         k[a.id] = a.tip === 'onay' ? el.checked : el.value.trim();
     });
+    k.basvuruTuru = basvuruTurunuNormalizeEt(k.basvuruTuru);
     return k;
 }
 
@@ -1363,13 +1501,16 @@ function formaYaz(k) {
             el.value = k[a.id] || '';
         }
     });
+    basvuruTuruTetikle();
+    if (k.kapsam) {
+        kapsamSecenekleriniGuncelle($('basvuruTuru').value, k.kapsam);
+    }
     const oto = $('mezuniyetOtomatik');
     if (oto) {
         const uretilen = mezuniyetAciklamaUret(k);
         oto.checked = !k.mezuniyetAciklama || k.mezuniyetAciklama === uretilen;
         mezuniyetNotYaz();
     }
-    basvuruTuruTetikle();
 }
 
 function mezuniyetAciklamaUret(k) {
@@ -1409,7 +1550,8 @@ function formuTemizle() {
         const el = $(a.id);
         if (!el) return;
         if (a.tip === 'onay') el.checked = false;
-        else if (a.id === 'basvuruTuru') el.value = 'Ustalık/Kalfalık';
+        else if (a.id === 'basvuruTuru') el.value = (aktifNavSekme === 'Tumu') ? 'Kalfalık Sınavı' : aktifNavSekme;
+        else if (a.id === 'ogrenimYili') el.value = '2025-2026';
         else el.value = '';
     });
     duzenlenenId = null;
@@ -1423,7 +1565,7 @@ function formuTemizle() {
 }
 
 function uyarilariTemizle() {
-    ['tcUyari', 'dogumUyari', 'calisma2Uyari', 'calisma3Uyari', 'calisma4Uyari'].forEach(id => {
+    ['tcUyari', 'dogumUyari', 'calisma2Uyari', 'calisma3Uyari'].forEach(id => {
         const el = $(id); if (el) el.textContent = '';
     });
     ['tc', 'dogumTarihi'].forEach(id => $(id).classList.remove('hatali'));
@@ -1473,14 +1615,6 @@ function dogrula(k, mevcutId) {
     if (k.eposta && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(k.eposta)) {
         hatalar.push('e-Posta adresi geçerli formatta değil.');
     }
-
-    [2, 3, 4].forEach(n => {
-        const bas = k['calisma' + n + 'Baslangic'], bit = k['calisma' + n + 'Bitis'];
-        if (bas && bit && bit < bas) {
-            hatalar.push(`${n}. çalışmışlık bitiş tarihi başlangıçtan önce olamaz.`);
-            const u = $('calisma' + n + 'Uyari'); if (u) u.textContent = 'Bitiş tarihi başlangıçtan önce olamaz.';
-        }
-    });
 
     return hatalar;
 }
@@ -1580,11 +1714,17 @@ function filtrelenmisKayitlar() {
     const tc = String($('sorgulaTc') ? $('sorgulaTc').value : '').replace(/\D/g, '');
     const metin = aramaAnahtari($('sorgulaMetin').value);
     const dogum = $('sorgulaDogum').value;
+
     return kayitlar.filter(k => {
+        // Sekme filtresi
+        if (aktifNavSekme !== 'Tumu') {
+            const tur = basvuruTurunuNormalizeEt(k.basvuruTuru);
+            if (tur !== aktifNavSekme) return false;
+        }
         if (tc && !String(k.tc || '').includes(tc)) return false;
         if (dogum && formatTarih(k.dogumTarihi) !== dogum) return false;
         if (metin) {
-            const havuz = aramaAnahtari([k.ad, k.soyad, k.tc, k.basvuruNo, k.alan, k.dal, k.telefon, k.eposta, k.adres, k.mezuniyetAciklama].join(' '));
+            const havuz = aramaAnahtari([k.ad, k.soyad, k.tc, k.basvuruNo, k.alan, k.dal, k.telefon, k.eposta, k.adres, k.mezuniyetAciklama, k.kapsam].join(' '));
             if (!havuz.includes(metin)) return false;
         }
         return true;
@@ -1617,7 +1757,7 @@ function sonucBariniYaz(liste) {
     }
     const k = liste[0];
     const bilgi = document.createElement('span');
-    bilgi.textContent = `Aday Bulundu: ${k.basvuruNo} — ${k.ad} ${k.soyad} (TC: ${k.tc}, Doğum: ${trTarih(formatTarih(k.dogumTarihi))})`;
+    bilgi.textContent = `Aday Bulundu: ${k.basvuruNo} — ${k.ad} ${k.soyad} (${k.basvuruTuru}, TC: ${k.tc})`;
     bar.appendChild(bilgi);
 
     [['Forma Getir', 'btn-warning', () => kaydiDuzenle(k.id)],
@@ -1654,21 +1794,38 @@ function tabloYenile() {
     govde.textContent = '';
     const liste = filtrelenmisKayitlar();
 
+    sekmeSayaclariniGuncelle();
+
     const bilgi = $('sorgulaSonuc');
-    if (!kayitlar.length) bilgi.textContent = 'Kayıt yok.';
-    else if (liste.length === kayitlar.length) bilgi.textContent = `Toplam ${kayitlar.length} aday.`;
-    else bilgi.textContent = `${kayitlar.length} kayıttan ${liste.length} gösteriliyor.`;
+    const sayac = $('tabloSayacYazi');
+    if (!kayitlar.length) {
+        bilgi.textContent = 'Kayıt yok.';
+        sayac.textContent = '0 Kayıt';
+    } else {
+        bilgi.textContent = `${kayitlar.length} toplam kayıttan ${liste.length} gösteriliyor.`;
+        sayac.textContent = `${liste.length} Aday Listeleniyor`;
+    }
 
     liste.forEach(k => {
         const tr = document.createElement('tr');
         if (k.id === duzenlenenId) tr.className = 'duzenleniyor';
 
         tr.appendChild(hucre(k.basvuruNo));
+        tr.appendChild(hucre(k.ogrenimYili || '2025-2026'));
 
         const tdTur = document.createElement('td');
         const rozet = document.createElement('span');
-        rozet.className = k.basvuruTuru === 'Usta Öğreticilik' ? 'badge-usta' : 'badge-kalust';
-        rozet.textContent = k.basvuruTuru === 'Usta Öğreticilik' ? 'Usta Öğrt.' : 'Kal/Ust';
+        const turNorm = basvuruTurunuNormalizeEt(k.basvuruTuru);
+        if (turNorm === 'İş Pedagojisi Kursu') {
+            rozet.className = 'badge-tur badge-pedagoji';
+            rozet.textContent = 'İş Pedagojisi';
+        } else if (turNorm === 'Ustalık Sınavı') {
+            rozet.className = 'badge-tur badge-ustalik';
+            rozet.textContent = 'Ustalık Sınavı';
+        } else {
+            rozet.className = 'badge-tur badge-kalfalik';
+            rozet.textContent = 'Kalfalık Sınavı';
+        }
         tdTur.appendChild(rozet);
         if (bekleyenMi(k.id)) {
             const bek = document.createElement('span');
@@ -1694,7 +1851,9 @@ function tabloYenile() {
         tdAlan.innerHTML = `<strong>${k.alan || '-'}</strong><div style="font-size:11.5px; color:#cbd5e1;">${k.dal || '-'}</div>`;
         tr.appendChild(tdAlan);
 
-        tr.appendChild(hucre(k.enSonMezuniyet || k.mezunOlduguOkul || '-'));
+        const tdKapsam = document.createElement('td');
+        tdKapsam.innerHTML = `<div><strong style="color:var(--primary);">${k.kapsam || '-'}</strong></div><div style="font-size:11.5px; color:#94a3b8;">${k.enSonMezuniyet || '-'} (${k.getirdigiBelge || 'Belge'})</div>`;
+        tr.appendChild(tdKapsam);
 
         const tdIslem = document.createElement('td');
         tdIslem.style.whiteSpace = 'nowrap';
@@ -1726,13 +1885,15 @@ function ozetHesapla(liste) {
         const g = gruplar.get(anahtar);
         g.kisi++; toplam.kisi++;
 
-        const kalVeUst = k.kalfalikVeUstalik || k.kalfalikVeBasariliUstalik;
-        if (kalVeUst) {
+        const tur = basvuruTurunuNormalizeEt(k.basvuruTuru);
+        if (tur === 'Kalfalık Sınavı' || k.kalfalikSinav || k.dogrudanKalfalik) {
             g.ogrKal++; g.sinKal++; toplam.ogrKal++; toplam.sinKal++;
+        }
+        if (tur === 'Ustalık Sınavı' || k.ustalikSinav || k.dogrudanUstalik) {
             g.ogrUst++; g.sinUst++; toplam.ogrUst++; toplam.sinUst++;
-        } else {
-            if (k.kalfalikSinav || k.dogrudanKalfalik) { g.ogrKal++; g.sinKal++; toplam.ogrKal++; toplam.sinKal++; }
-            if (k.ustalikSinav || k.dogrudanUstalik) { g.ogrUst++; g.sinUst++; toplam.ogrUst++; toplam.sinUst++; }
+        }
+        if (k.kalfalikVeUstalik || k.kalfalikVeBasariliUstalik) {
+            g.ogrUst++; g.sinUst++; toplam.ogrUst++; toplam.sinUst++;
         }
     });
     return { gruplar: Array.from(gruplar.values()), toplam };
@@ -1752,7 +1913,7 @@ function ozetYenile() {
         govde.appendChild(tr);
     });
     const tr = document.createElement('tr');
-    tr.style.background = '#17202d';
+    tr.style.background = '#0f172a';
     const td = document.createElement('td');
     td.colSpan = 2; td.style.textAlign = 'right'; td.style.fontWeight = 'bold'; td.style.color = 'var(--primary)';
     td.textContent = 'TOPLAM SINAVA GİRECEK ÖĞRENCİ SAYISI';
@@ -1764,14 +1925,6 @@ function ozetYenile() {
 }
 
 function tumunuYenile() { tabloYenile(); ozetYenile(); }
-
-function basvuruTuruTetikle() {
-    const tur = $('basvuruTuru').value;
-    const ustaOgrt = tur === 'Usta Öğreticilik';
-    $('ustalikKalfalikAlanlari').style.display = ustaOgrt ? 'none' : 'block';
-    $('ustaOgreticilikAlanlari').style.display = ustaOgrt ? 'block' : 'none';
-    $('kapsamGrup').style.display = ustaOgrt ? 'none' : 'flex';
-}
 
 /* ============================================================
    MYK ARAMA
@@ -1821,14 +1974,12 @@ function mykKlavye(e) {
 /* ============================================================
    RESMİ RAPORLAR VE ÇIKTI ŞABLONLARI (EK-2, EK-3, DEFTER)
    ============================================================ */
-
 function sablonUstYaziGuncelle(baslik, altBaslik, kurum) {
     $('sablonBaslikYazi').textContent = baslik;
     $('sablonKurumYazi').textContent = kurum || komisyonAyarlari.ilIlceMem;
     $('sablonAltBaslik').textContent = altBaslik || '';
 }
 
-/* 1. EK-3 Başvuru Sonuç Belgesi */
 function sonucSablonuKur(k) {
     if (!k && kayitlar.length) k = kayitlar[0];
     if (!k) { bildir('Görüntülenecek aday kaydı bulunamadı.', 'hata'); return; }
@@ -1845,16 +1996,13 @@ function sonucSablonuKur(k) {
     const bul = (id) => String(k[id] || '').trim();
     const birlestir = (list, ayirac) => list.map(x => String(x || '').trim()).filter(Boolean).join(ayirac || ' / ');
 
-    // 5 Seviye Tespiti
     const kalVeUst = !!(k.kalfalikVeUstalik || k.kalfalikVeBasariliUstalik);
-    const kalSinav = !!k.kalfalikSinav;
+    const kalSinav = !!k.kalfalikSinav || (k.basvuruTuru === 'Kalfalık Sınavı');
     const dogKal = !!k.dogrudanKalfalik;
-    const ustSinav = !!k.ustalikSinav;
+    const ustSinav = !!k.ustalikSinav || (k.basvuruTuru === 'Ustalık Sınavı');
     const dogUst = !!k.dogrudanUstalik;
 
     const container = $('sablonIcerikAlani');
-    
-    // Değerlendirmeye alınan belgeler listesi
     const belgeler = [];
     let bSira = 1;
     
@@ -1868,7 +2016,7 @@ function sonucSablonuKur(k) {
         });
     }
 
-    if (k.basvuruTuru === 'Usta Öğreticilik') {
+    if (k.basvuruTuru === 'İş Pedagojisi Kursu') {
         if (k.ustaDayanakBelge || k.ustaBelgeSayisi) {
             belgeler.push({
                 sira: bSira++,
@@ -1879,7 +2027,7 @@ function sonucSablonuKur(k) {
             });
         }
     } else {
-        [2, 3, 4].forEach(n => {
+        [2, 3].forEach(n => {
             const cesit = bul('calisma' + n + 'Cesit') || (bul('calisma' + n + 'Kurum') ? `${n}. Çalışmışlık Belgesi` : '');
             const kurum = bul('calisma' + n + 'Kurum');
             const sayi = bul('calisma' + n + 'Sayi');
@@ -1903,7 +2051,7 @@ function sonucSablonuKur(k) {
     if (belgeler.length === 0) {
         belgeler.push({
             sira: 1,
-            cesit: 'Öğrenim / Mezuniyet Belgesi',
+            cesit: k.getirdigiBelge || 'Diploma',
             kurum: k.mezunOlduguOkul || '-',
             tarihSayi: trTarih(formatTarih(k.belgeTarihi)) || '-',
             aciklama: k.kapsam ? 'Kapsam: ' + k.kapsam : '-'
@@ -1921,7 +2069,6 @@ function sonucSablonuKur(k) {
     `).join('');
 
     const kutuSecim = (durum) => durum ? '<strong style="font-size:16px; color:#000;">[ X ]</strong>' : '<span style="color:#555;">[ &nbsp; ]</span>';
-
     const bugunTarih = trTarih(formatTarih(k.denklikBelgeTarihi || k.kayitTarihi || new Date()));
 
     container.innerHTML = `
@@ -2032,7 +2179,6 @@ function sonucSablonuKur(k) {
     $('formSablonModal').classList.add('active');
 }
 
-/* 2. EK-2 İl Denklik Komisyonu Başvuru Değerlendirme Listesi */
 function komisyonListesiKur() {
     aktifRaporTuru = 'komisyon';
     sekmeButonlariniAyarla('btnSekmeKomisyon');
@@ -2050,12 +2196,11 @@ function komisyonListesiKur() {
     } else {
         liste.forEach((k, idx) => {
             const kalVeUst = !!(k.kalfalikVeUstalik || k.kalfalikVeBasariliUstalik);
-            const kalSinav = !!k.kalfalikSinav;
+            const kalSinav = !!k.kalfalikSinav || (k.basvuruTuru === 'Kalfalık Sınavı');
             const dogKal = !!k.dogrudanKalfalik;
-            const ustSinav = !!k.ustalikSinav;
+            const ustSinav = !!k.ustalikSinav || (k.basvuruTuru === 'Ustalık Sınavı');
             const dogUst = !!k.dogrudanUstalik;
 
-            // Açıklama
             let aciklama = k.kapsam ? `Kapsam: ${k.kapsam}` : '';
             if (k.enSonMezuniyet) aciklama += (aciklama ? ' | ' : '') + k.enSonMezuniyet;
 
@@ -2149,7 +2294,6 @@ function komisyonListesiKur() {
     $('formSablonModal').classList.add('active');
 }
 
-/* 3. Belge Denklik Defteri */
 function denklikDefteriKur() {
     aktifRaporTuru = 'defter';
     sekmeButonlariniAyarla('btnSekmeDefter');
@@ -2169,16 +2313,15 @@ function denklikDefteriKur() {
             if (k.kalfalikVeUstalik || k.kalfalikVeBasariliUstalik) hak = 'Kalfalık sınavına girmesi, başarılı olması halinde ustalık sınavlarına alınması';
             else if (k.dogrudanKalfalik) hak = 'Doğrudan kalfalık belgesi düzenlenmesi';
             else if (k.dogrudanUstalik) hak = 'Doğrudan Ustalık Belgesi Düzenlenmesi';
-            else if (k.kalfalikSinav) hak = 'Kalfalık sınavlarına girmesi';
-            else if (k.ustalikSinav) hak = 'Ustalık Sınavına Girmesi';
+            else if (k.kalfalikSinav || k.basvuruTuru === 'Kalfalık Sınavı') hak = 'Kalfalık sınavlarına girmesi';
+            else if (k.ustalikSinav || k.basvuruTuru === 'Ustalık Sınavı') hak = 'Ustalık Sınavına Girmesi';
             else hak = k.basvuruTuru || '-';
 
             const alinanBelgeler = [
                 k.getirdigiBelge || k.enSonMezuniyet,
                 k.mezunOlduguOkul,
                 k.calisma2Kurum ? '2.Çalışma: ' + k.calisma2Kurum : '',
-                k.calisma3Kurum ? '3.Çalışma: ' + k.calisma3Kurum : '',
-                k.calisma4Kurum ? '4.Çalışma: ' + k.calisma4Kurum : ''
+                k.calisma3Kurum ? '3.Çalışma: ' + k.calisma3Kurum : ''
             ].filter(Boolean).join('; ');
 
             satirlarHtml += `
@@ -2252,7 +2395,6 @@ function denklikDefteriKur() {
     $('formSablonModal').classList.add('active');
 }
 
-/* 4. Boş Başvuru Formu (Elden doldurmak için) */
 function bosSablonuKur() {
     aktifRaporTuru = 'bos';
     sekmeButonlariniAyarla('btnSekmeBosForm');
@@ -2278,19 +2420,17 @@ function bosSablonuKur() {
     }
 
     sBaslik(tablo, 'BAŞVURU TÜRÜ VE KİŞİSEL BİLGİLER');
-    sBosSatir(tablo, 'Başvuru Türü (Kalfalık / Ustalık / Usta Öğreticilik)');
+    sBosSatir(tablo, 'Başvuru Türü (Kalfalık Sınavı / Ustalık Sınavı / İş Pedagojisi Kursu)');
+    sBosSatir(tablo, 'Öğrenim Yılı');
     ['Adı Soyadı', 'TC Kimlik No', 'Doğum Tarihi', 'Telefon', 'e-Posta', 'İkametgâh / Adres', 'Başvurduğu Alan', 'Başvurduğu Dal']
         .forEach(e => sBosSatir(tablo, e));
 
     sBaslik(tablo, 'MEZUNİYET BİLGİLERİ');
-    ['En Son Mezuniyet (İlkokul / Ortaokul / Lise / Ön Lisans / Lisans)',
-     'Mezun Olduğu Okul', 'Getirdiği Belge ve Belge Tarihi', 'Öğrenim Süresi (3 / 4 Yıl)'].forEach(e => sBosSatir(tablo, e));
+    ['En Son Mezuniyeti (İlkokul / Ortaokul / Lise / Meslek Lisesi / Ön Lisans / Lisans)',
+     'Mezun Olduğu Okul', 'Getirdiği Belge (Diploma / Tastikname / Diğer)', 'Belge Tarihi'].forEach(e => sBosSatir(tablo, e));
 
-    sBaslik(tablo, 'USTA ÖĞRETİCİLİK BİLGİLERİ (İş Pedagojisi İçin)');
-    ['Dayanak Belge Tipi', 'Belge Tarihi ve Sayısı', 'Kurs / Sınav Talebi'].forEach(e => sBosSatir(tablo, e));
-
-    sBaslik(tablo, 'ÇALIŞMIŞLIK VE DENKLİK (Ustalık/Kalfalık İçin)');
-    sBosSatir(tablo, 'Kapsam (35. Madde, 28.c, 29. Madde vb.)');
+    sBaslik(tablo, 'KAPSAM VE ÇALIŞMIŞLIK');
+    sBosSatir(tablo, 'Kapsam (35. Madde, 28.c, 31.Madde, 29.Madde vb.)');
     sBosSatir(tablo, 'Çalışmışlık Belgesi / Kurum / Süre', '45px');
     sBosSatir(tablo, 'Sınav / Belge Talebi', '35px');
 
@@ -2358,8 +2498,10 @@ const BASLIK_ESLESME = (function () {
         'adres': 'adres', 'ikametgah': 'adres', 'ikametgahadresi': 'adres',
         'alanadi': 'alan', 'daladi': 'dal',
         'mykyeterlilik': 'mykAra', 'myk': 'mykAra',
-        'basvuruturu': 'basvuruTuru', 'programturu': 'basvuruTuru',
+        'basvuruturu': 'basvuruTuru', 'kayitturu': 'basvuruTuru', 'programturu': 'basvuruTuru',
+        'ogrenimyili': 'ogrenimYili', 'donem': 'ogrenimYili',
         'ensonmezuniyet': 'enSonMezuniyet', 'mezuniyet': 'enSonMezuniyet', 'mezuniyetdurumu': 'enSonMezuniyet',
+        'getirdigibelge': 'getirdigiBelge', 'belgeturu': 'getirdigiBelge',
         'mezunolduguokul': 'mezunOlduguOkul', 'okuladi': 'mezunOlduguOkul', 'okul': 'mezunOlduguOkul',
         'liseogrenimsuresi': 'liseSure', 'ogrenimsuresi': 'liseSure', 'lisesuresi': 'liseSure',
         'kalfalikvebasariliustalik': 'kalfalikVeUstalik',
@@ -2420,10 +2562,14 @@ function kayitlariIceAktar(nesneler, kaynak) {
         if (!veri.ad || !veri.soyad) { atlanan.push(`${satirNo}. satır: ad/soyad eksik`); return; }
         if (!tcGecerliMi(tc)) { atlanan.push(`${satirNo}. satır: TC geçersiz (${tc || 'boş'})`); return; }
         veri.tc = tc;
-        if (!veri.basvuruTuru) veri.basvuruTuru = 'Ustalık/Kalfalık';
+        veri.basvuruTuru = basvuruTurunuNormalizeEt(veri.basvuruTuru);
 
         const tam = {};
         ALANLAR.forEach(a => { tam[a.id] = (a.id in veri) ? veri[a.id] : (a.tip === 'onay' ? false : ''); });
+        if (!tam.ogrenimYili) tam.ogrenimYili = '2025-2026';
+        if (!tam.enSonMezuniyet) tam.enSonMezuniyet = 'Lise';
+        if (!tam.getirdigiBelge) tam.getirdigiBelge = 'Diploma';
+        if (!tam.kapsam) tam.kapsam = (tam.basvuruTuru === 'İş Pedagojisi Kursu') ? '31.Madde' : '35. Madde';
         if (!tam.mezuniyetAciklama) tam.mezuniyetAciklama = mezuniyetAciklamaUret(tam);
 
         const simdi = new Date().toISOString();
@@ -2486,7 +2632,7 @@ function panoMetniniAktar() {
     if (!metin.trim()) { bildir('Yapıştırılacak veri bulunamadı.', 'hata'); return; }
     const ayristirilan = tabloMetniniAyristir(metin);
     if (!ayristirilan || !ayristirilan.satirlar.length) { bildir('Başlık satırı ve en az bir veri satırı gereklidir.', 'hata'); return; }
-    const { nesneler, eslesenBaslik, taninmayan } = satirlariKayitlariCevir(ayristirilan.basliklar, ayristirilan.satirlar);
+    const { nesneler, eslesenBaslik } = satirlariKayitlariCevir(ayristirilan.basliklar, ayristirilan.satirlar);
     if (!eslesenBaslik) { bildir('Başlıklar tanınmadı. Başlık Satırını Panoya Kopyala butonunu kullanabilirsiniz.', 'hata'); return; }
     kayitlariIceAktar(nesneler, 'Yapıştırılan veri');
     $('hizliGirisAlani').value = '';
@@ -2500,7 +2646,7 @@ function hizliGirisOnizle() {
     if (!metin.trim()) { kutu.textContent = ''; return; }
     const a = tabloMetniniAyristir(metin);
     if (!a) { kutu.textContent = ''; return; }
-    const { eslesenBaslik, taninmayan } = satirlariKayitlariCevir(a.basliklar, a.satirlar);
+    const { eslesenBaslik } = satirlariKayitlariCevir(a.basliklar, a.satirlar);
     kutu.textContent = `${a.satirlar.length} aday satırı algılandı (${eslesenBaslik} alan eşleşti).`;
 }
 
@@ -2547,9 +2693,9 @@ async function excelDosyasiniAktar(olay) {
 }
 
 function tsvUret(liste) {
-    const basliklar = ['Başvuru No', 'Kayıt Tarihi'].concat(ALANLAR.map(a => a.ad));
+    const basliklar = ['Başvuru No', 'Öğrenim Yılı', 'Kayıt Tarihi'].concat(ALANLAR.map(a => a.ad));
     const satirlar = liste.map(k => {
-        const s = [k.basvuruNo, trTarih(formatTarih(k.kayitTarihi))];
+        const s = [k.basvuruNo, k.ogrenimYili || '2025-2026', trTarih(formatTarih(k.kayitTarihi))];
         ALANLAR.forEach(a => {
             if (a.tip === 'onay') s.push(k[a.id] ? 'Evet' : '');
             else if (a.tip === 'tarih') s.push(trTarih(k[a.id]));
@@ -2588,14 +2734,14 @@ async function excelIndir() {
     try {
         const workbook = new ExcelJS.Workbook();
         const ws = workbook.addWorksheet('Basvurular', { views: [{ state: 'frozen', ySplit: 1 }] });
-        const basliklar = ['Başvuru No', 'Kayıt Tarihi'].concat(ALANLAR.map(a => a.ad));
+        const basliklar = ['Başvuru No', 'Öğrenim Yılı', 'Kayıt Tarihi'].concat(ALANLAR.map(a => a.ad));
         const baslikSatiri = ws.addRow(basliklar);
         baslikSatiri.eachCell(c => {
-            c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF17202D' } };
+            c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F172A' } };
             c.font = { color: { argb: 'FFFFFFFF' }, bold: true };
         });
         kayitlar.forEach(k => {
-            const satir = [k.basvuruNo, trTarih(formatTarih(k.kayitTarihi))];
+            const satir = [k.basvuruNo, k.ogrenimYili || '2025-2026', trTarih(formatTarih(k.kayitTarihi))];
             ALANLAR.forEach(a => {
                 if (a.tip === 'onay') satir.push(k[a.id] ? 'Evet' : '');
                 else if (a.tip === 'tarih') satir.push(trTarih(k[a.id]));
@@ -2604,13 +2750,13 @@ async function excelIndir() {
             ws.addRow(satir);
         });
         ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: basliklar.length } };
-        ws.columns.forEach((c, i) => { c.width = i < 2 ? 16 : Math.min(30, Math.max(14, basliklar[i].length + 2)); });
+        ws.columns.forEach((c, i) => { c.width = i < 3 ? 16 : Math.min(30, Math.max(14, basliklar[i].length + 2)); });
 
         const wsOzet = workbook.addWorksheet('Ozet_Istatistik', { views: [{ state: 'frozen', ySplit: 1 }] });
         const ozetBasliklar = ['ALAN ADI', 'DAL ADI SINAV ADI', 'SINAVA GİRECEK KİŞİ SAYISI', 'ÖĞRENCİ SAYISI KALFALIK', 'ÖĞRENCİ SAYISI USTALIK', 'SINAV SAYISI KALFALIK', 'SINAV SAYISI USTALIK'];
         const ozetBaslikSatiri = wsOzet.addRow(ozetBasliklar);
         ozetBaslikSatiri.eachCell(c => {
-            c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF17202D' } };
+            c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F172A' } };
             c.font = { color: { argb: 'FFFFFFFF' }, bold: true };
         });
         const { gruplar, toplam } = ozetHesapla(kayitlar);
@@ -2659,63 +2805,93 @@ const EMESEM_BETIK_ADRESI = 'emesem-yardimci.js';
 function emesemYerImiAdresi() {
     const adres = new URL(EMESEM_BETIK_ADRESI, location.href).href;
     return "javascript:(function(){var s=document.createElement('script');" +
-        "s.src='" + adres + "?v='+Date.now();s.onerror=function(){alert('E-MESEM Robotu yuklenemedi. Guvenlik ayarlarindan dolayi engellendiyse konsol yontemini kullanin.');};" +
+        "s.src='" + adres + "?v='+Date.now();s.onerror=function(){alert('E-MESEM Robotu yuklenemedi. Guvenlik engeli varsa F12 konsol yontemini kullanin.');};" +
         "(document.body||document.documentElement).appendChild(s);})();";
 }
 
-function emesemFormatindaVeriOlustur() {
-    const liste = filtrelenmisKayitlar().length ? filtrelenmisKayitlar() : kayitlar;
+function emesemFormatindaVeriOlustur(filtreTuru) {
+    let liste = kayitlar;
+    if (filtreTuru) {
+        liste = kayitlar.filter(k => basvuruTurunuNormalizeEt(k.basvuruTuru) === filtreTuru);
+    }
     return liste.map(k => {
-        const alanlar = [{ id: 'basvuruNo', ad: 'Başvuru No', deger: k.basvuruNo || '' }];
-        ALANLAR.forEach(a => {
-            let d = k[a.id];
-            if (a.tip === 'onay') { if (!d) return; d = 'Evet'; }
-            else if (a.tip === 'tarih') d = trTarih(formatTarih(d));
-            else d = d == null ? '' : String(d);
-            if (d === '') return;
-            alanlar.push({ id: a.id, ad: a.ad, deger: d });
-        });
-        const kalVeUst = !!(k.kalfalikVeUstalik || k.kalfalikVeBasariliUstalik);
+        const turNorm = basvuruTurunuNormalizeEt(k.basvuruTuru);
+        let kapsam = k.kapsam;
+        if (!kapsam) {
+            kapsam = (turNorm === 'İş Pedagojisi Kursu') ? '31.Madde' : '35. Madde';
+        }
         return {
+            id: k.id,
+            basvuruNo: k.basvuruNo,
             tc: k.tc,
             ad: k.ad,
             soyad: k.soyad,
-            dogumTarihi: k.dogumTarihi,
-            basvuruTuru: k.basvuruTuru,
-            kapsam: k.kapsam,
-            eposta: k.eposta,
-            telefon: k.telefon,
-            adres: k.adres,
-            enSonMezuniyet: k.enSonMezuniyet,
-            mezunOlduguOkul: k.mezunOlduguOkul,
-            getirdigiBelge: k.getirdigiBelge,
-            belgeTarihi: k.belgeTarihi,
-            alan: k.alan,
-            dal: k.dal,
-            kalfalikVeUstalik: kalVeUst,
-            kalfalikVeBasariliUstalik: kalVeUst,
-            kalfalikSinav: !!k.kalfalikSinav,
+            dogumTarihi: formatTarih(k.dogumTarihi),
+            basvuruTuru: turNorm,
+            ogrenimYili: k.ogrenimYili || '2025-2026',
+            kapsam: kapsam,
+            eposta: k.eposta || '',
+            telefon: k.telefon || '',
+            adres: k.adres || '',
+            enSonMezuniyet: k.enSonMezuniyet || 'Lise',
+            mezunOlduguOkul: k.mezunOlduguOkul || '',
+            getirdigiBelge: k.getirdigiBelge || 'Diploma',
+            belgeTarihi: formatTarih(k.belgeTarihi),
+            alan: k.alan || '',
+            dal: k.dal || '',
+            kalfalikSinav: !!k.kalfalikSinav || (turNorm === 'Kalfalık Sınavı'),
             dogrudanKalfalik: !!k.dogrudanKalfalik,
-            ustalikSinav: !!k.ustalikSinav,
+            kalfalikVeUstalik: !!(k.kalfalikVeUstalik || k.kalfalikVeBasariliUstalik),
+            ustalikSinav: !!k.ustalikSinav || (turNorm === 'Ustalık Sınavı'),
             dogrudanUstalik: !!k.dogrudanUstalik,
-            alanlar: alanlar
+            ustaDayanakBelge: k.ustaDayanakBelge || '',
+            ustaBelgeTarihi: formatTarih(k.ustaBelgeTarihi),
+            ustaBelgeSayisi: k.ustaBelgeSayisi || '',
+            ustaTalepTuru: k.ustaTalepTuru || ''
         };
     });
 }
 
+function kategoriyeGoreKopyala(kategoriAdi) {
+    const veriler = emesemFormatindaVeriOlustur(kategoriAdi);
+    if (!veriler.length) { bildir(`${kategoriAdi} kategorisinde kayıtlı aday bulunamadı.`, 'hata'); return; }
+    panoyaYaz(JSON.stringify(veriler, null, 2), `Toplam ${veriler.length} adet [${kategoriAdi}] adayı robot için panoya kopyalandı! E-MESEM sekmesinde "📋 Panodan Al"a basın.`);
+}
+
 function tumKayitlariEmesemFormatindaKopyala() {
     if (!kayitlar.length) { bildir('Aktarılacak aday kaydı bulunamadı.', 'hata'); return; }
-    const veriler = emesemFormatindaVeriOlustur();
-    panoyaYaz(JSON.stringify(veriler, null, 2), `Toplam ${veriler.length} aday verisi E-MESEM Robotu için panoya kopyalandı! E-MESEM sekmesinde robotu çalıştırıp Panodan Al deyin.`);
+    const veriler = emesemFormatindaVeriOlustur(null);
+    panoyaYaz(JSON.stringify(veriler, null, 2), `Toplam ${veriler.length} aday verisi E-MESEM Robotu için panoya kopyalandı!`);
 }
 
 function emesemJsonIndir() {
     if (!kayitlar.length) { bildir('İndirilecek aday kaydı bulunamadı.', 'hata'); return; }
-    const veriler = emesemFormatindaVeriOlustur();
+    const veriler = emesemFormatindaVeriOlustur(null);
     const blob = new Blob([JSON.stringify(veriler, null, 2)], { type: 'application/json;charset=utf-8' });
     const dosyaAdi = `emesem_robot_adaylar_${new Date().toISOString().slice(0, 10)}.json`;
     saveAs(blob, dosyaAdi);
     bildir(`Toplam ${veriler.length} aday verisi JSON dosyası olarak indirildi.`, 'ok');
+}
+
+function userscriptKoduUret() {
+    const betikAdresi = new URL(EMESEM_BETIK_ADRESI, location.href).href;
+    return `// ==UserScript==
+// @name         E-MESEM Ön Kayıt Otomasyon Robotu
+// @namespace    https://emesem.meb.gov.tr/
+// @version      4.0
+// @description  MEB E-MESEM Sınav Öğrenci Ön Kayıt Otomasyonu
+// @author       Görkem Kocaman
+// @match        *://emesem.meb.gov.tr/*
+// @match        *://*.meb.gov.tr/*
+// @grant        none
+// ==/UserScript==
+
+(function() {
+    'use strict';
+    var script = document.createElement('script');
+    script.src = '${betikAdresi}?v=' + Date.now();
+    document.body.appendChild(script);
+})();`;
 }
 
 /* ============================================================
@@ -2728,6 +2904,12 @@ function olaylariBagla() {
     $('guncelleBtn').addEventListener('click', kaydiGuncelle);
     $('temizleBtn').addEventListener('click', formuTemizle);
     $('basvuruTuru').addEventListener('change', basvuruTuruTetikle);
+
+    // Sekmeler
+    $('tabKalfalik').addEventListener('click', () => navSekmeDegistir('Kalfalık Sınavı'));
+    $('tabUstalik').addEventListener('click', () => navSekmeDegistir('Ustalık Sınavı'));
+    $('tabPedagoji').addEventListener('click', () => navSekmeDegistir('İş Pedagojisi Kursu'));
+    $('tabTumu').addEventListener('click', () => navSekmeDegistir('Tumu'));
 
     $('sorgulaMetin').addEventListener('input', () => { sonucBariniGizle(); tabloYenile(); });
     $('sorgulaDogum').addEventListener('change', () => { sonucBariniGizle(); tabloYenile(); });
@@ -2795,7 +2977,7 @@ function olaylariBagla() {
     $('btnHizliKapat2').addEventListener('click', () => $('hizliGirisModal').classList.remove('active'));
     $('btnHizliAktar').addEventListener('click', panoMetniniAktar);
     $('btnHizliBaslikEkle').addEventListener('click', () => {
-        panoyaYaz(['Başvuru No', 'Kayıt Tarihi'].concat(ALANLAR.map(a => a.ad)).join('\t'), 'Başlık satırı panoya kopyalandı.');
+        panoyaYaz(['Başvuru No', 'Öğrenim Yılı', 'Kayıt Tarihi'].concat(ALANLAR.map(a => a.ad)).join('\t'), 'Başlık satırı panoya kopyalandı.');
     });
     $('hizliGirisAlani').addEventListener('input', hizliGirisOnizle);
     $('btnTabloKopyala').addEventListener('click', tabloyuKopyala);
@@ -2810,8 +2992,14 @@ function olaylariBagla() {
 
     $('btnEmesemKapat').addEventListener('click', () => $('emesemModal').classList.remove('active'));
     $('btnEmesemKapat2').addEventListener('click', () => $('emesemModal').classList.remove('active'));
+    
+    // Kategori Kopyalama Butonları
+    $('btnEmesemKalfalikKopyala').addEventListener('click', () => kategoriyeGoreKopyala('Kalfalık Sınavı'));
+    $('btnEmesemUstalikKopyala').addEventListener('click', () => kategoriyeGoreKopyala('Ustalık Sınavı'));
+    $('btnEmesemPedagojiKopyala').addEventListener('click', () => kategoriyeGoreKopyala('İş Pedagojisi Kursu'));
     $('btnEmesemTumunuKopyala').addEventListener('click', tumKayitlariEmesemFormatindaKopyala);
     $('btnEmesemJsonIndir').addEventListener('click', emesemJsonIndir);
+    
     $('btnEmesemBetikKopyala').addEventListener('click', async () => {
         try {
             const r = await fetch(new URL(EMESEM_BETIK_ADRESI, location.href).href);
@@ -2823,7 +3011,12 @@ function olaylariBagla() {
     });
     if ($('btnEmesemYerImiKopyala')) {
         $('btnEmesemYerImiKopyala').addEventListener('click', () => {
-            panoyaYaz(emesemYerImiAdresi(), 'Yer İmi (Bookmarklet) JavaScript adresi panoya kopyalandı. Tarayıcınızda yeni yer imi oluşturup URL kısmına yapıştırabilirsiniz.');
+            panoyaYaz(emesemYerImiAdresi(), 'Yer İmi (Bookmarklet) JavaScript adresi panoya kopyalandı.');
+        });
+    }
+    if ($('btnEmesemUserscriptKopyala')) {
+        $('btnEmesemUserscriptKopyala').addEventListener('click', () => {
+            panoyaYaz(userscriptKoduUret(), 'Tampermonkey / Violentmonkey kullanıcı betiği panoya kopyalandı!');
         });
     }
 
