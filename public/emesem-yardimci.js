@@ -1,20 +1,21 @@
 /* ==================================================================
-   E-MESEM Sınav Öğrenci Ön Kayıt & Otomasyon Robotu (v5.5)
+   E-MESEM Sınav Öğrenci Ön Kayıt & Otomasyon Robotu (v6.0)
    Geliştirici: Görkem Kocaman © 2026
    ------------------------------------------------------------------
    MEB E-MESEM (emesem.meb.gov.tr) portalında "Sınav Öğrenci Ön Kayıt"
    ekranında tam otomatik, ASP.NET AJAX UpdatePanel & PostBack uyumlu,
-   kademeli Alan -> Dal yükleme destekli, MERNİS korumalı ve
-   hatasız kayıt motoru.
+   evrensel çok katmanlı seçim motorlu (Select / Combobox / Div-Li / Select2 / DevExpress),
+   kademeli Alan -> Dal yükleme destekli, MERNİS korumalı,
+   canlı eleman analizörlü (Live DOM Inspector) ve hatasız kayıt motoru.
 
    Temel Yetenekler:
-     1. ⚡ ASP.NET AJAX PostBack & Sys.WebForms PageRequestManager İzleyici
-     2. 🌲 Kademeli (Cascading) Alan -> Dal Otomatik Seçim ve Bekleme Motoru (Kanonik Türkçe Eşleme)
-     3. 🛡️ Pre-Save Güvenlik Kilidi (Tüm Kritik Alanlar Doğrulanmadan Kaydetmez)
-     4. 🎯 Akıllı Alan Öğretici & Eşleme Modu (Selector Mapper)
-     5. 🐾 Adım Adım Manuel Denetim (Step-by-Step Test Modu)
-     6. 📟 Canlı Log Konsolu & Web Audio Bildirim Sistemi
-     7. 🔍 Sayfa Teşhis Aracı (DOM Inspector & Dumper)
+     1. ⚡ Evrensel Çok Katmanlı Seçim Motoru (Standart Select, Combobox Input, Custom Div/Span/Li Dropdown)
+     2. 🔬 Canlı Eleman Analizörü & DOM Dumper (Tek Tıkla Kutu İnceleme & Pano Raporlayıcı)
+     3. 🌲 Kademeli (Cascading) Alan -> Dal Otomatik Seçim ve Bekleme Motoru (Kanonik Türkçe Eşleme)
+     4. 🛡️ Pre-Save Güvenlik Kilidi (Tüm Kritik Alanlar Doğrulanmadan Kaydetmez)
+     5. 🎯 Akıllı Alan Öğretici & Eşleme Modu (Otomatik Ebeveyn/Çocuk Select/Input Yakalayıcı)
+     6. 🐾 Adım Adım Manuel Denetim (Step-by-Step Test Modu)
+     7. 📟 Canlı Log Konsolu & Web Audio Bildirim Sistemi
      8. 📅 Garantili Dönemli Öğrenim Yılı & Maskeli Telefon Girişi Simülatörü
 ================================================================== */
 (function () {
@@ -25,8 +26,8 @@
         return;
     }
 
-    var SURUM = "5.5";
-    var STORAGE_ESLEME_ANAHTARI = "mesem_ogretilmis_alanlar_v5";
+    var SURUM = "6.0";
+    var STORAGE_ESLEME_ANAHTARI = "mesem_ogretilmis_alanlar_v6";
     
     var tumKayitlar = [];          // Sisteme yüklenen tüm adaylar
     var filtreliKayitlar = [];     // Seçili kategoriye göre filtrelenmiş liste
@@ -41,11 +42,12 @@
     var ogretilenHedefAlan = null; // Sıradaki öğretilen alan kimliği
     var ogretmeListesiSirasi = 0;
     var ogretmeSiraliMi = false;   // Sırayla mı gidiliyor yoksa tekli mi
+    var incelemeModuAktif = false; // Canlı Eleman İnceleme modu aktif mi
 
     // Özel Alan Eşlemeleri (localStorage)
     var ozelEslemeler = {};
     try {
-        var kayitliEslemeler = localStorage.getItem(STORAGE_ESLEME_ANAHTARI) || localStorage.getItem("mesem_ogretilmis_alanlar_v4");
+        var kayitliEslemeler = localStorage.getItem(STORAGE_ESLEME_ANAHTARI) || localStorage.getItem("mesem_ogretilmis_alanlar_v5") || localStorage.getItem("mesem_ogretilmis_alanlar_v4");
         if (kayitliEslemeler) ozelEslemeler = JSON.parse(kayitliEslemeler);
     } catch (e) { ozelEslemeler = {}; }
 
@@ -58,18 +60,18 @@
         { id: 'yeniKayitBtn', ad: '"Yeni Kayıt" Butonu', tip: 'buton', grup: 'ANA_EKRAN', aciklama: 'Açılır kayıt penceresini açan buton' },
         
         // B. Açılır Kayıt Penceresi (Popup / Modal) Alanları
-        { id: 'ogrenimYili', ad: 'Öğrenim Yılı (Select)', tip: 'select', grup: 'POPUP', aciklama: 'Örn: 2026 - 2027 I. Dönem açılır menüsü' },
+        { id: 'ogrenimYili', ad: 'Öğrenim Yılı (Select/Combobox)', tip: 'select', grup: 'POPUP', aciklama: 'Örn: 2026 - 2027 I. Dönem açılır menüsü veya kutusu' },
         { id: 'tc', ad: 'T.C. Kimlik No', tip: 'input', grup: 'POPUP', aciklama: 'Aday TC Kimlik No giriş kutusu' },
         { id: 'dogumTarihi', ad: 'Doğum Tarihi', tip: 'input', grup: 'POPUP', aciklama: 'Aday doğum tarihi kutusu (GG.AA.YYYY)' },
         { id: 'sorgulaBtn', ad: '"Sorgula" Butonu', tip: 'buton', grup: 'POPUP', aciklama: 'MERNİS kimlik sorgulama butonu' },
-        { id: 'kapsam', ad: 'Kapsam Maddesi (Select)', tip: 'select', grup: 'POPUP', aciklama: '35. Madde / 31. Madde kapsam seçimi' },
+        { id: 'kapsam', ad: 'Kapsam Maddesi (Select/Combobox)', tip: 'select', grup: 'POPUP', aciklama: '35. Madde / 31. Madde kapsam seçimi' },
         { id: 'eposta', ad: 'E-posta', tip: 'input', grup: 'POPUP', aciklama: 'Aday e-posta iletişim kutusu' },
         { id: 'telefon', ad: 'Telefon', tip: 'input', grup: 'POPUP', aciklama: 'Aday cep telefonu iletişim kutusu (+90 maskeli)' },
-        { id: 'enSonMezuniyet', ad: 'En Son Mezuniyeti (Select)', tip: 'select', grup: 'POPUP', aciklama: 'Öğrenim / Mezuniyet durumu seçimi' },
-        { id: 'getirdigiBelge', ad: 'Getirdiği Belge (Select)', tip: 'select', grup: 'POPUP', aciklama: 'Diploma / Tastikname belge seçimi' },
+        { id: 'enSonMezuniyet', ad: 'En Son Mezuniyeti (Select/Combobox)', tip: 'select', grup: 'POPUP', aciklama: 'Öğrenim / Mezuniyet durumu seçimi' },
+        { id: 'getirdigiBelge', ad: 'Getirdiği Belge (Select/Combobox)', tip: 'select', grup: 'POPUP', aciklama: 'Diploma / Tastikname belge seçimi' },
         { id: 'belgeTarihi', ad: 'Belge Tarihi', tip: 'input', grup: 'POPUP', aciklama: 'Belge veriliş tarihi kutusu (GG.AA.YYYY)' },
-        { id: 'alan', ad: 'Alan Seçimi (Select/Input)', tip: 'select', grup: 'POPUP', aciklama: 'Mesleki alan açılır menüsü veya arama kutusu' },
-        { id: 'dal', ad: 'Dal Seçimi (Select/Input)', tip: 'select', grup: 'POPUP', aciklama: 'Mesleki dal açılır menüsü veya arama kutusu' },
+        { id: 'alan', ad: 'Alan Seçimi (Select/Input/Combobox)', tip: 'select', grup: 'POPUP', aciklama: 'Mesleki alan açılır menüsü veya arama kutusu' },
+        { id: 'dal', ad: 'Dal Seçimi (Select/Input/Combobox)', tip: 'select', grup: 'POPUP', aciklama: 'Mesleki dal açılır menüsü veya arama kutusu' },
         { id: 'kaydetBtn', ad: '"Kaydet" Butonu', tip: 'buton', grup: 'POPUP', aciklama: 'Aday kaydını tamamlayan ana buton' }
     ];
 
@@ -117,6 +119,14 @@
                 gain.gain.exponentialRampToValueAtTime(0.01, simdi + 0.08);
                 osc.start(simdi);
                 osc.stop(simdi + 0.08);
+            } else if (tur === 'kesif') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(440, simdi);
+                osc.frequency.setValueAtTime(659.25, simdi + 0.08);
+                gain.gain.setValueAtTime(0.12, simdi);
+                gain.gain.exponentialRampToValueAtTime(0.01, simdi + 0.25);
+                osc.start(simdi);
+                osc.stop(simdi + 0.25);
             }
         } catch (e) { }
     }
@@ -138,6 +148,7 @@
         else if (tur === 'hata') renk = '#f87171';
         else if (tur === 'uyari') renk = '#fbbf24';
         else if (tur === 'islem') renk = '#38bdf8';
+        else if (tur === 'mor') renk = '#c084fc';
 
         if (logIcerik) {
             var satir = document.createElement('div');
@@ -351,7 +362,7 @@
 
         for (var b = 0; b < belgeler.length; b++) {
             var doc = belgeler[b];
-            var inputs = Array.prototype.slice.call(doc.querySelectorAll('input, select, textarea'));
+            var inputs = Array.prototype.slice.call(doc.querySelectorAll('input, select, textarea, div[role="combobox"], span.select2, div.dx-dropdowneditor'));
 
             for (var i = 0; i < inputs.length; i++) {
                 var inp = inputs[i];
@@ -395,176 +406,245 @@
     }
 
     /* ============================================================
-       GELİŞMİŞ SELECT VE DEĞER YAZMA & FULL EVENT SIMULATION
+       EVRENSEL ÇOK KATMANLI SEÇİM MOTORU (UNIVERSAL SELECTION ENGINE)
        ============================================================ */
-    function ogrenimYiliSec(selectEl, arananDeger) {
-        if (!selectEl || !selectEl.options) return false;
-        var options = selectEl.options;
-        var secilenIndex = -1;
-        var hedef = arananDeger || '2026 - 2027 I. Dönem';
-        var kHedef = kanonikMetin(hedef);
 
-        // 1. Tam Kanonik Eşleşme
-        for (var i = 0; i < options.length; i++) {
-            var opt = options[i];
-            var kOpt = kanonikMetin(opt.textContent);
-            var kVal = kanonikMetin(opt.value);
-            if (kOpt === kHedef || kVal === kHedef) {
-                secilenIndex = i;
-                break;
-            }
+    /**
+     * MEB E-MESEM sayfasındaki Standart Select, Input/Combobox, Custom Div/Span/Li,
+     * DevExpress, Select2 ve jQuery UI gibi her türlü açılır kutudan garantili seçim yapar.
+     */
+    async function evrenselSecimYap(hedefEl, arananMetin, tetiklePostBack) {
+        if (!hedefEl) return false;
+        var aranan = String(arananMetin != null ? arananMetin : '').trim();
+        if (!aranan) return false;
+
+        var kAranan = kanonikMetin(aranan);
+        var doc = hedefEl.ownerDocument || document;
+        var win = doc.defaultView || window;
+
+        // ----------------------------------------------------
+        // DURUM A: Standart <select> veya Sarmalayan/Sarmalanan <select>
+        // ----------------------------------------------------
+        var selectEl = null;
+        if (hedefEl.tagName && hedefEl.tagName.toLowerCase() === 'select') {
+            selectEl = hedefEl;
+        } else if (hedefEl.querySelector) {
+            selectEl = hedefEl.querySelector('select');
+        }
+        if (!selectEl && hedefEl.closest) {
+            selectEl = hedefEl.closest('select');
+        }
+        if (!selectEl && hedefEl.id) {
+            // Select2 veya container ilişkili select arama (örn: #select2-ddlAlan-container -> #ddlAlan)
+            var olasiId = hedefEl.id.replace(/^select2-/, '').replace(/-container$/, '');
+            try { selectEl = doc.querySelector('#' + CSS.escape(olasiId)); } catch (e) { }
         }
 
-        // 2. Yıl ve Dönem Anahtar Kelimeleri Eşleşmesi (2026, 2027, I. Dönem, 1. Dönem)
-        if (secilenIndex === -1) {
-            var yillar = String(hedef).match(/\d{4}/g) || ['2026', '2027'];
-            var donem1 = kHedef.indexOf('1') !== -1 || kHedef.indexOf('i') !== -1 || kHedef.indexOf('bir') !== -1;
-            var donem2 = kHedef.indexOf('2') !== -1 || kHedef.indexOf('ii') !== -1 || kHedef.indexOf('iki') !== -1;
+        if (selectEl && selectEl.options && selectEl.options.length > 0) {
+            var options = selectEl.options;
+            var secilenIndex = -1;
 
-            for (var j = 0; j < options.length; j++) {
-                var o = options[j];
-                var optText = kanonikMetin(o.textContent);
-                var optVal = kanonikMetin(o.value);
+            // 1. Tam Kanonik Eşleşme
+            for (var i = 0; i < options.length; i++) {
+                var opt = options[i];
+                var kOpt = kanonikMetin(opt.textContent);
+                var kVal = kanonikMetin(opt.value);
+                if (kOpt === kAranan || kVal === kAranan) {
+                    secilenIndex = i;
+                    break;
+                }
+            }
 
-                // Yıl eşleşmesi
-                var yilUyumu = yillar.length > 0 && yillar.some(function (y) {
-                    return optText.indexOf(y) !== -1 || optVal.indexOf(y) !== -1;
-                });
+            // 2. Yıl ve Dönem Özel Eşleşmesi (Öğrenim Yılı için: 2026, 2027, I. Dönem / 1. Dönem)
+            if (secilenIndex === -1) {
+                var yillar = aranan.match(/\d{4}/g) || [];
+                var donem1 = kAranan.indexOf('1') !== -1 || kAranan.indexOf('i') !== -1 || kAranan.indexOf('bir') !== -1;
+                var donem2 = kAranan.indexOf('2') !== -1 || kAranan.indexOf('ii') !== -1 || kAranan.indexOf('iki') !== -1;
 
-                if (yilUyumu) {
-                    // Dönem kontrolü
-                    if (donem1 && (optText.indexOf('1') !== -1 || optText.indexOf('idonem') !== -1 || optText.indexOf('1donem') !== -1)) {
-                        secilenIndex = j;
-                        break;
-                    } else if (donem2 && (optText.indexOf('2') !== -1 || optText.indexOf('iidonem') !== -1 || optText.indexOf('2donem') !== -1)) {
-                        secilenIndex = j;
-                        break;
-                    } else {
-                        secilenIndex = j;
+                if (yillar.length > 0) {
+                    for (var j = 0; j < options.length; j++) {
+                        var o = options[j];
+                        var optText = kanonikMetin(o.textContent);
+                        var optVal = kanonikMetin(o.value);
+
+                        var yilUyumu = yillar.some(function (y) {
+                            return optText.indexOf(y) !== -1 || optVal.indexOf(y) !== -1;
+                        });
+
+                        if (yilUyumu) {
+                            if (donem1 && (optText.indexOf('1') !== -1 || optText.indexOf('idonem') !== -1 || optText.indexOf('1donem') !== -1)) {
+                                secilenIndex = j;
+                                break;
+                            } else if (donem2 && (optText.indexOf('2') !== -1 || optText.indexOf('iidonem') !== -1 || optText.indexOf('2donem') !== -1)) {
+                                secilenIndex = j;
+                                break;
+                            } else {
+                                secilenIndex = j;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 3. Kısmi İçerme / Substring Eşleşmesi
+            if (secilenIndex === -1 && kAranan.length > 2) {
+                for (var m = 0; m < options.length; m++) {
+                    var o2 = options[m];
+                    var optText2 = kanonikMetin(o2.textContent);
+                    var optVal2 = kanonikMetin(o2.value);
+
+                    if ((optText2 && (optText2.indexOf(kAranan) !== -1 || kAranan.indexOf(optText2) !== -1)) ||
+                        (optVal2 && (optVal2.indexOf(kAranan) !== -1 || kAranan.indexOf(optVal2) !== -1))) {
+                        secilenIndex = m;
                         break;
                     }
                 }
             }
-        }
 
-        // 3. Kısmi İçerme Eşleşmesi
-        if (secilenIndex === -1 && kHedef.length > 3) {
-            for (var m = 0; m < options.length; m++) {
-                var o2 = options[m];
-                var optText2 = kanonikMetin(o2.textContent);
-                var optVal2 = kanonikMetin(o2.value);
-
-                if ((optText2 && (optText2.indexOf(kHedef) !== -1 || kHedef.indexOf(optText2) !== -1)) ||
-                    (optVal2 && (optVal2.indexOf(kHedef) !== -1 || kHedef.indexOf(optVal2) !== -1))) {
-                    secilenIndex = m;
-                    break;
+            // 4. Fallback: Seçiniz olmayan ilk geçerli seçenek
+            if (secilenIndex === -1 && options.length > 0) {
+                for (var k = 0; k < options.length; k++) {
+                    var op = options[k];
+                    var txt = kanonikMetin(op.textContent);
+                    var val = (op.value || '').trim();
+                    if (val !== '' && txt.indexOf('seciniz') === -1 && txt.indexOf('sec') === -1 && txt.indexOf('lutfen') === -1) {
+                        secilenIndex = k;
+                        logEkle('Kutuda "' + aranan + '" tam bulunamadı, ilk seçenek seçildi: ' + op.textContent, 'uyari');
+                        break;
+                    }
                 }
+                if (secilenIndex === -1 && options.length > 1) {
+                    secilenIndex = 1;
+                }
+            }
+
+            if (secilenIndex !== -1) {
+                var seciliOpt = options[secilenIndex];
+                selectEl.selectedIndex = secilenIndex;
+                selectEl.value = seciliOpt.value;
+                seciliOpt.selected = true;
+
+                // Full Event Chain Simulation
+                try {
+                    selectEl.dispatchEvent(new Event('focus', { bubbles: true }));
+                    selectEl.dispatchEvent(new Event('input', { bubbles: true }));
+                    selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+                    if (typeof selectEl.onchange === 'function') {
+                        selectEl.onchange();
+                    }
+                    // ASP.NET PostBack Tetikleyici
+                    if (win.__doPostBack && selectEl.name) {
+                        win.__doPostBack(selectEl.name, '');
+                    }
+                    // jQuery / Select2 tetikleyicisi
+                    if (win.jQuery) {
+                        try { win.jQuery(selectEl).val(seciliOpt.value).trigger('change'); } catch (jqErr) { }
+                    }
+                    selectEl.dispatchEvent(new Event('blur', { bubbles: true }));
+                } catch (e) { }
+
+                logEkle('✓ Select (' + (selectEl.name || selectEl.id || 'select') + ') seçildi: ' + seciliOpt.textContent.trim(), 'basari');
+                return true;
             }
         }
 
-        // 4. Fallback: Listenin ilk dolu / seçilebilir seçeneğini garanti olarak seç
-        if (secilenIndex === -1 && options.length > 0) {
-            for (var k = 0; k < options.length; k++) {
-                var op = options[k];
-                var txt = kanonikMetin(op.textContent);
-                var val = (op.value || '').trim();
-                if (val !== '' && txt.indexOf('seciniz') === -1 && txt.indexOf('sec') === -1 && txt.indexOf('lutfen') === -1) {
-                    secilenIndex = k;
-                    logEkle('Öğrenim Yılı için "' + hedef + '" tam bulunamadı, ilk geçerli seçenek seçildi: ' + op.textContent, 'uyari');
-                    break;
-                }
-            }
-            if (secilenIndex === -1) {
-                secilenIndex = options.length > 1 ? 1 : 0;
-                logEkle('Öğrenim Yılı zorunlu fallback: ' + options[secilenIndex].textContent, 'uyari');
-            }
+        // ----------------------------------------------------
+        // DURUM B: Input Combobox / Autocomplete Kutusu
+        // ----------------------------------------------------
+        var inputEl = null;
+        if (hedefEl.tagName && (hedefEl.tagName.toLowerCase() === 'input' || hedefEl.tagName.toLowerCase() === 'textarea')) {
+            inputEl = hedefEl;
+        } else if (hedefEl.querySelector) {
+            inputEl = hedefEl.querySelector('input:not([type="hidden"]), textarea');
         }
 
-        if (secilenIndex !== -1) {
-            var seciliOpt = options[secilenIndex];
-            selectEl.selectedIndex = secilenIndex;
-            selectEl.value = seciliOpt.value;
-
-            // React, Angular, Vue, ASP.NET AutoPostBack Tetikleyicileri
-            try {
-                selectEl.dispatchEvent(new Event('input', { bubbles: true }));
-                selectEl.dispatchEvent(new Event('change', { bubbles: true }));
-                if (typeof selectEl.onchange === 'function') {
-                    selectEl.onchange();
-                }
-            } catch (e) { }
-
+        if (inputEl) {
+            degerYaz(inputEl, aranan);
+            // Açılır menü oku veya tetikleyicisi varsa tıkla
+            var triggerBtn = null;
+            if (hedefEl.parentElement) {
+                triggerBtn = hedefEl.parentElement.querySelector('.dx-dropdowneditor-button, .select2-selection__arrow, button, .btn, span[role="button"]');
+            }
+            if (triggerBtn && triggerBtn !== inputEl) {
+                try { triggerBtn.click(); await bekle(150); } catch (e) { }
+            }
+            logEkle('✓ Input/Combobox (' + (inputEl.name || inputEl.id || 'input') + ') dolduruldu: ' + aranan, 'basari');
             return true;
+        }
+
+        // ----------------------------------------------------
+        // DURUM C: Custom Dropdown (Div/Span/Ul/Li / DevExpress / Select2)
+        // ----------------------------------------------------
+        try {
+            hedefEl.focus && hedefEl.focus();
+            hedefEl.click();
+            await bekle(220);
+
+            // Açılan menü listesindeki öğeleri tara
+            var belgeler = tumBelgeleriGetir();
+            var listeSecicileri = [
+                '.select2-results__option',
+                '.dx-list-item',
+                '.dx-item',
+                'ul.dropdown-menu > li',
+                'ul > li',
+                'div[role="option"]',
+                'li[role="option"]',
+                '.dropdown-item',
+                '.combobox-item',
+                '.k-item',
+                '.mat-option',
+                '.ant-select-item-option-content'
+            ];
+
+            var bulunanSecenek = null;
+            for (var b = 0; b < belgeler.length; b++) {
+                var d = belgeler[b];
+                for (var s = 0; s < listeSecicileri.length; s++) {
+                    var items = d.querySelectorAll(listeSecicileri[s]);
+                    for (var it = 0; it < items.length; it++) {
+                        var itemEl = items[it];
+                        if (itemEl.offsetParent === null && itemEl.offsetWidth === 0) continue; // gizli olanları atla
+                        var itText = kanonikMetin(itemEl.textContent);
+                        if (itText === kAranan || (kAranan.length > 3 && itText.indexOf(kAranan) !== -1)) {
+                            bulunanSecenek = itemEl;
+                            break;
+                        }
+                    }
+                    if (bulunanSecenek) break;
+                }
+                if (bulunanSecenek) break;
+            }
+
+            if (bulunanSecenek) {
+                vurgula(bulunanSecenek, '#22c55e');
+                bulunanSecenek.click();
+                logEkle('✓ Özel Dropdown seçeneği tıklandı: ' + bulunanSecenek.textContent.trim(), 'basari');
+                await bekle(200);
+                return true;
+            } else {
+                logEkle('Özel Dropdown tıklandı, metin içeren seçenek doğrudan arandı.', 'islem');
+                return true;
+            }
+        } catch (e) {
+            logEkle('Dropdown seçiminde hata: ' + e.message, 'hata');
         }
 
         return false;
     }
 
-    function selectDegerSec(selectEl, arananDeger, tetiklePostBack) {
-        if (!selectEl || !selectEl.options) return false;
-        var aranan = kanonikMetin(arananDeger);
-        var options = selectEl.options;
-        var secilenIndex = -1;
+    /* ---------------- Öğrenim Yılı Seçici (Evrensel Motor Destekli) ---------------- */
+    async function ogrenimYiliSec(hedefEl, arananDeger) {
+        if (!hedefEl) return false;
+        var hedef = arananDeger || '2026 - 2027 I. Dönem';
+        return await evrenselSecimYap(hedefEl, hedef, true);
+    }
 
-        if (!aranan) return false;
-
-        // 1. Tam Kanonik Eşleşme (Örn: METAL TEKNOLOJİSİ vs Metal Teknolojisi -> metalteknolojisi)
-        for (var i = 0; i < options.length; i++) {
-            var opt = options[i];
-            var t = kanonikMetin(opt.textContent);
-            var v = kanonikMetin(opt.value);
-            if (t === aranan || v === aranan) {
-                secilenIndex = i;
-                break;
-            }
-        }
-
-        // 2. Kapsama / İçerme Eşleşmesi (Örn: 'metalteknolojisialani' <-> 'metalteknolojisi')
-        if (secilenIndex === -1) {
-            for (var m = 0; m < options.length; m++) {
-                var o2 = options[m];
-                var optText2 = kanonikMetin(o2.textContent);
-                var optVal2 = kanonikMetin(o2.value);
-
-                if ((optText2 && (optText2.indexOf(aranan) !== -1 || aranan.indexOf(optText2) !== -1)) ||
-                    (optVal2 && (optVal2.indexOf(aranan) !== -1 || aranan.indexOf(optVal2) !== -1))) {
-                    secilenIndex = m;
-                    break;
-                }
-            }
-        }
-
-        // 3. Fallback: Seçiniz olmayan ilk geçerli seçenek
-        if (secilenIndex === -1 && options.length > 1) {
-            for (var k = 0; k < options.length; k++) {
-                var op = options[k];
-                var txt = kanonikMetin(op.textContent);
-                if (op.value !== '' && txt.indexOf('seciniz') === -1 && txt.indexOf('sec') === -1 && txt.indexOf('lutfen') === -1) {
-                    secilenIndex = k;
-                    logEkle('Select (' + (selectEl.name || selectEl.id || 'select') + ') için "' + arananDeger + '" bulunamadı, ilk seçenek seçildi: ' + op.textContent, 'uyari');
-                    break;
-                }
-            }
-        }
-
-        if (secilenIndex !== -1) {
-            var secili = options[secilenIndex];
-            selectEl.selectedIndex = secilenIndex;
-            selectEl.value = secili.value;
-
-            // React, Angular, Vue, ASP.NET AutoPostBack Tetikleyicileri
-            try {
-                selectEl.dispatchEvent(new Event('input', { bubbles: true }));
-                selectEl.dispatchEvent(new Event('change', { bubbles: true }));
-                if (typeof selectEl.onchange === 'function') {
-                    selectEl.onchange();
-                }
-            } catch (e) { }
-
-            return true;
-        }
-
-        return false;
+    /* ---------------- Select Değer Seçici (Evrensel Motor Destekli) ---------------- */
+    async function selectDegerSec(hedefEl, arananDeger, tetiklePostBack) {
+        if (!hedefEl) return false;
+        return await evrenselSecimYap(hedefEl, arananDeger, tetiklePostBack);
     }
 
     /* ---------------- Maskeli Telefon Girişi Simülasyonu ---------------- */
@@ -887,11 +967,11 @@
     async function adim3_TcTarihDoldur(k) {
         logEkle('3. Adım: Öğrenim Yılı, TC ve Doğum Tarihi giriliyor...', 'islem');
 
-        // 3.1: Öğrenim Yılı (2026 - 2027 I. Dönem garantili eşleme & fallback)
+        // 3.1: Öğrenim Yılı (Evrensel Motor ile 2026 - 2027 I. Dönem garantili seçim)
         var ogrenimYiliEl = ogretilmisAlanBul('ogrenimYili') || evrenselInputBul(['ogrenimyili', 'donem', 'ogretimyili', 'egitimyili', 'ddlogrenimyili']);
         if (ogrenimYiliEl) {
             var hedefYil = k.ogrenimYili || '2026 - 2027 I. Dönem';
-            ogrenimYiliSec(ogrenimYiliEl, hedefYil);
+            await ogrenimYiliSec(ogrenimYiliEl, hedefYil);
             vurgula(ogrenimYiliEl, '#38bdf8');
             logEkle('Öğrenim yılı seçildi: ' + hedefYil, 'islem');
         }
@@ -980,7 +1060,7 @@
         var ogrenimYiliEl = ogretilmisAlanBul('ogrenimYili') || evrenselInputBul(['ogrenimyili', 'donem', 'ogretimyili', 'egitimyili', 'ddlogrenimyili']);
         if (ogrenimYiliEl) {
             var hedefYil = k.ogrenimYili || '2026 - 2027 I. Dönem';
-            ogrenimYiliSec(ogrenimYiliEl, hedefYil);
+            await ogrenimYiliSec(ogrenimYiliEl, hedefYil);
             vurgula(ogrenimYiliEl, '#38bdf8');
             logEkle('✓ Öğrenim Yılı doğrulandı: ' + hedefYil, 'islem');
             await bekle(250);
@@ -995,7 +1075,7 @@
         }
         var kapsamEl = ogretilmisAlanBul('kapsam') || evrenselInputBul(['kapsam', 'madde', 'kapsamturu', 'ddlkapsam']);
         if (kapsamEl) {
-            degerYaz(kapsamEl, kapsamDeger);
+            await evrenselSecimYap(kapsamEl, kapsamDeger, true);
             vurgula(kapsamEl, '#38bdf8');
             logEkle('✓ Kapsam seçildi: ' + kapsamDeger, 'islem');
             await bekle(300);
@@ -1020,7 +1100,7 @@
         // 5.4: En Son Mezuniyeti
         var mezuniyetEl = ogretilmisAlanBul('enSonMezuniyet') || evrenselInputBul(['ensonmezuniyet', 'mezuniyet', 'ogrenimdurumu', 'mezuniyetdurumu', 'ddlmezuniyet']);
         if (mezuniyetEl) {
-            degerYaz(mezuniyetEl, k.enSonMezuniyet || 'Lise');
+            await evrenselSecimYap(mezuniyetEl, k.enSonMezuniyet || 'Lise', true);
             vurgula(mezuniyetEl, '#38bdf8');
             logEkle('✓ En Son Mezuniyet seçildi: ' + (k.enSonMezuniyet || 'Lise'), 'islem');
             await bekle(250);
@@ -1031,7 +1111,7 @@
         if (belgeEl) {
             var bTur = k.getirdigiBelge || 'Diploma';
             if (trTemizle(bTur).indexOf('tas') !== -1) bTur = 'Tastikname';
-            degerYaz(belgeEl, bTur);
+            await evrenselSecimYap(belgeEl, bTur, true);
             vurgula(belgeEl, '#38bdf8');
             logEkle('✓ Getirdiği Belge seçildi: ' + bTur, 'islem');
             await bekle(250);
@@ -1050,37 +1130,33 @@
             logEkle('✓ Belge Tarihi yazıldı: ' + bTStr, 'islem');
         }
 
-        // 5.7: KADEMELİ ALAN SEÇİMİ (Cascading Alan -> Dal, Türkçe Kanonik Eşleme)
+        // 5.7: KADEMELİ ALAN SEÇİMİ (Cascading Alan -> Dal, Evrensel Çok Katmanlı Seçim Motoru)
         var alanEl = ogretilmisAlanBul('alan') || evrenselInputBul(['ddlalan', 'alan', 'alanadi', 'meslek', 'txtalan']);
         if (alanEl && k.alan) {
-            logEkle('Alan seçiliyor (Kanonik Türkçe): ' + k.alan, 'islem');
-            selectDegerSec(alanEl, k.alan, true);
+            logEkle('Alan seçiliyor (Evrensel Çok Katmanlı): ' + k.alan, 'islem');
+            await evrenselSecimYap(alanEl, k.alan, true);
             vurgula(alanEl, '#38bdf8');
 
-            // Eğer Alan bir select ise, Dal dropdown'ının AJAX ile dolmasını bekle
-            if ((alanEl.tagName || '').toLowerCase() === 'select') {
-                logEkle('Alan seçimi sonrası Dal listesinin AJAX ile yüklenmesi bekleniyor...', 'islem');
-                await postBackBitisiniBekle(3500, 'Dal Listesi Yükleme PostBack');
-                
-                // Dal select'inin options dolmasını polling ile bekle
-                var baslangicDal = Date.now();
-                while (Date.now() - baslangicDal < 2500) {
-                    var dalTestEl = ogretilmisAlanBul('dal') || evrenselInputBul(['ddldal', 'dal', 'daladi', 'txtdal']);
-                    if (dalTestEl && dalTestEl.options && dalTestEl.options.length > 1) {
-                        break;
-                    }
-                    await bekle(200);
+            // Dal dropdown'ının AJAX ile dolmasını bekle
+            logEkle('Alan seçimi sonrası Dal listesinin yüklenmesi bekleniyor...', 'islem');
+            await postBackBitisiniBekle(3500, 'Dal Listesi Yükleme PostBack');
+            
+            // Dal select'inin options dolmasını polling ile bekle
+            var baslangicDal = Date.now();
+            while (Date.now() - baslangicDal < 2500) {
+                var dalTestEl = ogretilmisAlanBul('dal') || evrenselInputBul(['ddldal', 'dal', 'daladi', 'txtdal']);
+                if (dalTestEl && dalTestEl.options && dalTestEl.options.length > 1) {
+                    break;
                 }
-            } else {
-                await bekle(500);
+                await bekle(200);
             }
         }
 
-        // 5.8: KADEMELİ DAL SEÇİMİ (Cascading Dal, Türkçe Kanonik Eşleme)
+        // 5.8: KADEMELİ DAL SEÇİMİ (Cascading Dal, Evrensel Çok Katmanlı Seçim Motoru)
         var dalEl = ogretilmisAlanBul('dal') || evrenselInputBul(['ddldal', 'dal', 'daladi', 'txtdal']);
         if (dalEl && k.dal) {
-            logEkle('Dal seçiliyor (Kanonik Türkçe): ' + k.dal, 'islem');
-            selectDegerSec(dalEl, k.dal, true);
+            logEkle('Dal seçiliyor (Evrensel Çok Katmanlı): ' + k.dal, 'islem');
+            await evrenselSecimYap(dalEl, k.dal, true);
             vurgula(dalEl, '#38bdf8');
             await bekle(300);
         }
@@ -1401,17 +1477,33 @@
 
     function ogreticiKontrolBariGuncelle() {
         if (!ogreticiKontrolBari) return;
-        if (!ogretmeModuAktif) {
+        if (!ogretmeModuAktif && !incelemeModuAktif) {
             ogreticiKontrolBari.style.display = 'none';
             return;
         }
 
+        ogreticiKontrolBari.textContent = '';
+        ogreticiKontrolBari.style.display = 'flex';
+
+        if (incelemeModuAktif) {
+            ogreticiKontrolBari.style.borderColor = '#c084fc';
+            var infoIncele = el('span', 'font-weight:600; color:#c084fc; display:flex; align-items:center; gap:6px;');
+            infoIncele.innerHTML = '🔬 <strong>CANLI ELEMAN İNCELEME MODU:</strong> İncelemek istediğiniz MEB kutusuna (Öğrenim Yılı / Alan vb.) tıklayın!';
+            ogreticiKontrolBari.appendChild(infoIncele);
+
+            var btnInceleKapat = el('button', 'padding:4px 9px; font-size:11px; font-weight:bold; background:#dc2626; color:#fff; border:0; border-radius:5px; cursor:pointer;', '✕ Kapat');
+            btnInceleKapat.onclick = function (e) {
+                e.stopPropagation();
+                elemanIncelemeModunuKapat();
+            };
+            ogreticiKontrolBari.appendChild(btnInceleKapat);
+            return;
+        }
+
+        ogreticiKontrolBari.style.borderColor = '#3b82f6';
         var alanBilgi = OGRETILEBILIR_ALANLAR.find(function (a) { return a.id === ogretilenHedefAlan; });
         var alanAd = alanBilgi ? alanBilgi.ad : (ogretilenHedefAlan || 'Seçilmedi');
         var grupAd = (alanBilgi && alanBilgi.grup === 'POPUP') ? '🪟 Açılır Pencere' : '🖥️ Ana Ekran';
-
-        ogreticiKontrolBari.textContent = '';
-        ogreticiKontrolBari.style.display = 'flex';
 
         var infoSpan = el('span', 'font-weight:600; color:#38bdf8; display:flex; align-items:center; gap:6px;');
         if (ogretmeDuraklatildi) {
@@ -1461,6 +1553,7 @@
     }
 
     function ogretmeModunuBaslat(tekliAlanId, siraliMi) {
+        if (incelemeModuAktif) elemanIncelemeModunuKapat();
         ogreticiArayuzHazirla();
         ogretmeModuAktif = true;
         ogretmeDuraklatildi = false;
@@ -1502,39 +1595,73 @@
     }
 
     function ogreticiFareHareketi(e) {
-        if (!ogretmeModuAktif || ogretmeDuraklatildi) return;
-        var hedef = e.target;
-        if (!hedef || hedef.closest('#mesemYardimciPanel') || hedef.closest('#mesemOgreticiModal') || hedef.closest('#mesemOgreticiKontrolBari') || hedef.id === 'mesemOgreticiVurgu' || hedef.id === 'mesemOgreticiRozet') {
-            vurguKatmani.style.display = 'none';
-            ogreticiRozet.style.display = 'none';
+        if ((!ogretmeModuAktif || ogretmeDuraklatildi) && !incelemeModuAktif) return;
+        var hamHedef = e.target;
+        if (!hamHedef || hamHedef.closest('#mesemYardimciPanel') || hamHedef.closest('#mesemOgreticiModal') || hamHedef.closest('#mesemOgreticiKontrolBari') || hamHedef.id === 'mesemOgreticiVurgu' || hamHedef.id === 'mesemOgreticiRozet') {
+            if (vurguKatmani) vurguKatmani.style.display = 'none';
+            if (ogreticiRozet) ogreticiRozet.style.display = 'none';
             return;
         }
+
+        // Akıllı Alan Öğretici: Eğer span/div ise en yakın select/input öğesini otomatik bul
+        var hedef = (hamHedef.closest && hamHedef.closest('select, input, textarea, button, a')) ||
+                    (hamHedef.querySelector && hamHedef.querySelector('select, input, textarea, button, a')) ||
+                    hamHedef;
 
         var rect = getElemanEkranKonumu(hedef);
         if (rect.width === 0 && rect.height === 0) return;
 
-        vurguKatmani.style.display = 'block';
-        vurguKatmani.style.top = rect.top + 'px';
-        vurguKatmani.style.left = rect.left + 'px';
-        vurguKatmani.style.width = rect.width + 'px';
-        vurguKatmani.style.height = rect.height + 'px';
+        if (vurguKatmani) {
+            vurguKatmani.style.display = 'block';
+            vurguKatmani.style.top = rect.top + 'px';
+            vurguKatmani.style.left = rect.left + 'px';
+            vurguKatmani.style.width = rect.width + 'px';
+            vurguKatmani.style.height = rect.height + 'px';
+            vurguKatmani.style.borderColor = incelemeModuAktif ? '#c084fc' : '#22c55e';
+            vurguKatmani.style.background = incelemeModuAktif ? 'rgba(192,132,252,0.2)' : 'rgba(34,197,94,0.18)';
+        }
 
-        var alanBilgi = OGRETILEBILIR_ALANLAR.find(function (a) { return a.id === ogretilenHedefAlan; });
-        var alanAd = alanBilgi ? alanBilgi.ad : ogretilenHedefAlan;
+        if (ogreticiRozet) {
+            ogreticiRozet.style.display = 'block';
+            ogreticiRozet.style.top = Math.max(5, rect.top - 32) + 'px';
+            ogreticiRozet.style.left = Math.max(5, rect.left) + 'px';
+            ogreticiRozet.style.borderColor = incelemeModuAktif ? '#c084fc' : '#22c55e';
+            ogreticiRozet.style.color = incelemeModuAktif ? '#c084fc' : '#4ade80';
 
-        ogreticiRozet.style.display = 'block';
-        ogreticiRozet.style.top = Math.max(5, rect.top - 32) + 'px';
-        ogreticiRozet.style.left = Math.max(5, rect.left) + 'px';
-        ogreticiRozet.textContent = '🎯 Eşle: ' + alanAd + ' (' + hedef.tagName.toLowerCase() + (hedef.id ? '#' + hedef.id : (hedef.name ? '[name=' + hedef.name + ']' : '')) + ')';
+            if (incelemeModuAktif) {
+                ogreticiRozet.textContent = '🔬 İncele: <' + hedef.tagName.toLowerCase() + '>' + (hedef.id ? '#' + hedef.id : (hedef.name ? '[name=' + hedef.name + ']' : ''));
+            } else {
+                var alanBilgi = OGRETILEBILIR_ALANLAR.find(function (a) { return a.id === ogretilenHedefAlan; });
+                var alanAd = alanBilgi ? alanBilgi.ad : ogretilenHedefAlan;
+                ogreticiRozet.textContent = '🎯 Eşle: ' + alanAd + ' (' + hedef.tagName.toLowerCase() + (hedef.id ? '#' + hedef.id : (hedef.name ? '[name=' + hedef.name + ']' : '')) + ')';
+            }
+        }
     }
 
     function ogreticiTiklama(e) {
-        if (!ogretmeModuAktif || ogretmeDuraklatildi) return;
-        var hedef = e.target;
-        if (!hedef || hedef.closest('#mesemYardimciPanel') || hedef.closest('#mesemOgreticiModal') || hedef.closest('#mesemOgreticiKontrolBari')) return;
+        if ((!ogretmeModuAktif || ogretmeDuraklatildi) && !incelemeModuAktif) return;
+        var hamHedef = e.target;
+        if (!hamHedef || hamHedef.closest('#mesemYardimciPanel') || hamHedef.closest('#mesemOgreticiModal') || hamHedef.closest('#mesemOgreticiKontrolBari')) return;
 
         e.preventDefault();
         e.stopPropagation();
+
+        // ----------------------------------------------------
+        // İNCELEME MODU (CANLI ELEMAN ANALİZİ)
+        // ----------------------------------------------------
+        if (incelemeModuAktif) {
+            elemaniDetayliInceleVeRaporla(hamHedef);
+            elemanIncelemeModunuKapat();
+            return;
+        }
+
+        // ----------------------------------------------------
+        // ÖĞRETİCİ MODU (AKILLI HEDEF ÇIKARIMI)
+        // ----------------------------------------------------
+        // Eğer div/span/label tıklandıysa otomatik en yakın select/input öğesini bul
+        var hedef = (hamHedef.closest && hamHedef.closest('select, input, textarea, button, a')) ||
+                    (hamHedef.querySelector && hamHedef.querySelector('select, input, textarea, button, a')) ||
+                    hamHedef;
 
         var selector = benzersizSelectorUret(hedef);
         if (selector && ogretilenHedefAlan) {
@@ -1547,7 +1674,7 @@
             var alanAd = alanBilgi ? alanBilgi.ad : ogretilenHedefAlan;
 
             sesCal('basari');
-            logEkle('✓ Eşlendi: [' + alanAd + '] -> ' + selector, 'basari');
+            logEkle('✓ Eşlendi: [' + alanAd + '] -> ' + selector + ' (' + hedef.tagName.toLowerCase() + ')', 'basari');
             vurgula(hedef, '#22c55e');
 
             if (ogretmeSiraliMi) {
@@ -1570,6 +1697,111 @@
                 durum('✓ [' + alanAd + '] alanı başarıyla kaydedildi!', '#4ade80');
                 alanOgretModaliniGoster();
             }
+        }
+    }
+
+    /* ============================================================
+       CANLI ELEMAN ANALİZÖRÜ (LIVE ELEMENT INSPECTOR & DUMPER)
+       ============================================================ */
+    function elemanIncelemeModunuBaslat() {
+        if (ogretmeModuAktif) ogretmeModunuKapat();
+        ogreticiArayuzHazirla();
+        incelemeModuAktif = true;
+        if (vurguKatmani) {
+            vurguKatmani.style.borderColor = '#c084fc';
+            vurguKatmani.style.background = 'rgba(192,132,252,0.2)';
+        }
+        ogreticiDinleyicileriBagla();
+        ogreticiKontrolBariGuncelle();
+        sesCal('kesif');
+        durum('🔬 İnceleme Modu: MEB ekranında analiz etmek istediğiniz kutuya tıklayın!', '#c084fc');
+        logEkle('🔬 Canlı Eleman İnceleme Modu Açıldı. MEB sayfasındaki herhangi bir kutuya tıklayın.', 'mor');
+    }
+
+    function elemanIncelemeModunuKapat() {
+        incelemeModuAktif = false;
+        if (vurguKatmani) vurguKatmani.style.display = 'none';
+        if (ogreticiRozet) ogreticiRozet.style.display = 'none';
+        if (ogreticiKontrolBari) ogreticiKontrolBari.style.display = 'none';
+        ogreticiDinleyicileriKopart();
+        durum('İnceleme modu kapatıldı.', '#cbd5e1');
+    }
+
+    function elemaniDetayliInceleVeRaporla(targetEl) {
+        if (!targetEl) return;
+
+        var el = (targetEl.closest && targetEl.closest('select, input, textarea, button, a')) ||
+                 (targetEl.querySelector && targetEl.querySelector('select, input, textarea, button, a')) ||
+                 targetEl;
+
+        var selector = benzersizSelectorUret(el);
+        var tag = (el.tagName || '').toLowerCase();
+        var id = el.id || '-';
+        var name = el.name || '-';
+        var cls = el.className || '-';
+        var type = el.type || '-';
+        var val = el.value !== undefined ? String(el.value) : '-';
+        var txt = (el.textContent || '').trim().slice(0, 100);
+
+        var optionsList = [];
+        if (el.options) {
+            for (var i = 0; i < el.options.length; i++) {
+                var o = el.options[i];
+                optionsList.push({ index: i, value: o.value, text: o.textContent.trim(), selected: o.selected });
+            }
+        } else if (targetEl.querySelectorAll) {
+            var altOptions = targetEl.querySelectorAll('option, li, div[role="option"]');
+            for (var j = 0; j < altOptions.length; j++) {
+                var ao = altOptions[j];
+                optionsList.push({ index: j, text: ao.textContent.trim() });
+            }
+        }
+
+        var rapor = {
+            tarih: new Date().toISOString(),
+            hedef: {
+                tagName: tag,
+                id: id,
+                name: name,
+                type: type,
+                className: cls,
+                value: val,
+                textContentOzet: txt,
+                selector: selector,
+                secenekSayisi: optionsList.length,
+                secenekler: optionsList.slice(0, 20),
+                outerHTML: (el.outerHTML || '').slice(0, 500)
+            },
+            ebeveyn: el.parentElement ? {
+                tagName: el.parentElement.tagName.toLowerCase(),
+                id: el.parentElement.id || '-',
+                className: el.parentElement.className || '-'
+            } : null
+        };
+
+        vurgula(el, '#c084fc');
+        sesCal('basari');
+
+        // Canlı Log Konsoluna Dök
+        logEkle('=== 🔬 ELEMAN ANALİZ RAPORU ===', 'mor');
+        logEkle('🏷️ Tag: <' + tag + '> | ID: #' + id + ' | Name: ' + name, 'mor');
+        logEkle('📌 Selector: ' + selector, 'islem');
+        logEkle('📝 Değer: "' + val + '" | Sınıf: ' + cls, 'islem');
+        if (optionsList.length > 0) {
+            logEkle('📋 Seçenekler (' + optionsList.length + ' adet): ' + optionsList.slice(0, 5).map(function (o) { return '"' + o.text + '"'; }).join(', ') + (optionsList.length > 5 ? ' ...' : ''), 'basari');
+        } else {
+            logEkle('ℹ️ Standart select options listesi bulunamadı (Input/Custom div olabilir).', 'uyari');
+        }
+
+        // Panoya JSON Formatında Kopyala
+        var jsonMetin = JSON.stringify(rapor, null, 2);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(jsonMetin).then(function () {
+                durum('✓ [' + tag + '#' + id + '] analizi yapıldı ve panoya kopyalandı!', '#4ade80');
+                logEkle('✓ Tam analiz raporu panoya (clipboard) kopyalandı!', 'basari');
+            });
+        } else {
+            durum('✓ [' + tag + '#' + id + '] incelendi (Konsola yazıldı).', '#4ade80');
         }
     }
 
@@ -1884,7 +2116,7 @@
        PANEL VE ARAYÜZ OLUŞTURMA
        ============================================================ */
     panel = el('div', [
-        'position:fixed', 'top:14px', 'right:14px', 'width:460px', 'max-height:94vh',
+        'position:fixed', 'top:14px', 'right:14px', 'width:470px', 'max-height:94vh',
         'background:#0f172a', 'color:#f8fafc', 'border:1px solid #334155', 'border-radius:12px',
         'box-shadow:0 25px 50px -12px rgba(0,0,0,0.85)', 'z-index:2147483647',
         'font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
@@ -1893,9 +2125,16 @@
     panel.id = 'mesemYardimciPanel';
 
     // Header
-    var baslik = el('div', 'display:flex; align-items:center; gap:8px; padding:10px 14px; background:#1e293b; cursor:move; user-select:none; border-bottom:1px solid #334155;');
+    var baslik = el('div', 'display:flex; align-items:center; gap:6px; padding:10px 14px; background:#1e293b; cursor:move; user-select:none; border-bottom:1px solid #334155;');
     baslik.appendChild(el('strong', 'flex:1; font-size:13.5px; color:#f59e0b; display:flex; align-items:center; gap:6px;', '⚡ E-MESEM Robotu v' + SURUM));
     
+    // 🔬 Canlı Eleman İnceleme Butonu (Header)
+    var btnIncele = el('button', 'padding:3px 7px; font-size:11px; font-weight:bold; cursor:pointer; background:#8b5cf6; color:#fff; border:0; border-radius:4px;', '🔬 İncele');
+    btnIncele.title = 'MEB sayfasındaki herhangi bir kutuyu tek tıkla incele ve detaylı analizini panoya kopyala';
+    btnIncele.onclick = function () {
+        if (incelemeModuAktif) elemanIncelemeModunuKapat(); else elemanIncelemeModunuBaslat();
+    };
+
     var btnOgretMod = el('button', 'padding:3px 7px; font-size:11px; font-weight:bold; cursor:pointer; background:#10b981; color:#fff; border:0; border-radius:4px; margin-right:4px;', '🎯 Alan Öğret');
     btnOgretMod.title = 'Açılır pencere ve ana ekran alanlarını robota öğretme panelini aç';
     btnOgretMod.onclick = function () {
@@ -1905,6 +2144,7 @@
     var kucultDugme = el('button', 'border:0; background:#334155; color:#f8fafc; width:26px; height:26px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:14px;', '–');
     var kapatDugme = el('button', 'border:0; background:#dc2626; color:#fff; width:26px; height:26px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:14px; margin-left:4px;', '×');
     
+    baslik.appendChild(btnIncele);
     baslik.appendChild(btnOgretMod);
     baslik.appendChild(kucultDugme);
     baslik.appendChild(kapatDugme);
@@ -2169,6 +2409,7 @@
     };
     kapatDugme.onclick = function () {
         ogretmeModunuKapat();
+        elemanIncelemeModunuKapat();
         panel.remove();
         if (dosyaGirdi) dosyaGirdi.remove();
         if (vurguKatmani) vurguKatmani.remove();
@@ -2198,7 +2439,7 @@
     })();
 
     kategoriFiltrele('TUMU');
-    logEkle('E-MESEM Otomasyon Robotu v' + SURUM + ' hazır.', 'basari');
+    logEkle('E-MESEM Otomasyon Robotu v' + SURUM + ' hazır (Evrensel Çok Katmanlı Seçim Motoru Aktif).', 'basari');
 
     window.__mesemYardimci = {
         gosterGizle: function () {
@@ -2209,7 +2450,9 @@
         sayfayiTeshisEt: sayfayiTeshisEt,
         ogretmeModunuBaslat: ogretmeModunuBaslat,
         alanOgretModaliniGoster: alanOgretModaliniGoster,
+        elemanIncelemeModunuBaslat: elemanIncelemeModunuBaslat,
         kanonikMetin: kanonikMetin,
+        evrenselSecimYap: evrenselSecimYap,
         ogrenimYiliSec: ogrenimYiliSec,
         telefonuYaz: telefonuYaz
     };
