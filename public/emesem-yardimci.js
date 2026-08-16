@@ -495,12 +495,18 @@
 
     /**
      * TELERİK RADCOMBOBOX GARANTİLİ SEÇİM MOTORU (Yöntem 1: $find API + Yöntem 2: DropDown DOM Simülasyonu)
+     * Öncelik Sırası:
+     *   1. Tam Kanonik Eşleşme (Exact Match)
+     *   2. Kelime / Başlangıç Eşleşmesi (StartsWith Match)
+     *   3. İçerme Eşleşmesi (Includes Substring Match)
+     * Kritik Kural: ASLA rastgele/ilk seçeneği seçme (fallback yok)!
      */
     async function telerikRadComboBoxSec(hedefEl, arananMetin, tetiklePostBack) {
         if (!hedefEl) return false;
         var aranan = String(arananMetin != null ? arananMetin : '').trim();
         if (!aranan) return false;
         var kAranan = kanonikMetin(aranan);
+        if (!kAranan) return false;
 
         var doc = hedefEl.ownerDocument || document;
         var win = doc.defaultView || window;
@@ -524,7 +530,7 @@
                 var count = items.get_count();
                 var hedefItem = null;
 
-                // 1. Tam Kanonik Eşleşme
+                // 1. Öncelik: Tam Kanonik Eşleşme
                 for (var i = 0; i < count; i++) {
                     var item = items.getItem(i);
                     var itText = kanonikMetin(item.get_text());
@@ -535,7 +541,38 @@
                     }
                 }
 
-                // 2. Yıl ve Dönem Özel Eşleşmesi (Öğrenim Yılı: 2026 - 2027 I. Dönem)
+                // 2. Öncelik: Kelime / Başlangıç Eşleşmesi
+                if (!hedefItem) {
+                    for (var sIdx = 0; sIdx < count; sIdx++) {
+                        var itS = items.getItem(sIdx);
+                        var sText = kanonikMetin(itS.get_text());
+                        var sVal = kanonikMetin(itS.get_value());
+                        if (sText && sText.indexOf('seciniz') === -1 && sText.indexOf('lutfen') === -1) {
+                            if (sText.startsWith(kAranan) || (sVal && sVal.startsWith(kAranan))) {
+                                hedefItem = itS;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // 3. Öncelik: İçerme (Includes) Eşleşmesi
+                if (!hedefItem && kAranan.length > 2) {
+                    for (var m = 0; m < count; m++) {
+                        var it3 = items.getItem(m);
+                        var t3 = kanonikMetin(it3.get_text());
+                        var v3 = kanonikMetin(it3.get_value());
+                        if (t3 && t3.indexOf('seciniz') === -1 && t3.indexOf('lutfen') === -1) {
+                            if ((t3 && (t3.indexOf(kAranan) !== -1 || kAranan.indexOf(t3) !== -1)) ||
+                                (v3 && (v3.indexOf(kAranan) !== -1 || kAranan.indexOf(v3) !== -1))) {
+                                hedefItem = it3;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // 4. Yıl ve Dönem Özel Eşleşmesi (Öğrenim Yılı: 2026 - 2027 I. Dönem için)
                 if (!hedefItem) {
                     var yillar = aranan.match(/\d{4}/g) || [];
                     var donem1 = kAranan.indexOf('1') !== -1 || kAranan.indexOf('i') !== -1 || kAranan.indexOf('bir') !== -1;
@@ -563,38 +600,7 @@
                     }
                 }
 
-                // 3. Kısmi İçerme / Substring Eşleşmesi
-                if (!hedefItem && kAranan.length > 2) {
-                    for (var m = 0; m < count; m++) {
-                        var it3 = items.getItem(m);
-                        var t3 = kanonikMetin(it3.get_text());
-                        var v3 = kanonikMetin(it3.get_value());
-                        if ((t3 && (t3.indexOf(kAranan) !== -1 || kAranan.indexOf(t3) !== -1)) ||
-                            (v3 && (v3.indexOf(kAranan) !== -1 || kAranan.indexOf(v3) !== -1))) {
-                            hedefItem = it3;
-                            break;
-                        }
-                    }
-                }
-
-                // 4. Fallback (Seçiniz olmayan ilk geçerli seçenek)
-                if (!hedefItem && count > 0) {
-                    for (var k = 0; k < count; k++) {
-                        var it4 = items.getItem(k);
-                        var t4 = kanonikMetin(it4.get_text());
-                        var v4 = (it4.get_value() || '').trim();
-                        if (v4 !== '' && t4.indexOf('seciniz') === -1 && t4.indexOf('sec') === -1 && t4.indexOf('lutfen') === -1) {
-                            hedefItem = it4;
-                            break;
-                        }
-                    }
-                    if (!hedefItem && count > 1) {
-                        hedefItem = items.getItem(1);
-                    } else if (!hedefItem && count > 0) {
-                        hedefItem = items.getItem(0);
-                    }
-                }
-
+                // KRİTİK KURAL: Asla fallback ile rastgele öğe seçme!
                 if (hedefItem) {
                     try {
                         hedefItem.select();
@@ -674,7 +680,7 @@
             if (liItems.length > 0) {
                 var secilenLi = null;
 
-                // 1. Tam Kanonik Eşleşme
+                // 1. Öncelik: Tam Kanonik Eşleşme
                 for (var liIdx = 0; liIdx < liItems.length; liIdx++) {
                     var li = liItems[liIdx];
                     var lText = kanonikMetin(li.textContent);
@@ -685,7 +691,36 @@
                     }
                 }
 
-                // 2. Yıl ve Dönem Eşleşmesi
+                // 2. Öncelik: Kelime / Başlangıç Eşleşmesi
+                if (!secilenLi) {
+                    for (var liS = 0; liS < liItems.length; liS++) {
+                        var liSw = liItems[liS];
+                        var ltSw = kanonikMetin(liSw.textContent);
+                        var lvSw = kanonikMetin(liSw.getAttribute('data-value') || liSw.value || '');
+                        if (ltSw && ltSw.indexOf('seciniz') === -1 && ltSw.indexOf('lutfen') === -1) {
+                            if (ltSw.startsWith(kAranan) || (lvSw && lvSw.startsWith(kAranan))) {
+                                secilenLi = liSw;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // 3. Öncelik: İçerme (Includes) Substring Eşleşmesi
+                if (!secilenLi && kAranan.length > 2) {
+                    for (var liM = 0; liM < liItems.length; liM++) {
+                        var li3 = liItems[liM];
+                        var lt3 = kanonikMetin(li3.textContent);
+                        if (lt3 && lt3.indexOf('seciniz') === -1 && lt3.indexOf('lutfen') === -1) {
+                            if (lt3.indexOf(kAranan) !== -1 || kAranan.indexOf(lt3) !== -1) {
+                                secilenLi = li3;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // 4. Yıl ve Dönem Eşleşmesi
                 if (!secilenLi) {
                     var yillar2 = aranan.match(/\d{4}/g) || [];
                     var don1 = kAranan.indexOf('1') !== -1 || kAranan.indexOf('i') !== -1 || kAranan.indexOf('bir') !== -1;
@@ -712,32 +747,7 @@
                     }
                 }
 
-                // 3. Substring Eşleşmesi
-                if (!secilenLi && kAranan.length > 2) {
-                    for (var liM = 0; liM < liItems.length; liM++) {
-                        var li3 = liItems[liM];
-                        var lt3 = kanonikMetin(li3.textContent);
-                        if (lt3 && (lt3.indexOf(kAranan) !== -1 || kAranan.indexOf(lt3) !== -1)) {
-                            secilenLi = li3;
-                            break;
-                        }
-                    }
-                }
-
-                // 4. Fallback
-                if (!secilenLi && liItems.length > 0) {
-                    for (var liK = 0; liK < liItems.length; liK++) {
-                        var li4 = liItems[liK];
-                        var lt4 = kanonikMetin(li4.textContent);
-                        if (lt4.indexOf('seciniz') === -1 && lt4.indexOf('sec') === -1 && lt4.indexOf('lutfen') === -1) {
-                            secilenLi = li4;
-                            break;
-                        }
-                    }
-                    if (!secilenLi && liItems.length > 1) secilenLi = liItems[1];
-                    else if (!secilenLi) secilenLi = liItems[0];
-                }
-
+                // KRİTİK KURAL: Asla fallback ile rastgele öğe seçme!
                 if (secilenLi) {
                     vurgula(secilenLi, '#22c55e');
                     var secilenMetin = secilenLi.textContent.trim();
@@ -771,6 +781,7 @@
             logEkle('Telerik DropDown DOM simülasyonunda hata: ' + domErr.message, 'uyari');
         }
 
+        logEkle('❌ Telerik RadComboBox içinde eşleşen seçenek bulunamadı: "' + aranan + '"', 'uyari');
         return false;
     }
 
@@ -836,7 +847,7 @@
             var options = selectEl.options;
             var secilenIndex = -1;
 
-            // 1. Tam Kanonik Eşleşme
+            // 1. Öncelik: Tam Kanonik Eşleşme
             for (var i = 0; i < options.length; i++) {
                 var opt = options[i];
                 var kOpt = kanonikMetin(opt.textContent);
@@ -847,7 +858,39 @@
                 }
             }
 
-            // 2. Yıl ve Dönem Özel Eşleşmesi (Öğrenim Yılı için: 2026, 2027, I. Dönem / 1. Dönem)
+            // 2. Öncelik: Kelime / Başlangıç Eşleşmesi
+            if (secilenIndex === -1) {
+                for (var sIdx = 0; sIdx < options.length; sIdx++) {
+                    var optS = options[sIdx];
+                    var kOptS = kanonikMetin(optS.textContent);
+                    var kValS = kanonikMetin(optS.value);
+                    if (kOptS && kOptS.indexOf('seciniz') === -1 && kOptS.indexOf('lutfen') === -1) {
+                        if (kOptS.startsWith(kAranan) || (kValS && kValS.startsWith(kAranan))) {
+                            secilenIndex = sIdx;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // 3. Öncelik: İçerme (Includes) Substring Eşleşmesi
+            if (secilenIndex === -1 && kAranan.length > 2) {
+                for (var m = 0; m < options.length; m++) {
+                    var o2 = options[m];
+                    var optText2 = kanonikMetin(o2.textContent);
+                    var optVal2 = kanonikMetin(o2.value);
+
+                    if (optText2 && optText2.indexOf('seciniz') === -1 && optText2.indexOf('lutfen') === -1) {
+                        if ((optText2 && (optText2.indexOf(kAranan) !== -1 || kAranan.indexOf(optText2) !== -1)) ||
+                            (optVal2 && (optVal2.indexOf(kAranan) !== -1 || kAranan.indexOf(optVal2) !== -1))) {
+                            secilenIndex = m;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // 4. Yıl ve Dönem Özel Eşleşmesi (Öğrenim Yılı için: 2026, 2027, I. Dönem / 1. Dönem)
             if (secilenIndex === -1) {
                 var yillar = aranan.match(/\d{4}/g) || [];
                 var donem1 = kAranan.indexOf('1') !== -1 || kAranan.indexOf('i') !== -1 || kAranan.indexOf('bir') !== -1;
@@ -876,38 +919,6 @@
                             }
                         }
                     }
-                }
-            }
-
-            // 3. Kısmi İçerme / Substring Eşleşmesi
-            if (secilenIndex === -1 && kAranan.length > 2) {
-                for (var m = 0; m < options.length; m++) {
-                    var o2 = options[m];
-                    var optText2 = kanonikMetin(o2.textContent);
-                    var optVal2 = kanonikMetin(o2.value);
-
-                    if ((optText2 && (optText2.indexOf(kAranan) !== -1 || kAranan.indexOf(optText2) !== -1)) ||
-                        (optVal2 && (optVal2.indexOf(kAranan) !== -1 || kAranan.indexOf(optVal2) !== -1))) {
-                        secilenIndex = m;
-                        break;
-                    }
-                }
-            }
-
-            // 4. Fallback: Seçiniz olmayan ilk geçerli seçenek
-            if (secilenIndex === -1 && options.length > 0) {
-                for (var k = 0; k < options.length; k++) {
-                    var op = options[k];
-                    var txt = kanonikMetin(op.textContent);
-                    var val = (op.value || '').trim();
-                    if (val !== '' && txt.indexOf('seciniz') === -1 && txt.indexOf('sec') === -1 && txt.indexOf('lutfen') === -1) {
-                        secilenIndex = k;
-                        logEkle('Kutuda "' + aranan + '" tam bulunamadı, ilk seçenek seçildi: ' + op.textContent, 'uyari');
-                        break;
-                    }
-                }
-                if (secilenIndex === -1 && options.length > 1) {
-                    secilenIndex = 1;
                 }
             }
 
@@ -1198,7 +1209,11 @@
             ['id', 'basvuruNo', 'tc', 'ad', 'soyad', 'dogumTarihi', 'basvuruTuru', 'ogrenimYili', 'kapsam',
              'eposta', 'telefon', 'adres', 'enSonMezuniyet', 'mezunOlduguOkul', 'getirdigiBelge', 'belgeTarihi',
              'alan', 'dal', 'kalfalikSinav', 'dogrudanKalfalik', 'kalfalikVeUstalik', 'kalfalikVeBasariliUstalik',
-             'ustalikSinav', 'dogrudanUstalik', 'ustaTalepTuru', 'ustaDayanakBelge', 'ustaBelgeSayisi'].forEach(function (anahtar) {
+             'ustalikSinav', 'dogrudanUstalik', 'ustaTalepTuru', 'ustaDayanakBelge', 'ustaBelgeSayisi',
+             'calisma1Cesit', 'calisma1Kurum', 'calisma1Sayi', 'calisma1Baslangic', 'calisma1Bitis', 'calisma1Aciklama',
+             'calisma2Cesit', 'calisma2Kurum', 'calisma2Sayi', 'calisma2Baslangic', 'calisma2Bitis', 'calisma2Aciklama',
+             'calisma3Cesit', 'calisma3Kurum', 'calisma3Sayi', 'calisma3Baslangic', 'calisma3Bitis', 'calisma3Aciklama',
+             'calisma4Cesit', 'calisma4Kurum', 'calisma4Sayi', 'calisma4Baslangic', 'calisma4Bitis', 'calisma4Aciklama'].forEach(function (anahtar) {
                 if (k[anahtar] !== undefined && duz[anahtar] === undefined) {
                     duz[anahtar] = k[anahtar];
                 }
@@ -1526,12 +1541,18 @@
         var alanEl = ogretilmisAlanBul('alan') || evrenselInputBul(['cmbalan', 'ddlalan', 'alan', 'alanadi', 'meslek', 'txtalan']);
         if (alanEl && k.alan) {
             logEkle('Alan seçiliyor (Telerik cmbAlan / Evrensel Motor): ' + k.alan, 'islem');
-            await evrenselSecimYap(alanEl, k.alan, true);
+            var alanSecildi = await evrenselSecimYap(alanEl, k.alan, true);
+            if (!alanSecildi) {
+                var alanHata = '❌ MESLEKİ ALAN BULUNAMADI / SEÇİLEMEDİ: "' + k.alan + '"';
+                logEkle(alanHata, 'hata');
+                durum(alanHata, '#f87171');
+                throw new Error(alanHata);
+            }
             vurgula(alanEl, '#38bdf8');
 
-            // Dal dropdown'ının AJAX & PostBack ile dolmasını bekle
-            logEkle('Alan seçimi sonrası Dal RadComboBox listesinin yüklenmesi bekleniyor...', 'islem');
-            await postBackBitisiniBekle(4000, 'cmbAlan Seçimi ve Dal PostBack');
+            // Dal dropdown'ının AJAX & UpdatePanel ile dolmasını bekle
+            logEkle('Alan seçimi sonrası Dal RadComboBox listesinin UpdatePanel ile yüklenmesi bekleniyor...', 'islem');
+            await postBackBitisiniBekle(3000, 'cmbAlan Seçimi ve Dal PostBack');
             
             // Dal RadComboBox / DropDown öğelerinin dolmasını akıllı polling ile bekle
             var baslangicDal = Date.now();
@@ -1565,7 +1586,13 @@
         var dalEl = ogretilmisAlanBul('dal') || evrenselInputBul(['cmbdal', 'ddldal', 'dal', 'daladi', 'txtdal']);
         if (dalEl && k.dal) {
             logEkle('Dal seçiliyor (Telerik cmbDal / Evrensel Motor): ' + k.dal, 'islem');
-            await evrenselSecimYap(dalEl, k.dal, true);
+            var dalSecildi = await evrenselSecimYap(dalEl, k.dal, true);
+            if (!dalSecildi) {
+                var dalHata = '❌ MESLEKİ DAL BULUNAMADI / SEÇİLEMEDİ: "' + k.dal + '"';
+                logEkle(dalHata, 'hata');
+                durum(dalHata, '#f87171');
+                throw new Error(dalHata);
+            }
             vurgula(dalEl, '#38bdf8');
             await bekle(300);
         }

@@ -481,23 +481,41 @@
             <!-- KALFALIK / USTALIK ÇALIŞMIŞLIK VE DENKLİK -->
             <div id="ustalikKalfalikAlanlari">
                 <div class="form-section">
-                    <h3>💼 Çalışmışlık Belgeleri (Hizmet / SGK)</h3>
+                    <h3>💼 Değerlendirmeye Alınan Belgeler / Çalışmışlık Bilgileri (4 Belge / SGK)</h3>
                     <div class="row">
                         <div class="col">
-                            <div style="border-bottom:1px solid var(--border-color); margin-bottom:10px; color:var(--primary); font-weight:600;">2. Çalışmışlık</div>
-                            <div class="form-group"><label for="calisma2Cesit">Belge Çeşidi</label><select id="calisma2Cesit"><option value="">Seçiniz</option><option>Diploma</option><option>Kurs Belgesi</option><option>Hizmet Belgesi</option><option>SGK</option><option>Diğer</option></select></div>
+                            <div style="border-bottom:1px solid var(--border-color); margin-bottom:10px; color:var(--primary); font-weight:600;">1. Belge / Çalışmışlık</div>
+                            <div class="form-group"><label for="calisma1Cesit">Belge Çeşidi</label><select id="calisma1Cesit"><option value="">Seçiniz</option><option>Diploma</option><option>Tastikname</option><option>Kurs Belgesi</option><option>Hizmet Belgesi</option><option>SGK</option><option>Kalfalık / Ustalık Belgesi</option><option>Diğer</option></select></div>
+                            <div class="form-group"><label for="calisma1Kurum">Kurum / Sayı</label><div style="display:flex; gap:6px; width:100%;"><input type="text" id="calisma1Kurum" placeholder="Kurum Adı" style="flex:2;"><input type="text" id="calisma1Sayi" placeholder="Sayı" style="flex:1;"></div></div>
+                            <div class="form-group"><label for="calisma1Baslangic">Başlangıç/Bitiş</label><div style="display:flex; gap:6px; width:100%;"><input type="date" id="calisma1Baslangic" style="flex:1;"><input type="date" id="calisma1Bitis" style="flex:1;"></div></div>
+                            <div class="alan-uyari" id="calisma1Uyari"></div>
+                            <div class="form-group"><label for="calisma1Aciklama">Açıklamalar</label><textarea id="calisma1Aciklama" rows="1"></textarea></div>
+                        </div>
+                        <div class="col">
+                            <div style="border-bottom:1px solid var(--border-color); margin-bottom:10px; color:var(--primary); font-weight:600;">2. Belge / Çalışmışlık</div>
+                            <div class="form-group"><label for="calisma2Cesit">Belge Çeşidi</label><select id="calisma2Cesit"><option value="">Seçiniz</option><option>Diploma</option><option>Tastikname</option><option>Kurs Belgesi</option><option>Hizmet Belgesi</option><option>SGK</option><option>Kalfalık / Ustalık Belgesi</option><option>Diğer</option></select></div>
                             <div class="form-group"><label for="calisma2Kurum">Kurum / Sayı</label><div style="display:flex; gap:6px; width:100%;"><input type="text" id="calisma2Kurum" placeholder="Kurum Adı" style="flex:2;"><input type="text" id="calisma2Sayi" placeholder="Sayı" style="flex:1;"></div></div>
                             <div class="form-group"><label for="calisma2Baslangic">Başlangıç/Bitiş</label><div style="display:flex; gap:6px; width:100%;"><input type="date" id="calisma2Baslangic" style="flex:1;"><input type="date" id="calisma2Bitis" style="flex:1;"></div></div>
                             <div class="alan-uyari" id="calisma2Uyari"></div>
                             <div class="form-group"><label for="calisma2Aciklama">Açıklamalar</label><textarea id="calisma2Aciklama" rows="1"></textarea></div>
                         </div>
+                    </div>
+                    <div class="row" style="margin-top:14px;">
                         <div class="col">
-                            <div style="border-bottom:1px solid var(--border-color); margin-bottom:10px; color:var(--primary); font-weight:600;">3. Çalışmışlık</div>
-                            <div class="form-group"><label for="calisma3Cesit">Belge Çeşidi</label><select id="calisma3Cesit"><option value="">Seçiniz</option><option>Diploma</option><option>Kurs Belgesi</option><option>Hizmet Belgesi</option><option>SGK</option><option>Diğer</option></select></div>
+                            <div style="border-bottom:1px solid var(--border-color); margin-bottom:10px; color:var(--primary); font-weight:600;">3. Belge / Çalışmışlık</div>
+                            <div class="form-group"><label for="calisma3Cesit">Belge Çeşidi</label><select id="calisma3Cesit"><option value="">Seçiniz</option><option>Diploma</option><option>Tastikname</option><option>Kurs Belgesi</option><option>Hizmet Belgesi</option><option>SGK</option><option>Kalfalık / Ustalık Belgesi</option><option>Diğer</option></select></div>
                             <div class="form-group"><label for="calisma3Kurum">Kurum / Sayı</label><div style="display:flex; gap:6px; width:100%;"><input type="text" id="calisma3Kurum" placeholder="Kurum Adı" style="flex:2;"><input type="text" id="calisma3Sayi" placeholder="Sayı" style="flex:1;"></div></div>
                             <div class="form-group"><label for="calisma3Baslangic">Başlangıç/Bitiş</label><div style="display:flex; gap:6px; width:100%;"><input type="date" id="calisma3Baslangic" style="flex:1;"><input type="date" id="calisma3Bitis" style="flex:1;"></div></div>
                             <div class="alan-uyari" id="calisma3Uyari"></div>
                             <div class="form-group"><label for="calisma3Aciklama">Açıklamalar</label><textarea id="calisma3Aciklama" rows="1"></textarea></div>
+                        </div>
+                        <div class="col">
+                            <div style="border-bottom:1px solid var(--border-color); margin-bottom:10px; color:var(--primary); font-weight:600;">4. Belge / Çalışmışlık</div>
+                            <div class="form-group"><label for="calisma4Cesit">Belge Çeşidi</label><select id="calisma4Cesit"><option value="">Seçiniz</option><option>Diploma</option><option>Tastikname</option><option>Kurs Belgesi</option><option>Hizmet Belgesi</option><option>SGK</option><option>Kalfalık / Ustalık Belgesi</option><option>Diğer</option></select></div>
+                            <div class="form-group"><label for="calisma4Kurum">Kurum / Sayı</label><div style="display:flex; gap:6px; width:100%;"><input type="text" id="calisma4Kurum" placeholder="Kurum Adı" style="flex:2;"><input type="text" id="calisma4Sayi" placeholder="Sayı" style="flex:1;"></div></div>
+                            <div class="form-group"><label for="calisma4Baslangic">Başlangıç/Bitiş</label><div style="display:flex; gap:6px; width:100%;"><input type="date" id="calisma4Baslangic" style="flex:1;"><input type="date" id="calisma4Bitis" style="flex:1;"></div></div>
+                            <div class="alan-uyari" id="calisma4Uyari"></div>
+                            <div class="form-group"><label for="calisma4Aciklama">Açıklamalar</label><textarea id="calisma4Aciklama" rows="1"></textarea></div>
                         </div>
                     </div>
                 </div>
@@ -1000,6 +1018,12 @@ const ALANLAR = [
     { id: 'ustaBelgeTarihi', ad: 'Usta Öğrt. Belge Tarihi', tip: 'tarih' },
     { id: 'ustaBelgeSayisi', ad: 'Usta Öğrt. Belge Sayısı', tip: 'metin' },
     { id: 'ustaTalepTuru', ad: 'Usta Öğrt. Talep Türü', tip: 'metin' },
+    { id: 'calisma1Cesit', ad: '1.Çalışma Çeşit', tip: 'metin' },
+    { id: 'calisma1Kurum', ad: '1.Çalışma Kurum', tip: 'metin' },
+    { id: 'calisma1Sayi', ad: '1.Çalışma Sayı', tip: 'metin' },
+    { id: 'calisma1Baslangic', ad: '1.Çalışma Başlangıç', tip: 'tarih' },
+    { id: 'calisma1Bitis', ad: '1.Çalışma Bitiş', tip: 'tarih' },
+    { id: 'calisma1Aciklama', ad: '1.Çalışma Açıklama', tip: 'metin' },
     { id: 'calisma2Cesit', ad: '2.Çalışma Çeşit', tip: 'metin' },
     { id: 'calisma2Kurum', ad: '2.Çalışma Kurum', tip: 'metin' },
     { id: 'calisma2Sayi', ad: '2.Çalışma Sayı', tip: 'metin' },
@@ -1012,6 +1036,12 @@ const ALANLAR = [
     { id: 'calisma3Baslangic', ad: '3.Çalışma Başlangıç', tip: 'tarih' },
     { id: 'calisma3Bitis', ad: '3.Çalışma Bitiş', tip: 'tarih' },
     { id: 'calisma3Aciklama', ad: '3.Çalışma Açıklama', tip: 'metin' },
+    { id: 'calisma4Cesit', ad: '4.Çalışma Çeşit', tip: 'metin' },
+    { id: 'calisma4Kurum', ad: '4.Çalışma Kurum', tip: 'metin' },
+    { id: 'calisma4Sayi', ad: '4.Çalışma Sayı', tip: 'metin' },
+    { id: 'calisma4Baslangic', ad: '4.Çalışma Başlangıç', tip: 'tarih' },
+    { id: 'calisma4Bitis', ad: '4.Çalışma Bitiş', tip: 'tarih' },
+    { id: 'calisma4Aciklama', ad: '4.Çalışma Açıklama', tip: 'metin' },
     { id: 'denklikBelgeTarihi', ad: 'Denklik Belge Tarihi', tip: 'tarih' },
     { id: 'kalfalikSinav', ad: 'Kalfalık Sınavlarına Girmesi', tip: 'onay' },
     { id: 'dogrudanKalfalik', ad: 'Doğrudan Kalfalık Belgesi Düzenlenmesi', tip: 'onay' },
@@ -1565,7 +1595,7 @@ function formuTemizle() {
 }
 
 function uyarilariTemizle() {
-    ['tcUyari', 'dogumUyari', 'calisma2Uyari', 'calisma3Uyari'].forEach(id => {
+    ['tcUyari', 'dogumUyari', 'calisma1Uyari', 'calisma2Uyari', 'calisma3Uyari', 'calisma4Uyari'].forEach(id => {
         const el = $(id); if (el) el.textContent = '';
     });
     ['tc', 'dogumTarihi'].forEach(id => $(id).classList.remove('hatali'));
@@ -2003,72 +2033,67 @@ function sonucSablonuKur(k) {
     const dogUst = !!k.dogrudanUstalik;
 
     const container = $('sablonIcerikAlani');
-    const belgeler = [];
-    let bSira = 1;
     
-    if (k.enSonMezuniyet || k.mezunOlduguOkul || k.getirdigiBelge) {
-        belgeler.push({
-            sira: bSira++,
-            cesit: k.getirdigiBelge || k.enSonMezuniyet || 'Diploma / Mezuniyet Belgesi',
-            kurum: k.mezunOlduguOkul || '-',
-            tarihSayi: birlestir([trTarih(formatTarih(k.belgeTarihi)), bul('ilkogretimBelgeSayisi') || bul('liseBelgeSayisi') || bul('onlisansBelgeSayisi')]),
-            aciklama: k.mezuniyetAciklama || k.enSonMezuniyet || '-'
-        });
-    }
+    // 4 Tam Satır Belge Listesi
+    const belgeler = [];
+    
+    // 1. Belge
+    let b1Cesit = bul('calisma1Cesit') || k.getirdigiBelge || k.enSonMezuniyet || 'Diploma';
+    let b1Kurum = bul('calisma1Kurum') || k.mezunOlduguOkul || '-';
+    let b1TarihSayi = birlestir([
+        (bul('calisma1Baslangic') || bul('calisma1Bitis')) ? `${trTarih(formatTarih(bul('calisma1Baslangic')))} - ${trTarih(formatTarih(bul('calisma1Bitis')))}` : trTarih(formatTarih(k.belgeTarihi)),
+        bul('calisma1Sayi') || bul('ilkogretimBelgeSayisi') || bul('liseBelgeSayisi') || bul('onlisansBelgeSayisi')
+    ]) || '-';
+    let b1Aciklama = bul('calisma1Aciklama') || k.mezuniyetAciklama || (k.kapsam ? 'Kapsam: ' + k.kapsam : '-');
+    belgeler.push({ sira: 1, cesit: b1Cesit, kurum: b1Kurum, tarihSayi: b1TarihSayi, aciklama: b1Aciklama });
 
-    if (k.basvuruTuru === 'İş Pedagojisi Kursu') {
-        if (k.ustaDayanakBelge || k.ustaBelgeSayisi) {
-            belgeler.push({
-                sira: bSira++,
-                cesit: k.ustaDayanakBelge || 'Usta Öğreticilik Dayanak Belgesi',
-                kurum: aktifKurum || '-',
-                tarihSayi: birlestir([trTarih(formatTarih(k.ustaBelgeTarihi)), bul('ustaBelgeSayisi')]),
-                aciklama: k.ustaTalepTuru || 'İş Pedagojisi Talebi'
-            });
-        }
-    } else {
-        [2, 3].forEach(n => {
-            const cesit = bul('calisma' + n + 'Cesit') || (bul('calisma' + n + 'Kurum') ? `${n}. Çalışmışlık Belgesi` : '');
-            const kurum = bul('calisma' + n + 'Kurum');
-            const sayi = bul('calisma' + n + 'Sayi');
-            const bas = bul('calisma' + n + 'Baslangic');
-            const bit = bul('calisma' + n + 'Bitis');
-            const acik = bul('calisma' + n + 'Aciklama');
-            
-            if (cesit || kurum || sayi || bas || bit || acik) {
-                const tarihAraligi = (bas || bit) ? `${trTarih(formatTarih(bas))} - ${trTarih(formatTarih(bit))}` : '';
-                belgeler.push({
-                    sira: bSira++,
-                    cesit: cesit || 'Hizmet / SGK Belgesi',
-                    kurum: kurum || '-',
-                    tarihSayi: birlestir([tarihAraligi, sayi ? 'Sayı: ' + sayi : '']),
-                    aciklama: acik || (k.kapsam ? 'Kapsam: ' + k.kapsam : '-')
-                });
-            }
-        });
+    // 2. Belge
+    let b2Cesit = bul('calisma2Cesit');
+    let b2Kurum = bul('calisma2Kurum');
+    let b2TarihSayi = birlestir([
+        (bul('calisma2Baslangic') || bul('calisma2Bitis')) ? `${trTarih(formatTarih(bul('calisma2Baslangic')))} - ${trTarih(formatTarih(bul('calisma2Bitis')))}` : '',
+        bul('calisma2Sayi') ? 'Sayı: ' + bul('calisma2Sayi') : ''
+    ]);
+    let b2Aciklama = bul('calisma2Aciklama');
+    if (k.basvuruTuru === 'İş Pedagojisi Kursu' && (k.ustaDayanakBelge || k.ustaBelgeSayisi)) {
+        b2Cesit = k.ustaDayanakBelge || 'Usta Öğreticilik Dayanak Belgesi';
+        b2Kurum = aktifKurum || '-';
+        b2TarihSayi = birlestir([trTarih(formatTarih(k.ustaBelgeTarihi)), bul('ustaBelgeSayisi')]);
+        b2Aciklama = k.ustaTalepTuru || 'İş Pedagojisi Talebi';
     }
+    belgeler.push({ sira: 2, cesit: b2Cesit || '', kurum: b2Kurum || '', tarihSayi: b2TarihSayi || '', aciklama: b2Aciklama || '' });
 
-    if (belgeler.length === 0) {
-        belgeler.push({
-            sira: 1,
-            cesit: k.getirdigiBelge || 'Diploma',
-            kurum: k.mezunOlduguOkul || '-',
-            tarihSayi: trTarih(formatTarih(k.belgeTarihi)) || '-',
-            aciklama: k.kapsam ? 'Kapsam: ' + k.kapsam : '-'
-        });
-    }
+    // 3. Belge
+    let b3Cesit = bul('calisma3Cesit');
+    let b3Kurum = bul('calisma3Kurum');
+    let b3TarihSayi = birlestir([
+        (bul('calisma3Baslangic') || bul('calisma3Bitis')) ? `${trTarih(formatTarih(bul('calisma3Baslangic')))} - ${trTarih(formatTarih(bul('calisma3Bitis')))}` : '',
+        bul('calisma3Sayi') ? 'Sayı: ' + bul('calisma3Sayi') : ''
+    ]);
+    let b3Aciklama = bul('calisma3Aciklama');
+    belgeler.push({ sira: 3, cesit: b3Cesit || '', kurum: b3Kurum || '', tarihSayi: b3TarihSayi || '', aciklama: b3Aciklama || '' });
+
+    // 4. Belge
+    let b4Cesit = bul('calisma4Cesit');
+    let b4Kurum = bul('calisma4Kurum');
+    let b4TarihSayi = birlestir([
+        (bul('calisma4Baslangic') || bul('calisma4Bitis')) ? `${trTarih(formatTarih(bul('calisma4Baslangic')))} - ${trTarih(formatTarih(bul('calisma4Bitis')))}` : '',
+        bul('calisma4Sayi') ? 'Sayı: ' + bul('calisma4Sayi') : ''
+    ]);
+    let b4Aciklama = bul('calisma4Aciklama');
+    belgeler.push({ sira: 4, cesit: b4Cesit || '', kurum: b4Kurum || '', tarihSayi: b4TarihSayi || '', aciklama: b4Aciklama || '' });
 
     let belgeSatirlariHtml = belgeler.map(b => `
         <tr>
-            <td style="text-align:center; padding:5px; border:1px solid #000;">${b.sira}</td>
-            <td style="padding:5px; border:1px solid #000;">${b.cesit}</td>
-            <td style="padding:5px; border:1px solid #000;">${b.kurum}</td>
-            <td style="padding:5px; border:1px solid #000; text-align:center;">${b.tarihSayi || '-'}</td>
-            <td style="padding:5px; border:1px solid #000;">${b.aciklama}</td>
+            <td style="text-align:center; padding:6px 4px; border:1px solid #000; font-weight:bold;">${b.sira}</td>
+            <td style="padding:6px 8px; border:1px solid #000;">${b.cesit || '&nbsp;'}</td>
+            <td style="padding:6px 8px; border:1px solid #000;">${b.kurum || '&nbsp;'}</td>
+            <td style="padding:6px 8px; border:1px solid #000; text-align:center;">${b.tarihSayi || '&nbsp;'}</td>
+            <td style="padding:6px 8px; border:1px solid #000;">${b.aciklama || '&nbsp;'}</td>
         </tr>
     `).join('');
 
-    const kutuSecim = (durum) => durum ? '<strong style="font-size:16px; color:#000;">[ X ]</strong>' : '<span style="color:#555;">[ &nbsp; ]</span>';
+    const kutuSecim = (durum) => durum ? '<strong style="font-size:15px; color:#000;">[ X ]</strong>' : '<span style="color:#222; font-size:14px;">[ &nbsp; ]</span>';
     const bugunTarih = trTarih(formatTarih(k.denklikBelgeTarihi || k.kayitTarihi || new Date()));
 
     container.innerHTML = `
@@ -2082,36 +2107,36 @@ function sonucSablonuKur(k) {
             </div>
         </div>
 
-        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:12px; font-weight:bold;">
-            <div>Sonuç Belgesinin Tarihi: ${bugunTarih}</div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:12px; font-weight:bold; font-family:'Times New Roman', serif;">
+            <div>SONUÇ BELGESİNİN TARİHİ: ${bugunTarih}</div>
             <div>Sonuç Belgesinin Sayısı: ${k.basvuruNo || '-'}</div>
         </div>
 
-        <div style="font-weight:bold; font-size:12px; margin:8px 0 4px; text-transform:uppercase;">BAŞVURU SAHİBİNİN</div>
-        <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:12px;">
+        <div style="font-weight:bold; font-size:12px; margin:8px 0 4px; text-transform:uppercase; font-family:'Times New Roman', serif;">BAŞVURU SAHİBİNİN BİLGİLERİ</div>
+        <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:12px; font-family:'Times New Roman', serif;">
             <tr>
-                <td style="width:25%; font-weight:bold; background:#f5f5f5; border:1px solid #000; padding:5px;">Adı Soyadı</td>
-                <td style="width:35%; font-weight:bold; border:1px solid #000; padding:5px; font-size:13px;">${k.ad || ''} ${k.soyad || ''}</td>
-                <td style="width:20%; font-weight:bold; background:#f5f5f5; border:1px solid #000; padding:5px;">T.C. Kimlik No</td>
-                <td style="width:20%; font-weight:bold; border:1px solid #000; padding:5px; text-align:center; font-size:13px;">${k.tc || '-'}</td>
+                <td style="width:20%; font-weight:bold; background:#f5f5f5; border:1px solid #000; padding:6px 8px;">Adı Soyadı</td>
+                <td style="width:30%; font-weight:bold; border:1px solid #000; padding:6px 8px; font-size:13px;">${k.ad || ''} ${k.soyad || ''}</td>
+                <td style="width:20%; font-weight:bold; background:#f5f5f5; border:1px solid #000; padding:6px 8px;">TC. Kimlik No</td>
+                <td style="width:30%; font-weight:bold; border:1px solid #000; padding:6px 8px; text-align:center; font-size:13px;">${k.tc || '-'}</td>
             </tr>
             <tr>
-                <td style="font-weight:bold; background:#f5f5f5; border:1px solid #000; padding:5px;">Meslek Alanı</td>
-                <td style="border:1px solid #000; padding:5px;"><strong>${k.alan || '-'}</strong></td>
-                <td style="font-weight:bold; background:#f5f5f5; border:1px solid #000; padding:5px;">Meslek Dalı</td>
-                <td style="border:1px solid #000; padding:5px;">${k.dal || '-'}</td>
+                <td style="font-weight:bold; background:#f5f5f5; border:1px solid #000; padding:6px 8px;">Başvuru Yapılan Alan / Dal</td>
+                <td colspan="3" style="border:1px solid #000; padding:6px 8px; font-weight:600;">
+                    <strong>${k.alan || '-'}</strong> / ${k.dal || '-'}
+                </td>
             </tr>
         </table>
 
-        <div style="font-weight:bold; font-size:12px; margin:8px 0 4px; text-transform:uppercase;">DEĞERLENDİRMEYE ALINAN BELGELER</div>
-        <table style="width:100%; border-collapse:collapse; font-size:11px; margin-bottom:10px;">
+        <div style="font-weight:bold; font-size:12px; margin:8px 0 4px; text-transform:uppercase; font-family:'Times New Roman', serif;">DEĞERLENDİRMEYE ALINAN BELGELER</div>
+        <table style="width:100%; border-collapse:collapse; font-size:11.5px; margin-bottom:10px; font-family:'Times New Roman', serif;">
             <thead>
-                <tr style="background:#f2f2f2; font-weight:bold;">
-                    <th style="width:6%; border:1px solid #000; padding:5px; text-align:center;">Sıra No</th>
-                    <th style="width:26%; border:1px solid #000; padding:5px;">Belge Çeşidi</th>
-                    <th style="width:28%; border:1px solid #000; padding:5px;">Belgeyi Veren Kurum</th>
-                    <th style="width:20%; border:1px solid #000; padding:5px; text-align:center;">Belgenin Tarih ve Sayısı</th>
-                    <th style="width:20%; border:1px solid #000; padding:5px;">Belge ile İlgili Açıklamalar</th>
+                <tr style="background:#f2f2f2; font-weight:bold; text-align:center;">
+                    <th style="width:7%; border:1px solid #000; padding:6px 4px;">Sıra No</th>
+                    <th style="width:25%; border:1px solid #000; padding:6px 8px;">Belge Çeşidi</th>
+                    <th style="width:27%; border:1px solid #000; padding:6px 8px;">Belgeyi Veren Kurum</th>
+                    <th style="width:21%; border:1px solid #000; padding:6px 8px;">Belgenin Tarih ve Sayısı</th>
+                    <th style="width:20%; border:1px solid #000; padding:6px 8px;">Belge ile ilgili açıklamalar</th>
                 </tr>
             </thead>
             <tbody>
@@ -2119,60 +2144,59 @@ function sonucSablonuKur(k) {
             </tbody>
         </table>
 
-        <div style="font-size:12px; line-height:1.5; margin:10px 0; text-align:justify; font-style:italic;">
+        <div style="font-size:12px; line-height:1.5; margin:10px 0; text-align:justify; font-style:italic; font-family:'Times New Roman', serif;">
             Yukarıda bilgileri bulunan başvuru sahibinin evrakları Önceki Öğrenmelerin Tanınması ve Denklik Komisyonu tarafından incelenmiş ve sonuç aşağıda belirtilmiştir.
         </div>
 
-        <div style="font-weight:bold; font-size:12px; margin:8px 0 4px; text-transform:uppercase;">BAŞVURU SONUCU</div>
-        <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:14px;">
+        <div style="font-weight:bold; font-size:12px; margin:8px 0 4px; text-transform:uppercase; font-family:'Times New Roman', serif;">BAŞVURU SONUCU</div>
+        <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:14px; font-family:'Times New Roman', serif;">
             <tbody>
                 <tr style="${kalSinav ? 'background:#f0fdf4; font-weight:bold;' : ''}">
                     <td style="border:1px solid #000; text-align:center; padding:6px; width:10%;">${kutuSecim(kalSinav)}</td>
-                    <td style="border:1px solid #000; padding:6px;">Kalfalık sınavlarına girmesi</td>
+                    <td style="border:1px solid #000; padding:6px 10px;">Kalfalık sınavlarına girmesi</td>
                 </tr>
                 <tr style="${dogKal ? 'background:#f0fdf4; font-weight:bold;' : ''}">
                     <td style="border:1px solid #000; text-align:center; padding:6px; width:10%;">${kutuSecim(dogKal)}</td>
-                    <td style="border:1px solid #000; padding:6px;">Doğrudan kalfalık belgesi düzenlenmesi</td>
+                    <td style="border:1px solid #000; padding:6px 10px;">Doğrudan kalfalık belgesi düzenlenmesi</td>
                 </tr>
                 <tr style="${kalVeUst ? 'background:#f0fdf4; font-weight:bold;' : ''}">
                     <td style="border:1px solid #000; text-align:center; padding:6px; width:10%;">${kutuSecim(kalVeUst)}</td>
-                    <td style="border:1px solid #000; padding:6px;">Kalfalık sınavına girmesi, başarılı olması halinde ustalık sınavlarına alınması</td>
+                    <td style="border:1px solid #000; padding:6px 10px;">Kalfalık sınavına girmesi, başarılı olması halinde ustalık sınavlarına alınması</td>
                 </tr>
                 <tr style="${ustSinav ? 'background:#f0fdf4; font-weight:bold;' : ''}">
                     <td style="border:1px solid #000; text-align:center; padding:6px; width:10%;">${kutuSecim(ustSinav)}</td>
-                    <td style="border:1px solid #000; padding:6px;">Ustalık Sınavına Girmesi</td>
+                    <td style="border:1px solid #000; padding:6px 10px;">Ustalık sınavlarına girmesi</td>
                 </tr>
                 <tr style="${dogUst ? 'background:#f0fdf4; font-weight:bold;' : ''}">
                     <td style="border:1px solid #000; text-align:center; padding:6px; width:10%;">${kutuSecim(dogUst)}</td>
-                    <td style="border:1px solid #000; padding:6px;">Doğrudan Ustalık Belgesi Düzenlenmesi</td>
+                    <td style="border:1px solid #000; padding:6px 10px;">Doğrudan ustalık belgesi düzenlenmesi</td>
                 </tr>
             </tbody>
         </table>
     `;
 
     $('sablonAltImza').innerHTML = `
-        <div style="display:flex; justify-content:space-between; margin-top:16px; font-family:'Times New Roman', serif; text-align:center;">
+        <div style="display:flex; justify-content:space-between; margin-top:20px; font-family:'Times New Roman', serif; text-align:center;">
             <div style="width:40%;">
-                <div style="font-weight:bold; font-size:12.5px;">Üye</div>
-                <div style="font-size:12px; font-weight:600; margin-top:2px;">${komisyonAyarlari.uye1AdSoyad}</div>
-                <div style="font-size:11.5px; color:#333;">${komisyonAyarlari.uye1Unvan}</div>
+                <div style="font-size:12px; color:#333;">${komisyonAyarlari.uye1Kurum}</div>
+                <div style="font-size:12.5px; font-weight:bold; margin-top:2px;">${komisyonAyarlari.uye1AdSoyad}</div>
+                <div style="font-size:11.5px;">${komisyonAyarlari.uye1Unvan}</div>
                 <div style="margin-top:25px; border-top:1px dotted #000; padding-top:3px; font-size:11px;">İmza</div>
             </div>
             <div style="width:40%;">
-                <div style="font-weight:bold; font-size:12.5px;">Üye</div>
-                <div style="font-size:12px; font-weight:600; margin-top:2px;">${komisyonAyarlari.uye2AdSoyad}</div>
-                <div style="font-size:11.5px; color:#333;">${komisyonAyarlari.uye2Unvan}</div>
+                <div style="font-size:12px; color:#333;">${komisyonAyarlari.uye2Kurum}</div>
+                <div style="font-size:12.5px; font-weight:bold; margin-top:2px;">${komisyonAyarlari.uye2AdSoyad}</div>
+                <div style="font-size:11.5px;">${komisyonAyarlari.uye2Unvan}</div>
                 <div style="margin-top:25px; border-top:1px dotted #000; padding-top:3px; font-size:11px;">İmza</div>
             </div>
         </div>
 
-        <div style="text-align:center; margin-top:22px; font-family:'Times New Roman', serif;">
-            <div style="font-weight:bold; font-size:13px;">UYGUNDUR</div>
+        <div style="text-align:center; margin-top:24px; font-family:'Times New Roman', serif;">
+            <div style="font-weight:bold; font-size:13.5px;">UYGUNDUR</div>
             <div style="font-size:12px; margin:2px 0;">... / ... / 2026</div>
-            <div style="font-weight:bold; font-size:13px; margin-top:2px;">${komisyonAyarlari.baskanAdSoyad}</div>
             <div style="font-size:12px;">${komisyonAyarlari.baskanUnvan}</div>
-            <div style="font-size:11.5px; color:#444;">Komisyon Başkanı</div>
-            <div style="margin-top:18px; font-size:11px; font-style:italic;">İmza / Mühür</div>
+            <div style="font-weight:bold; font-size:13px; margin-top:2px;">${komisyonAyarlari.baskanAdSoyad}</div>
+            <div style="margin-top:16px; font-size:11.5px; font-style:italic;">İmza Mühür</div>
         </div>
     `;
 
@@ -2230,7 +2254,8 @@ function komisyonListesiKur() {
         <div style="position:relative; font-family:'Times New Roman', serif; margin-bottom:12px;">
             <div style="position:absolute; top:0; right:0; font-weight:bold; font-size:14px;">EK-2</div>
             <div style="text-align:center; font-size:13.5px; font-weight:bold; line-height:1.4;">
-                ${mem} İL DENKLİK KOMİSYONU BAŞVURU DEĞERLENDİRME LİSTESİ (${donem})
+                ${mem} İL DENKLİK KOMİSYONU<br>
+                BAŞVURU DEĞERLENDİRME LİSTESİ (${donem})
             </div>
         </div>
 
@@ -2276,9 +2301,11 @@ function komisyonListesiKur() {
                 <div style="margin-top:28px; border-top:1px dotted #000; padding-top:2px;">İmza</div>
             </div>
             <div style="width:30%;">
-                <div style="font-weight:bold; font-size:12.5px;">ONAY / Komisyon Başkanı</div>
+                <div style="font-weight:bold; font-size:12.5px;">UYGUNDUR</div>
+                <div style="font-size:11px; margin:2px 0;">... / ... / 2026</div>
                 <div style="font-weight:600; margin-top:2px;">${komisyonAyarlari.baskanAdSoyad}</div>
                 <div style="font-size:11px;">${komisyonAyarlari.baskanUnvan}</div>
+                <div style="font-size:10.5px; color:#444;">Komisyon Başkanı</div>
                 <div style="margin-top:28px; border-top:1px dotted #000; padding-top:2px;">İmza / Mühür</div>
             </div>
             <div style="width:30%;">
@@ -2317,11 +2344,12 @@ function denklikDefteriKur() {
             else if (k.ustalikSinav || k.basvuruTuru === 'Ustalık Sınavı') hak = 'Ustalık Sınavına Girmesi';
             else hak = k.basvuruTuru || '-';
 
+            const bulK = (id) => String(k[id] || '').trim();
             const alinanBelgeler = [
-                k.getirdigiBelge || k.enSonMezuniyet,
-                k.mezunOlduguOkul,
-                k.calisma2Kurum ? '2.Çalışma: ' + k.calisma2Kurum : '',
-                k.calisma3Kurum ? '3.Çalışma: ' + k.calisma3Kurum : ''
+                bulK('calisma1Cesit') ? `1.Belge: ${bulK('calisma1Cesit')} (${bulK('calisma1Kurum') || '-'})` : (k.getirdigiBelge || k.enSonMezuniyet ? `${k.getirdigiBelge || 'Diploma'}: ${k.mezunOlduguOkul || '-'}` : ''),
+                bulK('calisma2Cesit') ? `2.Belge: ${bulK('calisma2Cesit')} (${bulK('calisma2Kurum') || '-'})` : (bulK('calisma2Kurum') ? `2.Çalışma: ${bulK('calisma2Kurum')}` : ''),
+                bulK('calisma3Cesit') ? `3.Belge: ${bulK('calisma3Cesit')} (${bulK('calisma3Kurum') || '-'})` : (bulK('calisma3Kurum') ? `3.Çalışma: ${bulK('calisma3Kurum')}` : ''),
+                bulK('calisma4Cesit') ? `4.Belge: ${bulK('calisma4Cesit')} (${bulK('calisma4Kurum') || '-'})` : (bulK('calisma4Kurum') ? `4.Çalışma: ${bulK('calisma4Kurum')}` : '')
             ].filter(Boolean).join('; ');
 
             satirlarHtml += `
@@ -2360,12 +2388,12 @@ function denklikDefteriKur() {
                 <tr style="background:#f2f2f2; text-align:center; font-weight:bold;">
                     <th style="border:1px solid #000; padding:6px; width:35px;">Sıra No</th>
                     <th style="border:1px solid #000; padding:6px; width:130px;">Adı Soyadı</th>
-                    <th style="border:1px solid #000; padding:6px; width:95px;">Gelen Evrakın Tarih ve Sayısı</th>
-                    <th style="border:1px solid #000; padding:6px;">Değerlendirmeye Alınan Belgeler</th>
-                    <th style="border:1px solid #000; padding:6px; width:80px;">Denklik Belge Numarası</th>
-                    <th style="border:1px solid #000; padding:6px; width:75px;">Denklik Belge Tarihi</th>
-                    <th style="border:1px solid #000; padding:6px; width:180px;">Belgenin Kişiye Kazandırdığı Haklar</th>
-                    <th style="border:1px solid #000; padding:6px; width:140px;">Meslek Alanı / Dalı</th>
+                    <th style="border:1px solid #000; padding:6px; width:95px;">Gelen Evrakın Tarih ve sayısı</th>
+                    <th style="border:1px solid #000; padding:6px;">Değerlendirmeye alınan belgeler</th>
+                    <th style="border:1px solid #000; padding:6px; width:80px;">Denklik belge numarası</th>
+                    <th style="border:1px solid #000; padding:6px; width:75px;">Denklik belge Tarihi</th>
+                    <th style="border:1px solid #000; padding:6px; width:180px;">Belgenin kişiye kazandırdığı haklar</th>
+                    <th style="border:1px solid #000; padding:6px; width:140px;">Meslek Alanı/Dalı</th>
                     <th style="border:1px solid #000; padding:6px; width:95px;">Açıklamalar</th>
                 </tr>
             </thead>
@@ -2510,7 +2538,13 @@ const BASLIK_ESLESME = (function () {
         'kalfaliksinavi': 'kalfalikSinav',
         'dogrudankalfalik': 'dogrudanKalfalik',
         'ustaliksinavi': 'ustalikSinav',
-        'dogrudanustalik': 'dogrudanUstalik'
+        'dogrudanustalik': 'dogrudanUstalik',
+        '1calisma': 'calisma1Cesit', '1calismacesit': 'calisma1Cesit', '1calismakurum': 'calisma1Kurum', '1calismasayi': 'calisma1Sayi', '1calismabaslangic': 'calisma1Baslangic', '1calismabitis': 'calisma1Bitis', '1calismaaciklama': 'calisma1Aciklama',
+        '2calisma': 'calisma2Cesit', '2calismacesit': 'calisma2Cesit', '2calismakurum': 'calisma2Kurum', '2calismasayi': 'calisma2Sayi', '2calismabaslangic': 'calisma2Baslangic', '2calismabitis': 'calisma2Bitis', '2calismaaciklama': 'calisma2Aciklama',
+        '3calisma': 'calisma3Cesit', '3calismacesit': 'calisma3Cesit', '3calismakurum': 'calisma3Kurum', '3calismasayi': 'calisma3Sayi', '3calismabaslangic': 'calisma3Baslangic', '3calismabitis': 'calisma3Bitis', '3calismaaciklama': 'calisma3Aciklama',
+        '4calisma': 'calisma4Cesit', '4calismacesit': 'calisma4Cesit', '4calismakurum': 'calisma4Kurum', '4calismasayi': 'calisma4Sayi', '4calismabaslangic': 'calisma4Baslangic', '4calismabitis': 'calisma4Bitis', '4calismaaciklama': 'calisma4Aciklama',
+        'belge1': 'calisma1Cesit', 'belge2': 'calisma2Cesit', 'belge3': 'calisma3Cesit', 'belge4': 'calisma4Cesit',
+        '1belge': 'calisma1Cesit', '2belge': 'calisma2Cesit', '3belge': 'calisma3Cesit', '4belge': 'calisma4Cesit'
     };
     Object.keys(ekler).forEach(k => { if (!harita[k]) harita[k] = ekler[k]; });
     return harita;
@@ -2847,7 +2881,31 @@ function emesemFormatindaVeriOlustur(filtreTuru) {
             ustaDayanakBelge: k.ustaDayanakBelge || '',
             ustaBelgeTarihi: formatTarih(k.ustaBelgeTarihi),
             ustaBelgeSayisi: k.ustaBelgeSayisi || '',
-            ustaTalepTuru: k.ustaTalepTuru || ''
+            ustaTalepTuru: k.ustaTalepTuru || '',
+            calisma1Cesit: k.calisma1Cesit || '',
+            calisma1Kurum: k.calisma1Kurum || '',
+            calisma1Sayi: k.calisma1Sayi || '',
+            calisma1Baslangic: formatTarih(k.calisma1Baslangic),
+            calisma1Bitis: formatTarih(k.calisma1Bitis),
+            calisma1Aciklama: k.calisma1Aciklama || '',
+            calisma2Cesit: k.calisma2Cesit || '',
+            calisma2Kurum: k.calisma2Kurum || '',
+            calisma2Sayi: k.calisma2Sayi || '',
+            calisma2Baslangic: formatTarih(k.calisma2Baslangic),
+            calisma2Bitis: formatTarih(k.calisma2Bitis),
+            calisma2Aciklama: k.calisma2Aciklama || '',
+            calisma3Cesit: k.calisma3Cesit || '',
+            calisma3Kurum: k.calisma3Kurum || '',
+            calisma3Sayi: k.calisma3Sayi || '',
+            calisma3Baslangic: formatTarih(k.calisma3Baslangic),
+            calisma3Bitis: formatTarih(k.calisma3Bitis),
+            calisma3Aciklama: k.calisma3Aciklama || '',
+            calisma4Cesit: k.calisma4Cesit || '',
+            calisma4Kurum: k.calisma4Kurum || '',
+            calisma4Sayi: k.calisma4Sayi || '',
+            calisma4Baslangic: formatTarih(k.calisma4Baslangic),
+            calisma4Bitis: formatTarih(k.calisma4Bitis),
+            calisma4Aciklama: k.calisma4Aciklama || ''
         };
     });
 }
