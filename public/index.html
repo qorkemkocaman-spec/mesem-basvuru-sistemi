@@ -305,10 +305,18 @@
                         <div class="form-group">
                             <label for="ogrenimYili">Öğrenim Yılı *</label>
                             <select id="ogrenimYili" style="font-weight:bold;">
-                                <option value="2025-2026">2025-2026</option>
-                                <option value="2026-2027">2026-2027</option>
-                                <option value="2024-2025">2024-2025</option>
-                                <option value="2027-2028">2027-2028</option>
+                                <option value="2026-2027 I. Dönem" selected>2026-2027 I. Dönem</option>
+                                <option value="2026-2027 II. Dönem">2026-2027 II. Dönem</option>
+                                <option value="2026-2027 III. Dönem">2026-2027 III. Dönem</option>
+                                <option value="2026-2027 IV. Dönem">2026-2027 IV. Dönem</option>
+                                <option value="2025-2026 I. Dönem">2025-2026 I. Dönem</option>
+                                <option value="2025-2026 II. Dönem">2025-2026 II. Dönem</option>
+                                <option value="2025-2026 III. Dönem">2025-2026 III. Dönem</option>
+                                <option value="2025-2026 IV. Dönem">2025-2026 IV. Dönem</option>
+                                <option value="2024-2025 I. Dönem">2024-2025 I. Dönem</option>
+                                <option value="2024-2025 II. Dönem">2024-2025 II. Dönem</option>
+                                <option value="2024-2025 III. Dönem">2024-2025 III. Dönem</option>
+                                <option value="2024-2025 IV. Dönem">2024-2025 IV. Dönem</option>
                             </select>
                         </div>
                     </div>
@@ -757,8 +765,8 @@
         <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
             <div style="font-size:32px;">🤖</div>
             <div>
-                <h2 style="margin:0; color:#c084fc;">MEB E-MESEM Sınav Ön Kayıt Otomasyon Robotu (v6.0)</h2>
-                <div style="font-size:12.5px; color:#94a3b8;">Evrensel Çok Katmanlı Seçim Motorlu (Select / Combobox / Div-Li), Canlı Eleman Analizörlü & Akıllı Alan Öğreticili Kayıt Robotu</div>
+                <h2 style="margin:0; color:#c084fc;">MEB E-MESEM Sınav Ön Kayıt Otomasyon Robotu (v9.0)</h2>
+                <div style="font-size:12.5px; color:#94a3b8;">Yerleşik Sabitlenmiş Telerik Profili, RadDatePicker Desteği & 4 Dönemli Öğrenim Yılı Motorlu Ön Kayıt Robotu</div>
             </div>
         </div>
         <p style="font-size:13.5px; color:#cbd5e1; line-height:1.6; margin-bottom:18px;">
@@ -1456,7 +1464,7 @@ function kaydiNormalize(k) {
         id: k.id || yeniId(),
         sira: Number(k.sira) || 0,
         basvuruNo: k.basvuruNo || '',
-        ogrenimYili: k.ogrenimYili || '2025-2026',
+        ogrenimYili: k.ogrenimYili || '2026-2027 I. Dönem',
         kayitTarihi: k.kayitTarihi || '',
         guncelleme: k.guncelleme || ''
     };
@@ -1470,7 +1478,7 @@ function kaydiNormalize(k) {
         else y[a.id] = d == null ? '' : String(d);
     });
     y.basvuruTuru = basvuruTurunuNormalizeEt(y.basvuruTuru);
-    if (!y.ogrenimYili) y.ogrenimYili = '2025-2026';
+    if (!y.ogrenimYili) y.ogrenimYili = '2026-2027 I. Dönem';
     if (!y.enSonMezuniyet) y.enSonMezuniyet = 'Lise';
     if (!y.getirdigiBelge) y.getirdigiBelge = 'Diploma';
     if (!y.kapsam) {
@@ -1581,7 +1589,7 @@ function formuTemizle() {
         if (!el) return;
         if (a.tip === 'onay') el.checked = false;
         else if (a.id === 'basvuruTuru') el.value = (aktifNavSekme === 'Tumu') ? 'Kalfalık Sınavı' : aktifNavSekme;
-        else if (a.id === 'ogrenimYili') el.value = '2025-2026';
+        else if (a.id === 'ogrenimYili') el.value = '2026-2027 I. Dönem';
         else el.value = '';
     });
     duzenlenenId = null;
@@ -1841,7 +1849,7 @@ function tabloYenile() {
         if (k.id === duzenlenenId) tr.className = 'duzenleniyor';
 
         tr.appendChild(hucre(k.basvuruNo));
-        tr.appendChild(hucre(k.ogrenimYili || '2025-2026'));
+        tr.appendChild(hucre(k.ogrenimYili || '2026-2027 I. Dönem'));
 
         const tdTur = document.createElement('td');
         const rozet = document.createElement('span');
@@ -2600,7 +2608,7 @@ function kayitlariIceAktar(nesneler, kaynak) {
 
         const tam = {};
         ALANLAR.forEach(a => { tam[a.id] = (a.id in veri) ? veri[a.id] : (a.tip === 'onay' ? false : ''); });
-        if (!tam.ogrenimYili) tam.ogrenimYili = '2025-2026';
+        if (!tam.ogrenimYili) tam.ogrenimYili = '2026-2027 I. Dönem';
         if (!tam.enSonMezuniyet) tam.enSonMezuniyet = 'Lise';
         if (!tam.getirdigiBelge) tam.getirdigiBelge = 'Diploma';
         if (!tam.kapsam) tam.kapsam = (tam.basvuruTuru === 'İş Pedagojisi Kursu') ? '31.Madde' : '35. Madde';
@@ -2729,7 +2737,7 @@ async function excelDosyasiniAktar(olay) {
 function tsvUret(liste) {
     const basliklar = ['Başvuru No', 'Öğrenim Yılı', 'Kayıt Tarihi'].concat(ALANLAR.map(a => a.ad));
     const satirlar = liste.map(k => {
-        const s = [k.basvuruNo, k.ogrenimYili || '2025-2026', trTarih(formatTarih(k.kayitTarihi))];
+        const s = [k.basvuruNo, k.ogrenimYili || '2026-2027 I. Dönem', trTarih(formatTarih(k.kayitTarihi))];
         ALANLAR.forEach(a => {
             if (a.tip === 'onay') s.push(k[a.id] ? 'Evet' : '');
             else if (a.tip === 'tarih') s.push(trTarih(k[a.id]));
@@ -2775,7 +2783,7 @@ async function excelIndir() {
             c.font = { color: { argb: 'FFFFFFFF' }, bold: true };
         });
         kayitlar.forEach(k => {
-            const satir = [k.basvuruNo, k.ogrenimYili || '2025-2026', trTarih(formatTarih(k.kayitTarihi))];
+            const satir = [k.basvuruNo, k.ogrenimYili || '2026-2027 I. Dönem', trTarih(formatTarih(k.kayitTarihi))];
             ALANLAR.forEach(a => {
                 if (a.tip === 'onay') satir.push(k[a.id] ? 'Evet' : '');
                 else if (a.tip === 'tarih') satir.push(trTarih(k[a.id]));
@@ -2862,7 +2870,7 @@ function emesemFormatindaVeriOlustur(filtreTuru) {
             soyad: k.soyad,
             dogumTarihi: formatTarih(k.dogumTarihi),
             basvuruTuru: turNorm,
-            ogrenimYili: k.ogrenimYili || '2025-2026',
+            ogrenimYili: k.ogrenimYili || '2026-2027 I. Dönem',
             kapsam: kapsam,
             eposta: k.eposta || '',
             telefon: k.telefon || '',
@@ -2936,8 +2944,8 @@ function userscriptKoduUret() {
     return `// ==UserScript==
 // @name         E-MESEM Ön Kayıt Otomasyon Robotu
 // @namespace    https://emesem.meb.gov.tr/
-// @version      7.0
-// @description  MEB E-MESEM Sınav Öğrenci Ön Kayıt Otomasyonu (v7.0 - Yerel Telerik RadComboBox Motoru & $find API)
+// @version      9.0
+// @description  MEB E-MESEM Sınav Öğrenci Ön Kayıt Otomasyonu (v9.0 - Yerleşik Telerik Haritası, RadDatePicker & 4 Dönemli Öğrenim Yılı)
 // @author       Görkem Kocaman
 // @match        *://emesem.meb.gov.tr/*
 // @match        *://*.meb.gov.tr/*
