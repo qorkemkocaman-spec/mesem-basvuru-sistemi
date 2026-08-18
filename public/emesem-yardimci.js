@@ -39,45 +39,45 @@
        (Kullanıcının Hiçbir Şey Öğretmesine Gerek Kalmadan Sıfır Konfigürasyonla Çalışır)
        ============================================================ */
     var VARSAYILAN_TELERIK_HARITASI = {
-        // 1. Ana Ekran Sekmeleri
-        kalfalikSekme: '#btnKalfalik, #tabKalfalik, input[value*="Kalfalık"], a[href*="Kalfalik"], button[id*="Kalfalik"], .kalfalik-tab, #ctl00_cphGovde_btnKalfalik, #ctl00_cphGovde_tabKalfalik',
-        ustalikSekme: '#btnUstalik, #tabUstalik, input[value*="Ustalık"], a[href*="Ustalik"], button[id*="Ustalik"], .ustalik-tab, #ctl00_cphGovde_btnUstalik, #ctl00_cphGovde_tabUstalik',
-        pedagojiSekme: '#btnPedagoji, #tabPedagoji, input[value*="Pedagoji"], a[href*="Pedagoji"], button[id*="Pedagoji"], input[value*="Usta Öğretici"], #tabUstaOgretici, #ctl00_cphGovde_btnPedagoji',
+        // 1. Ana Ekran Sekmeleri (Öğretilmiş Gerçek E-MESEM Seçicileri Öncelikli)
+        kalfalikSekme: '#rdTabIslemler > div > ul > li:nth-of-type(1) > span > span, #btnKalfalik, #tabKalfalik, input[value*="Kalfalık"], a[href*="Kalfalik"], button[id*="Kalfalik"], .kalfalik-tab, #ctl00_cphGovde_btnKalfalik, #ctl00_cphGovde_tabKalfalik',
+        ustalikSekme: '#rdTabIslemler > div > ul > li:nth-of-type(2) > span, #btnUstalik, #tabUstalik, input[value*="Ustalık"], a[href*="Ustalik"], button[id*="Ustalik"], .ustalik-tab, #ctl00_cphGovde_btnUstalik, #ctl00_cphGovde_tabUstalik',
+        pedagojiSekme: '#rdTabIslemler > div > ul > li:nth-of-type(3) > span > span, #btnPedagoji, #tabPedagoji, input[value*="Pedagoji"], a[href*="Pedagoji"], button[id*="Pedagoji"], input[value*="Usta Öğretici"], #tabUstaOgretici, #ctl00_cphGovde_btnPedagoji',
         
-        // 2. Yeni Kayıt Butonu
-        yeniKayitBtn: '#btnYeniKayit, #btnYeni, input[id*="YeniKayit"], input[id*="btnYeni"], button[id*="btnYeni"], a[id*="btnYeni"], #ctl00_cphGovde_btnYeniKayit, #ctl00_cphGovde_btnYeni',
+        // 2. Yeni Kayıt Butonu (Öğretilmiş: wucPageHeader1_btnToolNew)
+        yeniKayitBtn: '#wucPageHeader1_btnToolNew, #btnYeniKayit, #btnYeni, input[id*="YeniKayit"], input[id*="btnYeni"], button[id*="btnYeni"], a[id*="btnYeni"], #ctl00_cphGovde_btnYeniKayit, #ctl00_cphGovde_btnYeni',
         
-        // 3. Öğrenim Yılı (Telerik cmbOgrenimYili)
+        // 3. Öğrenim Yılı (Telerik cmbOgrenimYili - Öğretilmiş)
         ogrenimYili: '#cmbOgrenimYili_Input, #ctl00_cphGovde_cmbOgrenimYili_Input, input[id*="cmbOgrenimYili"], select[id*="OgrenimYili"], select[name*="OgrenimYili"], #cmbOgrenimYili, #ctl00_cphGovde_cmbOgrenimYili',
         
-        // 4. TC Kimlik No (Gerçek E-MESEM ID: txtTCKimlikNo)
+        // 4. TC Kimlik No (Gerçek E-MESEM ID: txtTCKimlikNo - Öğretilmiş)
         tc: '#txtTCKimlikNo, #txtKimlikNo, #txtTC, input[id*="TCKimlikNo"], input[id*="KimlikNo"], input[id*="txtTC"], #ctl00_cphGovde_txtTCKimlikNo, #ctl00_cphGovde_txtKimlikNo',
         
-        // 5. Doğum Tarihi (Telerik RadDatePicker dtDogumTarihi)
+        // 5. Doğum Tarihi (Telerik RadDatePicker dtDogumTarihi - Öğretilmiş)
         dogumTarihi: '#dtDogumTarihi_dateInput, #dtDogumTarihi, #txtDogumTarihi, input[id*="DogumTarih"], input[name*="DogumTarih"], #ctl00_cphGovde_dtDogumTarihi_dateInput, #ctl00_cphGovde_dtDogumTarihi',
         
-        // 6. MERNİS Sorgula Butonu (Gerçek E-MESEM ID: btnSearch)
+        // 6. MERNİS Sorgula Butonu (Gerçek E-MESEM ID: btnSearch - Öğretilmiş)
         sorgulaBtn: '#btnSearch, #btnSorgula, #btnMernis, input[id*="btnSearch"], input[id*="btnSorgula"], button[id*="btnSorgula"], input[value="Sorgula"], #ctl00_cphGovde_btnSearch, #ctl00_cphGovde_btnSorgula',
         
-        // 7. Kapsam Maddesi (Telerik cmbKapsam / Select)
+        // 7. Kapsam Maddesi (Telerik cmbKapsam - Öğretilmiş)
         kapsam: '#cmbKapsam_Input, #ddlKapsam, select[id*="Kapsam"], input[id*="cmbKapsam"], #ctl00_cphGovde_cmbKapsam_Input, #ctl00_cphGovde_cmbKapsam',
         
-        // 8. İletişim Bilgileri (Gerçek E-MESEM ID'leri: txtEPosta / txtTelefonGSM)
+        // 8. İletişim Bilgileri (Gerçek E-MESEM ID'leri: txtEPosta / txtTelefonGSM - Öğretilmiş)
         eposta: '#txtEPosta, #txtEposta, #txtEmail, input[id*="EPosta"], input[id*="Eposta"], input[id*="Email"], #ctl00_cphGovde_txtEPosta, #ctl00_cphGovde_txtEposta',
         telefon: '#txtTelefonGSM, #txtCepTel, #txtTelefon, input[id*="TelefonGSM"], input[id*="Telefon"], input[id*="CepTel"], #ctl00_cphGovde_txtTelefonGSM, #ctl00_cphGovde_txtCepTel',
         
-        // 9. Mezuniyet & Belge Bilgileri (Gerçek E-MESEM ID'leri: cmbEgitim / cmbMezuniyetBelgeTuru)
+        // 9. Mezuniyet & Belge Bilgileri (Gerçek E-MESEM ID'leri: cmbEgitim / cmbMezuniyetBelgeTuru - Öğretilmiş)
         enSonMezuniyet: '#cmbEgitim_Input, #cmbMezuniyet_Input, #ddlMezuniyet, select[id*="Egitim"], select[id*="Mezuniyet"], input[id*="cmbEgitim"], #ctl00_cphGovde_cmbEgitim_Input, #ctl00_cphGovde_cmbMezuniyet_Input',
         getirdigiBelge: '#cmbMezuniyetBelgeTuru_Input, #cmbBelge_Input, #ddlBelge, select[id*="MezuniyetBelgeTuru"], select[id*="Belge"], input[id*="cmbMezuniyetBelgeTuru"], #ctl00_cphGovde_cmbMezuniyetBelgeTuru_Input, #ctl00_cphGovde_cmbBelge_Input',
         
-        // 10. Belge Tarihi (Gerçek E-MESEM ID: dtMezuniyet - Telerik RadDatePicker)
+        // 10. Belge Tarihi (Gerçek E-MESEM ID: dtMezuniyet - Telerik RadDatePicker - Öğretilmiş)
         belgeTarihi: '#dtMezuniyet_dateInput, #dtMezuniyet, #dtpBelgeTarihi_dateInput, #dtpBelgeTarihi, #dtBelgeTarihi_dateInput, input[id*="dtMezuniyet"], input[id*="BelgeTarih"], input[name*="BelgeTarih"], #ctl00_cphGovde_dtMezuniyet_dateInput, #ctl00_cphGovde_dtpBelgeTarihi_dateInput',
         
-        // 11. Mesleki Alan & Dal (Telerik cmbAlan & cmbDal)
+        // 11. Mesleki Alan & Dal (Telerik cmbAlan & cmbDal - Öğretilmiş)
         alan: '#cmbAlan_Input, #ctl00_cphGovde_cmbAlan_Input, input[id*="cmbAlan"], select[id*="cmbAlan"], select[id*="ddlAlan"], #cmbAlan, #ctl00_cphGovde_cmbAlan',
         dal: '#cmbDal_Input, #ctl00_cphGovde_cmbDal_Input, input[id*="cmbDal"], select[id*="cmbDal"], select[id*="ddlDal"], #cmbDal, #ctl00_cphGovde_cmbDal',
         
-        // 12. Kaydet Butonu
+        // 12. Kaydet Butonu (Öğretilmiş: btnKaydet)
         kaydetBtn: '#btnKaydet, #btnOnKayitKaydet, input[id*="btnKaydet"], button[id*="btnKaydet"], input[value="Kaydet"], #ctl00_cphGovde_btnKaydet, #ctl00_cphGovde_btnOnKayitKaydet',
         
         // 13. Ana Ekran Yenile Butonu
