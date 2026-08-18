@@ -78,7 +78,10 @@
         dal: '#cmbDal_Input, #ctl00_cphGovde_cmbDal_Input, input[id*="cmbDal"], select[id*="cmbDal"], select[id*="ddlDal"], #cmbDal, #ctl00_cphGovde_cmbDal',
         
         // 12. Kaydet Butonu
-        kaydetBtn: '#btnKaydet, #btnOnKayitKaydet, input[id*="btnKaydet"], button[id*="btnKaydet"], input[value="Kaydet"], #ctl00_cphGovde_btnKaydet, #ctl00_cphGovde_btnOnKayitKaydet'
+        kaydetBtn: '#btnKaydet, #btnOnKayitKaydet, input[id*="btnKaydet"], button[id*="btnKaydet"], input[value="Kaydet"], #ctl00_cphGovde_btnKaydet, #ctl00_cphGovde_btnOnKayitKaydet',
+        
+        // 13. Ana Ekran Yenile Butonu
+        yenileBtn: 'input[value*="Yenile"], button[id*="Yenile"], a[id*="Yenile"], #btnYenile, #btnRefresh, input[value="Yenile"], #ctl00_cphGovde_btnYenile'
     };
 
     
@@ -231,7 +234,7 @@
     /* ---------------- Türkçe Karakter & Kanonik Normalizasyon ---------------- */
     function kanonikMetin(s) {
         if (!s) return '';
-        return String(s)
+        var t = String(s)
             .replace(/İ/g, 'i').replace(/I/g, 'i').replace(/ı/g, 'i')
             .replace(/Ğ/g, 'g').replace(/ğ/g, 'g')
             .replace(/Ü/g, 'u').replace(/ü/g, 'u')
@@ -239,8 +242,16 @@
             .replace(/Ö/g, 'o').replace(/ö/g, 'o')
             .replace(/Ç/g, 'c').replace(/ç/g, 'c')
             .toLowerCase()
-            .replace(/[^a-z0-9]/g, '')
-            .trim();
+            // E-MESEM'de "İç Mekan ve Mobilya Teknolojisi" farklı formlarda görünebilir.
+            // "ve"/"ile" bağlaçlarını kelime olarak kaldır: "ic mekan ve mobilya" -> "ic mekan mobilya"
+            .replace(/\s+ve\s+/g, ' ')
+            .replace(/\s+ile\s+/g, ' ')
+            .replace(/^ve\s+/g, '')
+            .replace(/\s+ve$/g, '')
+            .replace(/^ile\s+/g, '')
+            .replace(/\s+ile$/g, '')
+            .replace(/[^a-z0-9]/g, '');
+        return t.trim();
     }
 
     function trTemizle(s) {
@@ -2137,6 +2148,20 @@
         }
 
         await adim6_Kaydet(k);
+
+        // Kayıt tamamlandıktan sonra ana ekrandaki "Yenile" butonuna bas ve sayfanın
+        // yenilenmesini bekle. Böylece bir sonraki aday için temiz bir form açılır.
+        var yenileBtn = ogretilmisAlanBul('yenileBtn') ||
+                        evrenselMetinleBul('button, a, input[type="button"], input[type="submit"]', ['Yenile', 'Yenile', 'Refresh'], false);
+        if (yenileBtn) {
+            vurgula(yenileBtn, '#38bdf8');
+            yenileBtn.click();
+            logEkle('🔄 Ana ekran "Yenile" butonuna basıldı, sayfa yenileniyor...', 'islem');
+            await postBackBitisiniBekle(5000, 'Yenile PostBack');
+            await bekle(800);
+        } else {
+            logEkle('⚠️ "Yenile" butonu bulunamadı, sayfa yenilenmeden devam ediliyor.', 'uyari');
+        }
 
         k.durum = 'tamamlandi';
         sesCal('basari');
