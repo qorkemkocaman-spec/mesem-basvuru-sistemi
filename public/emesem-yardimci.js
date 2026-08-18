@@ -1556,65 +1556,25 @@
         }
     }
 
-    /**
-     * Açılır "Yeni Kayıt" penceresinin GERÇEKTEN açılıp açılmadığını kontrol eder
-     * (TC Kimlik No kutusunun görünür/erişilebilir olması esas alınır).
-     */
-    function popupAcikMi() {
-        var tcEl = ogretilmisAlanBul('tc') || evrenselInputBul(['tc', 'kimlikno', 'tckimlikno', 'txttc', 'txtkimlikno']);
-        return !!(tcEl && elemanGorunurMu(tcEl));
-    }
-
     // ADIM 2: Yeni Kayıt Butonuna Bas
     async function adim2_YeniKayitAc(k) {
         logEkle('2. Adım: "Yeni Kayıt" butonu aranıyor...', 'islem');
-
-        if (popupAcikMi()) {
-            logEkle('ℹ️ Açılır kayıt penceresi zaten açık görünüyor, adım atlanıyor.', 'uyari');
-            return true;
-        }
-
         var btn = ogretilmisAlanBul('yeniKayitBtn') ||
                   evrenselMetinleBul('button, a, input[type="button"], .btn', ['Yeni Kayıt', 'Yeni Ekle', 'Yeni'], true) ||
                   evrenselMetinleBul('button, a, input[type="button"], .btn', ['Yeni Kayıt', 'Yeni Ekle', 'Yeni'], false);
 
-        if (!btn) {
-            logEkle('Uyarı: "Yeni Kayıt" butonu bulunamadı, formun zaten açık olduğu varsayılıyor.', 'uyari');
-            return popupAcikMi();
-        }
-
-        // YENİ: İnternet/bilgisayar performansı nedeniyle açılır pencere zamanında
-        // açılmayabiliyor; bu durumda robot form doldurmaya devam edip başarısız oluyordu.
-        // Artık pencerenin GERÇEKTEN açıldığı doğrulanana kadar en fazla 3 kez tekrar denenir.
-        var maxDeneme = 3;
-        for (var deneme = 1; deneme <= maxDeneme; deneme++) {
+        if (btn) {
             vurgula(btn, '#22c55e');
             btn.click();
-            logEkle('✓ "Yeni Kayıt" butonuna tıklandı (' + deneme + '/' + maxDeneme + '. deneme), açılır pencere bekleniyor...', 'basari');
+            logEkle('✓ "Yeni Kayıt" butonuna tıklandı, modal açılışı bekleniyor.', 'basari');
             await postBackBitisiniBekle(4000, 'Yeni Kayıt Modal Yükleme');
-            await bekle(400);
-
-            var beklemeBaslangic = Date.now();
-            while (Date.now() - beklemeBaslangic < 2500) {
-                if (popupAcikMi()) {
-                    logEkle('✓ Açılır kayıt penceresi doğrulandı (TC kutusu görünür).', 'basari');
-                    return true;
-                }
-                await bekle(200);
-            }
-
-            logEkle('⚠️ Açılır kayıt penceresi henüz açılmadı görünüyor.', 'uyari');
-            btn = ogretilmisAlanBul('yeniKayitBtn') ||
-                  evrenselMetinleBul('button, a, input[type="button"], .btn', ['Yeni Kayıt', 'Yeni Ekle', 'Yeni'], true) ||
-                  evrenselMetinleBul('button, a, input[type="button"], .btn', ['Yeni Kayıt', 'Yeni Ekle', 'Yeni'], false);
-            if (!btn) break;
+            await bekle(300);
+            return true;
+        } else {
+            logEkle('Uyarı: "Yeni Kayıt" butonu bulunamadı, formun zaten açık olduğu varsayılıyor.', 'uyari');
+            return false;
         }
-
-        var hataMsg = '❌ "Yeni Kayıt" açılır penceresi ' + maxDeneme + ' denemede de açılmadı (internet/performans sorunu olabilir). Bu aday güvenlik amacıyla atlandı.';
-        logEkle(hataMsg, 'hata');
-        throw new Error(hataMsg);
     }
-
 
     // ADIM 3: Öğrenim Yılı, TC ve Doğum Tarihi Doldur
     async function adim3_TcTarihDoldur(k) {
@@ -1633,21 +1593,10 @@
         var tcEl = ogretilmisAlanBul('tc') || evrenselInputBul(['tc', 'kimlikno', 'tckimlikno', 'txttc', 'txtkimlikno']);
         if (tcEl && k.tc) {
             degerYaz(tcEl, k.tc);
-            await bekle(150);
-            // YENİ: Yazılan TC'nin GERÇEKTEN kutuda kaldığı doğrulanır. Bazen odak/olay
-            // kaybı nedeniyle değer yazılmadan bir sonraki adıma (Sorgula) geçilebiliyordu.
-            var tcTemizDeger = tcEl.value ? tcEl.value.trim().replace(/\D/g, '') : '';
-            if (tcTemizDeger !== String(k.tc).trim()) {
-                logEkle('⚠️ TC Kimlik No ilk denemede kalıcı olmadı, tekrar yazılıyor...', 'uyari');
-                degerYaz(tcEl, k.tc);
-                await bekle(250);
-            }
             vurgula(tcEl, '#38bdf8');
             logEkle('✓ TC Kimlik No yazıldı: ' + k.tc, 'islem');
         } else {
-            var tcYokHata = '❌ TC Kimlik No kutusu bulunamadı! (Açılır pencere düzgün açılmamış olabilir)';
-            logEkle(tcYokHata, 'hata');
-            throw new Error(tcYokHata);
+            logEkle('Hata: TC Kimlik No kutusu bulunamadı!', 'hata');
         }
 
         // 3.3: Doğum Tarihi (Telerik RadDatePicker / Input)
@@ -1660,124 +1609,57 @@
             }
             await telerikRadDatePickerYaz(dogumEl, dStr);
             degerYaz(dogumEl, dStr);
-            await bekle(150);
-            // YENİ: Doğum Tarihi'nin GERÇEKTEN kutuda kaldığı doğrulanır.
-            if (!dogumEl.value || dogumEl.value.trim().length < 8) {
-                logEkle('⚠️ Doğum Tarihi ilk denemede kalıcı olmadı, tekrar yazılıyor...', 'uyari');
-                await telerikRadDatePickerYaz(dogumEl, dStr);
-                degerYaz(dogumEl, dStr);
-                await bekle(250);
-            }
             vurgula(dogumEl, '#38bdf8');
             logEkle('✓ Doğum Tarihi yazıldı: ' + dStr, 'islem');
-        } else if (dogumEl) {
-            logEkle('⚠️ Aday verisinde Doğum Tarihi bulunmuyor, kutu boş bırakıldı.', 'uyari');
         }
 
         await bekle(300);
         return true;
     }
 
-
-    /**
-     * TC ve Doğum Tarihi kutularının GERÇEKTEN dolu olup olmadığını kontrol edip,
-     * boşsa yeniden yazar. "Bazen TC/Doğum Tarihi yazılmadan Sorgula'ya basılıyor,
-     * bu yüzden ad/soyad/doğum yeri/cinsiyet gelmiyor" sorunu için eklendi.
-     */
-    async function tcVeDogumTarihiniGarantiye(k) {
-        var tcEl = ogretilmisAlanBul('tc') || evrenselInputBul(['tc', 'kimlikno', 'tckimlikno', 'txttc']);
-        if (tcEl && k.tc) {
-            var tcTemiz = tcEl.value ? tcEl.value.trim().replace(/\D/g, '') : '';
-            if (tcTemiz !== String(k.tc).trim()) {
-                degerYaz(tcEl, k.tc);
-                await bekle(200);
-            }
-        }
-
-        var dogumEl = ogretilmisAlanBul('dogumTarihi') || evrenselInputBul(['dtdogumtarihi', 'dogumtarihi', 'dogum', 'txtdogum', 'txtdogumtarihi']);
-        if (dogumEl && k.dogumTarihi && (!dogumEl.value || dogumEl.value.trim().length < 8)) {
-            var dStr = k.dogumTarihi;
-            if (/^\d{4}-\d{2}-\d{2}$/.test(dStr)) {
-                var dp = dStr.split('-');
-                dStr = dp[2] + '.' + dp[1] + '.' + dp[0];
-            }
-            await telerikRadDatePickerYaz(dogumEl, dStr);
-            degerYaz(dogumEl, dStr);
-            await bekle(200);
-        }
-        return { tcEl: tcEl, dogumEl: dogumEl };
-    }
-
     // ADIM 4: Sorgula'ya Bas ve MERNİS ASP.NET PostBack Bitişini Bekle
     async function adim4_SorgulaVeMernisBekle(k) {
-        logEkle('4. Adım: Sorgula\'dan önce TC ve Doğum Tarihi son kez doğrulanıyor...', 'islem');
+        logEkle('4. Adım: MERNİS Sorgula butonuna basılıyor...', 'islem');
 
-        var kontrol = await tcVeDogumTarihiniGarantiye(k);
-        var tcEl = kontrol.tcEl;
-        var dogumEl = kontrol.dogumEl;
-
-        // GÜVENLİK: TC veya Doğum Tarihi hâlâ boşsa Sorgula'ya basmadan dur. Bu kontrol
-        // olmadığında MERNİS boş dönüp ad/soyad/doğum yeri/cinsiyet gelmiyordu ve kayıt
-        // sessizce başarısız oluyordu.
-        if (tcEl && (!tcEl.value || tcEl.value.trim().replace(/\D/g, '').length < 11)) {
-            var tcHata = '❌ TC Kimlik No dolu değil, MERNİS Sorgula güvenli şekilde durduruldu.';
-            logEkle(tcHata, 'hata');
-            throw new Error(tcHata);
-        }
-        if (dogumEl && k.dogumTarihi && (!dogumEl.value || dogumEl.value.trim().length < 8)) {
-            var dtHata = '❌ Doğum Tarihi dolu değil, MERNİS Sorgula güvenli şekilde durduruldu.';
-            logEkle(dtHata, 'hata');
-            throw new Error(dtHata);
+        var tcEl = ogretilmisAlanBul('tc') || evrenselInputBul(['tc', 'kimlikno', 'tckimlikno', 'txttc']);
+        if (tcEl && (!tcEl.value || tcEl.value.trim().length < 11) && k.tc) {
+            degerYaz(tcEl, k.tc);
+            await bekle(150);
         }
 
         var sorgulaBtn = ogretilmisAlanBul('sorgulaBtn') ||
                          evrenselMetinleBul('button, a, input[type="button"], .btn', ['Sorgula', 'MERNİS Sorgula', 'Mernis', 'Getir'], false);
 
-        if (!sorgulaBtn) {
-            logEkle('Uyarı: "Sorgula" butonu bulunamadı, MERNİS adımı atlanıyor.', 'uyari');
-            return false;
-        }
-
-        // YENİ: MERNİS yanıtı (ad/soyad/doğum yeri/cinsiyet) gelmezse, TC/Doğum Tarihi
-        // tekrar kontrol edilip Sorgula en fazla 2 kez daha otomatik denenir.
-        var mernisMaxDeneme = 2;
-        var mernisGeldi = false;
-        for (var deneme = 1; deneme <= mernisMaxDeneme; deneme++) {
+        if (sorgulaBtn) {
             vurgula(sorgulaBtn, '#eab308');
             sorgulaBtn.click();
-            logEkle('Sorgula tıklandı (' + deneme + '/' + mernisMaxDeneme + '. deneme), ASP.NET AJAX PostBack & MERNİS yanıtı bekleniyor...', 'uyari');
-
+            logEkle('Sorgula tıklandı, ASP.NET AJAX PostBack & MERNİS yanıtı bekleniyor...', 'uyari');
+            
             await postBackBitisiniBekle(mernisBeklemeSuresi + 2000, 'MERNİS AJAX PostBack');
 
             var baslangic = Date.now();
+            var mernisGeldi = false;
             while (Date.now() - baslangic < mernisBeklemeSuresi) {
                 var adInput = evrenselInputBul(['txtad', 'txtadi', 'ad', 'adi', 'ogrenciadi', 'txtogrenciadi']);
-                var soyadInput = evrenselInputBul(['txtsoyad', 'txtsoyadi', 'soyad', 'soyadi']);
-                if ((adInput && adInput.value && adInput.value.trim().length > 1) || (soyadInput && soyadInput.value && soyadInput.value.trim().length > 1)) {
+                if (adInput && adInput.value && adInput.value.trim().length > 1) {
                     mernisGeldi = true;
-                    logEkle('✓ MERNİS kimlik verisi başarıyla alındı: ' + (adInput ? adInput.value.trim() : '') + ' ' + (soyadInput ? soyadInput.value.trim() : ''), 'basari');
+                    logEkle('✓ MERNİS kimlik verisi başarıyla alındı: ' + adInput.value.trim(), 'basari');
                     break;
                 }
                 await bekle(300);
             }
 
-            if (mernisGeldi) break;
+            if (!mernisGeldi) {
+                logEkle('MERNİS bekleme süresi tamamlandı. PostBack sonrası form alanları doldurulmaya başlanıyor.', 'uyari');
+            }
 
-            logEkle('⚠️ MERNİS verisi gelmedi. TC/Doğum Tarihi kontrol edilip Sorgula tekrar denenecek...', 'uyari');
-            var kontrol2 = await tcVeDogumTarihiniGarantiye(k);
-            sorgulaBtn = ogretilmisAlanBul('sorgulaBtn') ||
-                         evrenselMetinleBul('button, a, input[type="button"], .btn', ['Sorgula', 'MERNİS Sorgula', 'Mernis', 'Getir'], false);
-            if (!sorgulaBtn) break;
+            await bekle(400);
+            return true;
+        } else {
+            logEkle('Uyarı: "Sorgula" butonu bulunamadı, MERNİS adımı atlanıyor.', 'uyari');
+            return false;
         }
-
-        if (!mernisGeldi) {
-            logEkle('⚠️ MERNİS bekleme süresi ' + mernisMaxDeneme + ' denemede de tamamlanamadı. Form yine de devam ediyor ama kayıt eksik olabilir, lütfen kontrol edin.', 'uyari');
-        }
-
-        await bekle(400);
-        return true;
     }
-
 
     // ADIM 5: Kapsam, Kademeli Alan -> Dal, İletişim ve RadDatePicker Belge Tarihi
     async function adim5_KapsamVeBilgileriDoldur(k) {
@@ -1990,44 +1872,10 @@
             await bekle(300);
         }
 
-        // 5.9: BELGE TARİHİ SON KONTROL VE GEREKİRSE YENİDEN YAZMA
-        // ÖNEMLİ: Alan/Dal seçimleri sırasında oluşan ek PostBack'ler (özellikle Kalfalık
-        // formunda), daha önce 5.6'da yazılmış olan Belge Tarihi'ni sıfırlayıp boşaltabiliyordu
-        // ("Alan ve Dal'ı seçti ama Belge Tarihi'ni girmedi" sorunu). Bu yüzden Belge Tarihi,
-        // TÜM postback tetikleyen kademeli seçimler tamamlandıktan SONRA burada tekrar
-        // kontrol edilip gerekirse yeniden yazılır.
-        if (k.belgeTarihi) {
-            var belgeTarihElSon = ogretilmisAlanBul('belgeTarihi') || evrenselInputBul(['dtmezuniyet_dateinput', 'dtpbelgetarihi', 'belgetarihi', 'diplomatarihi', 'txtbelgetarihi', 'dtbelgetarihi']);
-            if (belgeTarihElSon) {
-                var bTSonVal = belgeTarihElSon.value ? belgeTarihElSon.value.trim() : '';
-                if (!bTSonVal || !/\d/.test(bTSonVal)) {
-                    logEkle('⚠️ Belge Tarihi, Alan/Dal seçimi sonrası oluşan PostBack ile boşalmış görünüyor. Tekrar yazılıyor...', 'uyari');
-                    var bTStr2 = k.belgeTarihi;
-                    if (/^\d{4}-\d{2}-\d{2}$/.test(bTStr2)) {
-                        var btp2 = bTStr2.split('-');
-                        bTStr2 = btp2[2] + '.' + btp2[1] + '.' + btp2[0];
-                    }
-                    await telerikRadDatePickerYaz(belgeTarihElSon, bTStr2);
-                    degerYaz(belgeTarihElSon, bTStr2);
-                    await bekle(300);
-                    vurgula(belgeTarihElSon, '#f59e0b');
-
-                    var bTSonVal2 = belgeTarihElSon.value ? belgeTarihElSon.value.trim() : '';
-                    if (bTSonVal2 && /\d/.test(bTSonVal2)) {
-                        logEkle('✓ Belge Tarihi tekrar yazılarak kurtarıldı: ' + bTStr2, 'basari');
-                    } else {
-                        logEkle('❌ Belge Tarihi ikinci denemede de yazılamadı: ' + bTStr2, 'hata');
-                    }
-                } else {
-                    logEkle('✓ Belge Tarihi son kontrolde kalıcı olarak doğrulandı: ' + bTSonVal, 'basari');
-                }
-            }
-        }
 
         logEkle('✓ Tüm form, RadDatePicker belge tarihi ve mesleki alan/dal bilgileri başarıyla dolduruldu.', 'basari');
         return true;
     }
-
 
     /* ============================================================
        PRE-SAVE VERIFICATION & GÜVENLİK KİLİDİ
