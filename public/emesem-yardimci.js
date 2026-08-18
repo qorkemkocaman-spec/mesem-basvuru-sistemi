@@ -3115,52 +3115,85 @@
        ============================================================ */
     function kayitListesiniKopyala() {
         var belgeler = tumBelgeleriGetir();
-        var tabloBulundu = null;
+        var tumSatirlar = [];
+        var kategoriAdlari = ['Kalfalık Sınavı', 'Ustalık Sınavı', 'İş Pedagojisi Kursu'];
+        var kategoriSecicileri = {
+            'Kalfalık Sınavı': ['kalfalikSekme', 'Kalfalık', 'Kalfalik'],
+            'Ustalık Sınavı': ['ustalikSekme', 'Ustalık', 'Ustalik'],
+            'İş Pedagojisi Kursu': ['pedagojiSekme', 'İş Pedagojisi', 'Pedagoji', 'Usta Öğretici']
+        };
 
-        for (var b = 0; b < belgeler.length; b++) {
-            var doc = belgeler[b];
-            var tablolar = doc.querySelectorAll('table');
-            for (var t = 0; t < tablolar.length; t++) {
-                var tbl = tablolar[t];
-                var metin = tbl.textContent || '';
-                if (/\d{11}/.test(metin)) {
-                    tabloBulundu = tbl;
-                    break;
+        // Tüm sekmeleri gezerek kayıtları topla
+        for (var k = 0; k < kategoriAdlari.length; k++) {
+            var kategori = kategoriAdlari[k];
+            var seciciler = kategoriSecicileri[kategori];
+
+            // Sekme butonunu bul ve tıkla
+            var sekmeBtn = null;
+            for (var s = 0; s < seciciler.length; s++) {
+                sekmeBtn = ogretilmisAlanBul(seciciler[s]) ||
+                           evrenselMetinleBul('button, a, input[type="button"], .tab, span, td, div', [seciciler[s]], false);
+                if (sekmeBtn) break;
+            }
+
+            if (sekmeBtn) {
+                vurgula(sekmeBtn, '#38bdf8');
+                sekmeBtn.click();
+                // PostBack bitişini bekle
+                // (senkron çalıştığı için kısa bekleme yapıyoruz)
+            }
+
+            // Bu sekmedeki kayıt listesi tablosunu bul
+            var tabloBulundu = null;
+            for (var b = 0; b < belgeler.length; b++) {
+                var doc = belgeler[b];
+                var tablolar = doc.querySelectorAll('table');
+                for (var t = 0; t < tablolar.length; t++) {
+                    var tbl = tablolar[t];
+                    var metin = tbl.textContent || '';
+                    if (/\d{11}/.test(metin)) {
+                        tabloBulundu = tbl;
+                        break;
+                    }
+                }
+                if (tabloBulundu) break;
+
+                var gridler = doc.querySelectorAll('.rgMasterTable, .RadGrid table, .k-grid table');
+                for (var g = 0; g < gridler.length; g++) {
+                    if (/\d{11}/.test(gridler[g].textContent || '')) {
+                        tabloBulundu = gridler[g];
+                        break;
+                    }
+                }
+                if (tabloBulundu) break;
+            }
+
+            if (tabloBulundu) {
+                // Sekme başlığını ekle
+                tumSatirlar.push(kategori);
+
+                var trler = tabloBulundu.querySelectorAll('tr');
+                for (var r = 0; r < trler.length; r++) {
+                    var hucreler = trler[r].querySelectorAll('th, td');
+                    var satirMetni = [];
+                    for (var h = 0; h < hucreler.length; h++) {
+                        satirMetni.push((hucreler[h].textContent || '').trim());
+                    }
+                    if (satirMetni.join('').trim()) {
+                        tumSatirlar.push(satirMetni.join('\t'));
+                    }
                 }
             }
-            if (tabloBulundu) break;
-
-            var gridler = doc.querySelectorAll('.rgMasterTable, .RadGrid table, .k-grid table');
-            for (var g = 0; g < gridler.length; g++) {
-                if (/\d{11}/.test(gridler[g].textContent || '')) {
-                    tabloBulundu = gridler[g];
-                    break;
-                }
-            }
-            if (tabloBulundu) break;
         }
 
-        if (!tabloBulundu) {
+        if (!tumSatirlar.length) {
             durum('❌ Kayıt listesi tablosu bulunamadı. "Sınav Öğrenci Ön Kayıt" ekranında olduğunuzdan emin olun.', '#f87171');
             logEkle('❌ Kayıt listesi tablosu bulunamadı.', 'hata');
             sesCal('hata');
             return;
         }
 
-        var satirlar = [];
-        var trler = tabloBulundu.querySelectorAll('tr');
-        for (var r = 0; r < trler.length; r++) {
-            var hucreler = trler[r].querySelectorAll('th, td');
-            var satirMetni = [];
-            for (var h = 0; h < hucreler.length; h++) {
-                satirMetni.push((hucreler[h].textContent || '').trim());
-            }
-            if (satirMetni.join('').trim()) {
-                satirlar.push(satirMetni.join('\t'));
-            }
-        }
-
-        var metin = satirlar.join('\n');
+        var metin = tumSatirlar.join('\n');
         if (!metin.trim()) {
             durum('❌ Tablo boş görünüyor.', '#f87171');
             return;
@@ -3170,8 +3203,8 @@
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(metin).then(function () {
                     sesCal('basari');
-                    durum('✓ Kayıt listesi panoya kopyalandı (' + satirlar.length + ' satır). Web uygulamasında "Arşiv & E-MESEM Karşılaştırma"ya yapıştırın.', '#4ade80');
-                    logEkle('✓ Kayıt listesi panoya kopyalandı (' + satirlar.length + ' satır).', 'basari');
+                    durum('✓ Tüm sekmelerdeki kayıt listesi panoya kopyalandı (' + tumSatirlar.length + ' satır). Web uygulamasında "Arşiv & E-MESEM Karşılaştırma"ya yapıştırın.', '#4ade80');
+                    logEkle('✓ Tüm sekmelerdeki kayıt listesi panoya kopyalandı (' + tumSatirlar.length + ' satır).', 'basari');
                 }).catch(function () {
                     secVeKopyala();
                 });
@@ -3183,14 +3216,14 @@
         function secVeKopyala() {
             try {
                 var range = document.createRange();
-                range.selectNodeContents(tabloBulundu);
+                range.selectNodeContents(document.body);
                 var sel = window.getSelection();
                 sel.removeAllRanges();
                 sel.addRange(range);
                 document.execCommand('copy');
                 sel.removeAllRanges();
                 sesCal('basari');
-                durum('✓ Kayıt listesi seçilerek kopyalandı (' + satirlar.length + ' satır).', '#4ade80');
+                durum('✓ Kayıt listesi seçilerek kopyalandı (' + tumSatirlar.length + ' satır).', '#4ade80');
                 logEkle('✓ Kayıt listesi seçilerek kopyalandı.', 'basari');
             } catch (e) {
                 durum('❌ Pano erişimi reddedildi. Manuel seçip Ctrl+C ile kopyalayın.', '#f87171');

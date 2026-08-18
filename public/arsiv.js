@@ -257,10 +257,18 @@
             return;
         }
 
-        // Ana uygulama global değişkenlerine erişmeye çalış
-        const anaKayitlar = window.kayitlar || [];
-        if (!anaKayitlar.length) {
-            sonuc.innerHTML = '<span style="color:#fbbf24;">⚠️ Ana listede kayıtlı aday bulunamadı. Önce kayıt ekleyin veya buluttan yükleyin.</span>';
+        // Ana uygulama kayıtlarını localStorage'dan oku
+        const aktifKurum = localStorage.getItem('mesem_aktif_kurum') || '';
+        const anahtar = 'mesem_kayitlar_' + aktifKurum;
+        let anaKayitlar = [];
+        try {
+            anaKayitlar = JSON.parse(localStorage.getItem(anahtar) || '[]');
+        } catch (e) {
+            anaKayitlar = [];
+        }
+
+        if (!anaKayitlar || !anaKayitlar.length) {
+            sonuc.innerHTML = `<span style="color:#fbbf24;">⚠️ Ana listede kayıtlı aday bulunamadı (${aktifKurum || 'kurum bilinmiyor'}). Önce kayıt ekleyin veya buluttan yükleyin.</span>`;
             return;
         }
 
@@ -270,28 +278,21 @@
             return;
         }
 
-        // Global değişkenleri güncelle
-        if (window.kayitlar) window.kayitlar = kalan;
-        if (window.arsivKayitlar) {
-            window.arsivKayitlar = window.arsivKayitlar.concat(tasinan);
-        }
-
-        // localStorage'a yaz
+        // localStorage'a yaz - ana liste ve arşiv
         try {
-            const aktifKurum = localStorage.getItem('mesem_aktif_kurum') || '';
             if (aktifKurum) {
                 localStorage.setItem('mesem_kayitlar_' + aktifKurum, JSON.stringify(kalan));
                 const arsivAnahtar = 'mesem_arsiv_' + aktifKurum;
-                const mevcutArsiv = JSON.parse(localStorage.getItem(arsivAnahtar) || '[]');
+                let mevcutArsiv = [];
+                try { mevcutArsiv = JSON.parse(localStorage.getItem(arsivAnahtar) || '[]'); } catch (e) { mevcutArsiv = []; }
                 localStorage.setItem(arsivAnahtar, JSON.stringify(mevcutArsiv.concat(tasinan)));
             }
         } catch (e) {
             console.error('Arşive taşıma localStorage hatası:', e);
         }
 
-        // Arayüzü yenile
-        if (typeof window.tumunuYenile === 'function') window.tumunuYenile();
-        if (typeof window.sekmeSayaclariniGuncelle === 'function') window.sekmeSayaclariniGuncelle();
+        // Sayfayı yenile - böylece kayitlar ve arsivKayitlar değişkenleri güncellenir
+        location.reload();
 
         const tasinanOzet = tasinan.map(k => `${k.ad || ''} ${k.soyad || ''} (${k.tc})`).slice(0, 5).join(', ');
         sonuc.innerHTML = `

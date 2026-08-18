@@ -1316,6 +1316,7 @@ function uygulamayiAc() {
     $('loginOverlay').style.display = 'none';
     $('mainApp').style.display = 'block';
     $('aktifKurumAdi').textContent = aktifKurum;
+    localStorage.setItem('mesem_aktif_kurum', aktifKurum);
     esitlemeDurumu(YEREL_MOD ? 'yerel' : 'ok', YEREL_MOD ? 'Yerel mod' : 'Bulutla eşit');
     komisyonAyarlariniYukle();
     yeredenOku();
