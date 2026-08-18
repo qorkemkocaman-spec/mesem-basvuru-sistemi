@@ -1,0 +1,43 @@
+{
+  "surum": "9.0",
+  "olusturmaTarihi": "2026-08-18T13:29:02.094Z",
+  "ozelEslemeler": {
+    "kalfalikSekme": "#rdTabIslemler > div > ul > li:nth-of-type(1) > span > span",
+    "ustalikSekme": "#rdTabIslemler > div > ul > li:nth-of-type(2) > span",
+    "pedagojiSekme": "#rdTabIslemler > div > ul > li:nth-of-type(3) > span > span",
+    "yeniKayitBtn": "#wucPageHeader1_btnToolNew",
+    "ogrenimYili": "#cmbOgrenimYili_Input",
+    "tc": "#txtTCKimlikNo",
+    "dogumTarihi": "#dtDogumTarihi_dateInput",
+    "sorgulaBtn": "#btnSearch",
+    "kapsam": "#cmbKapsam_Input",
+    "eposta": "#txtEPosta",
+    "telefon": "#txtTelefonGSM",
+    "enSonMezuniyet": "#cmbEgitim_Input",
+    "getirdigiBelge": "#cmbMezuniyetBelgeTuru_Input",
+    "belgeTarihi": "#dtMezuniyet_dateInput",
+    "alan": "#cmbAlan_Input",
+    "dal": "#cmbDal_Input",
+    "kaydetBtn": "#btnKaydet"
+  },
+  "yerlesikHarita": {
+    "kalfalikSekme": "#btnKalfalik, #tabKalfalik, input[value*=\"Kalfalık\"], a[href*=\"Kalfalik\"], button[id*=\"Kalfalik\"], .kalfalik-tab, #ctl00_cphGovde_btnKalfalik, #ctl00_cphGovde_tabKalfalik",
+    "ustalikSekme": "#btnUstalik, #tabUstalik, input[value*=\"Ustalık\"], a[href*=\"Ustalik\"], button[id*=\"Ustalik\"], .ustalik-tab, #ctl00_cphGovde_btnUstalik, #ctl00_cphGovde_tabUstalik",
+    "pedagojiSekme": "#btnPedagoji, #tabPedagoji, input[value*=\"Pedagoji\"], a[href*=\"Pedagoji\"], button[id*=\"Pedagoji\"], input[value*=\"Usta Öğretici\"], #tabUstaOgretici, #ctl00_cphGovde_btnPedagoji",
+    "yeniKayitBtn": "#btnYeniKayit, #btnYeni, input[id*=\"YeniKayit\"], input[id*=\"btnYeni\"], button[id*=\"btnYeni\"], a[id*=\"btnYeni\"], #ctl00_cphGovde_btnYeniKayit, #ctl00_cphGovde_btnYeni",
+    "ogrenimYili": "#cmbOgrenimYili_Input, #ctl00_cphGovde_cmbOgrenimYili_Input, input[id*=\"cmbOgrenimYili\"], select[id*=\"OgrenimYili\"], select[name*=\"OgrenimYili\"], #cmbOgrenimYili, #ctl00_cphGovde_cmbOgrenimYili",
+    "tc": "#txtTCKimlikNo, #txtKimlikNo, #txtTC, input[id*=\"TCKimlikNo\"], input[id*=\"KimlikNo\"], input[id*=\"txtTC\"], #ctl00_cphGovde_txtTCKimlikNo, #ctl00_cphGovde_txtKimlikNo",
+    "dogumTarihi": "#dtDogumTarihi_dateInput, #dtDogumTarihi, #txtDogumTarihi, input[id*=\"DogumTarih\"], input[name*=\"DogumTarih\"], #ctl00_cphGovde_dtDogumTarihi_dateInput, #ctl00_cphGovde_dtDogumTarihi",
+    "sorgulaBtn": "#btnSearch, #btnSorgula, #btnMernis, input[id*=\"btnSearch\"], input[id*=\"btnSorgula\"], button[id*=\"btnSorgula\"], input[value=\"Sorgula\"], #ctl00_cphGovde_btnSearch, #ctl00_cphGovde_btnSorgula",
+    "kapsam": "#cmbKapsam_Input, #ddlKapsam, select[id*=\"Kapsam\"], input[id*=\"cmbKapsam\"], #ctl00_cphGovde_cmbKapsam_Input, #ctl00_cphGovde_cmbKapsam",
+    "eposta": "#txtEPosta, #txtEposta, #txtEmail, input[id*=\"EPosta\"], input[id*=\"Eposta\"], input[id*=\"Email\"], #ctl00_cphGovde_txtEPosta, #ctl00_cphGovde_txtEposta",
+    "telefon": "#txtTelefonGSM, #txtCepTel, #txtTelefon, input[id*=\"TelefonGSM\"], input[id*=\"Telefon\"], input[id*=\"CepTel\"], #ctl00_cphGovde_txtTelefonGSM, #ctl00_cphGovde_txtCepTel",
+    "enSonMezuniyet": "#cmbEgitim_Input, #cmbMezuniyet_Input, #ddlMezuniyet, select[id*=\"Egitim\"], select[id*=\"Mezuniyet\"], input[id*=\"cmbEgitim\"], #ctl00_cphGovde_cmbEgitim_Input, #ctl00_cphGovde_cmbMezuniyet_Input",
+    "getirdigiBelge": "#cmbMezuniyetBelgeTuru_Input, #cmbBelge_Input, #ddlBelge, select[id*=\"MezuniyetBelgeTuru\"], select[id*=\"Belge\"], input[id*=\"cmbMezuniyetBelgeTuru\"], #ctl00_cphGovde_cmbMezuniyetBelgeTuru_Input, #ctl00_cphGovde_cmbBelge_Input",
+    "belgeTarihi": "#dtMezuniyet_dateInput, #dtMezuniyet, #dtpBelgeTarihi_dateInput, #dtpBelgeTarihi, #dtBelgeTarihi_dateInput, input[id*=\"dtMezuniyet\"], input[id*=\"BelgeTarih\"], input[name*=\"BelgeTarih\"], #ctl00_cphGovde_dtMezuniyet_dateInput, #ctl00_cphGovde_dtpBelgeTarihi_dateInput",
+    "alan": "#cmbAlan_Input, #ctl00_cphGovde_cmbAlan_Input, input[id*=\"cmbAlan\"], select[id*=\"cmbAlan\"], select[id*=\"ddlAlan\"], #cmbAlan, #ctl00_cphGovde_cmbAlan",
+    "dal": "#cmbDal_Input, #ctl00_cphGovde_cmbDal_Input, input[id*=\"cmbDal\"], select[id*=\"cmbDal\"], select[id*=\"ddlDal\"], #cmbDal, #ctl00_cphGovde_cmbDal",
+    "kaydetBtn": "#btnKaydet, #btnOnKayitKaydet, input[id*=\"btnKaydet\"], button[id*=\"btnKaydet\"], input[value=\"Kaydet\"], #ctl00_cphGovde_btnKaydet, #ctl00_cphGovde_btnOnKayitKaydet",
+    "yenileBtn": "input[value*=\"Yenile\"], button[id*=\"Yenile\"], a[id*=\"Yenile\"], #btnYenile, #btnRefresh, input[value=\"Yenile\"], #ctl00_cphGovde_btnYenile"
+  }
+}
