@@ -24,6 +24,13 @@
                 return true;
             }
             return false;
+        },
+        arsivdenGeriAl: function (id) {
+            if (typeof window.kaydiArsivdenGeriAl === 'function') {
+                window.kaydiArsivdenGeriAl(id);
+                return true;
+            }
+            return false;
         }
     };
 })();
