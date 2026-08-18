@@ -1661,6 +1661,48 @@
         }
     }
 
+    /**
+     * Belge Tarihi (RadDatePicker) alanını bulur, yazar ve doğrular.
+     * Kalfalık formunda Alan/Dal seçimi sırasında tetiklenen PostBack'ler belge tarihi
+     * kutusunu sıfırlayabildiği için, bu fonksiyon hem ilk yazımda hem de Alan/Dal
+     * seçimi SONRASINDA çağrılır. Ayrıca evrenselInputBul bazen bir DIV container
+     * döndürebildiği için, bulunan eleman input değilse içindeki gerçek input aranır.
+     */
+    async function belgeTarihiYazVeDogrula(k) {
+        if (!k || !k.belgeTarihi) {
+            logEkle('⚠️ Aday verisinde "belgeTarihi" alanı boş geldiği için Belge Tarihi kutusu doldurulamadı.', 'uyari');
+            return false;
+        }
+
+        // 1. Belge Tarihi elemanını bul (önce özel eşleme, sonra evrensel arama)
+        var belgeTarihEl = ogretilmisAlanBul('belgeTarihi') || evrenselInputBul(['dtmezuniyet_dateinput', 'dtpbelgetarihi', 'belgetarihi', 'diplomatarihi', 'txtbelgetarihi', 'dtbelgetarihi']);
+        if (!belgeTarihEl) {
+            logEkle('❌ Belge Tarihi (dtMezuniyet) kutusu bulunamadı! Lütfen "Alan Öğret" ile öğretin.', 'hata');
+            return false;
+        }
+
+        // 2. Eğer bulunan eleman bir DIV/container ise içindeki gerçek input'u bul
+        var gercekInput = belgeTarihEl;
+        if (belgeTarihEl.tagName && belgeTarihEl.tagName.toLowerCase() !== 'input' && belgeTarihEl.tagName.toLowerCase() !== 'textarea') {
+            var icInput = belgeTarihEl.querySelector('input:not([type="hidden"]), textarea');
+            if (icInput) gercekInput = icInput;
+        }
+
+        // 3. Tarihi GG.AA.YYYY formatına çevir
+        var bTStr = k.belgeTarihi;
+        if (/^\d{4}-\d{2}-\d{2}$/.test(bTStr)) {
+            var btp = bTStr.split('-');
+            bTStr = btp[2] + '.' + btp[1] + '.' + btp[0];
+        }
+
+        // 4. Telerik RadDatePicker API + DOM simülasyonu ile yaz
+        await telerikRadDatePickerYaz(gercekInput, bTStr);
+        degerYaz(gercekInput, bTStr);
+        vurgula(gercekInput, '#38bdf8');
+        logEkle('✓ Belge Tarihi (RadDatePicker / Input) yazıldı: ' + bTStr, 'basari');
+        return true;
+    }
+
     // ADIM 5: Kapsam, Kademeli Alan -> Dal, İletişim ve RadDatePicker Belge Tarihi
     async function adim5_KapsamVeBilgileriDoldur(k) {
         logEkle('5. Adım: MERNİS sonrası güncellenen DOM üzerinden Kapsam, İletişim, Mezuniyet, Belge Tarihi ve Alan/Dal dolduruluyor...', 'islem');
@@ -1734,25 +1776,10 @@
         // 5.6: Belge Tarihi (Gerçek E-MESEM ID: dtMezuniyet - Telerik RadDatePicker)
         // ÖNEMLİ: "dtmezuniyet_dateinput" en spesifik anahtar - gizli/görünmez "dtMezuniyet"
         // adlı yardımcı input yanlışlıkla bulunup boş kalmasın diye tam ID kullanılıyor.
-        var belgeTarihEl = ogretilmisAlanBul('belgeTarihi') || evrenselInputBul(['dtmezuniyet_dateinput', 'dtpbelgetarihi', 'belgetarihi', 'diplomatarihi', 'txtbelgetarihi', 'dtbelgetarihi']);
-        if (!belgeTarihEl) {
-            logEkle('❌ Belge Tarihi (dtMezuniyet) kutusu bulunamadı! Lütfen "Alan Öğret" ile öğretin.', 'hata');
-        }
-        if (belgeTarihEl && !k.belgeTarihi) {
-            logEkle('⚠️ Aday verisinde "belgeTarihi" alanı boş geldiği için Belge Tarihi kutusu doldurulamadı.', 'uyari');
-        }
-        if (belgeTarihEl && k.belgeTarihi) {
-
-            var bTStr = k.belgeTarihi;
-            if (/^\d{4}-\d{2}-\d{2}$/.test(bTStr)) {
-                var btp = bTStr.split('-');
-                bTStr = btp[2] + '.' + btp[1] + '.' + btp[0];
-            }
-            await telerikRadDatePickerYaz(belgeTarihEl, bTStr);
-            degerYaz(belgeTarihEl, bTStr);
-            vurgula(belgeTarihEl, '#38bdf8');
-            logEkle('✓ Belge Tarihi (RadDatePicker / Input) yazıldı: ' + bTStr, 'basari');
-        }
+        // NOT: Alan/Dal seçimi sırasında tetiklenen PostBack'ler belge tarihi kutusunu
+        // sıfırlayabildiği için, bu adımda yazılan tarih 5.7/5.8 sonunda tekrar doğrulanır
+        // ve gerekirse yeniden yazılır.
+        await belgeTarihiYazVeDogrula(k);
 
         // 5.7: KADEMELİ ALAN SEÇİMİ (Telerik cmbAlan Motoru)
         var alanEl = ogretilmisAlanBul('alan') || evrenselInputBul(['cmbalan', 'ddlalan', 'alan', 'alanadi', 'meslek', 'txtalan']);
@@ -1872,6 +1899,10 @@
             await bekle(300);
         }
 
+        // 5.9: Alan/Dal PostBack'leri belge tarihi kutusunu sıfırlamış olabilir.
+        // Güvenlik kilidi kayıttan önce boş tarih tespit ederse kaydı durdurur; bu yüzden
+        // Alan/Dal seçimi TAMAMLANDIKTAN SONRA belge tarihi tekrar yazılır ve doğrulanır.
+        await belgeTarihiYazVeDogrula(k);
 
         logEkle('✓ Tüm form, RadDatePicker belge tarihi ve mesleki alan/dal bilgileri başarıyla dolduruldu.', 'basari');
         return true;
@@ -1963,9 +1994,16 @@
         // 8. Belge Tarihi (Gerçek ID: dtMezuniyet - RadDatePicker). ÖNEMLİ: Bu kontrol
         // önceden HİÇ YAPILMIYORDU; bu yüzden belge tarihi boş kalsa bile kayıt "başarılı"
         // görünüyordu. Artık boş/geçersiz ise kayıt güvenlik kilidi tarafından durdurulur.
+        // NOT: evrenselInputBul bazen bir DIV container döndürebildiği için önce içindeki
+        // gerçek input'u bulmaya çalışırız.
         var belgeTarihEl = ogretilmisAlanBul('belgeTarihi') || evrenselInputBul(['dtmezuniyet_dateinput', 'dtpbelgetarihi', 'belgetarihi', 'diplomatarihi', 'txtbelgetarihi', 'dtbelgetarihi']);
         if (belgeTarihEl) {
-            var btVal = belgeTarihEl.value ? belgeTarihEl.value.trim() : '';
+            var btDegerEl = belgeTarihEl;
+            if (belgeTarihEl.tagName && belgeTarihEl.tagName.toLowerCase() !== 'input' && belgeTarihEl.tagName.toLowerCase() !== 'textarea') {
+                var btIcInput = belgeTarihEl.querySelector('input:not([type="hidden"]), textarea');
+                if (btIcInput) btDegerEl = btIcInput;
+            }
+            var btVal = btDegerEl.value ? String(btDegerEl.value).trim() : '';
             if (!btVal || !/\d/.test(btVal)) {
                 eksikler.push('Belge Tarihi');
             }
