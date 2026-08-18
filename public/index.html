@@ -2043,9 +2043,11 @@ function dogrula(k, mevcutId) {
         $('tcUyari').textContent = 'Geçersiz TC Kimlik No.';
         $('tc').classList.add('hatali');
     } else {
-        const ayni = kayitlar.find(x => x.tc === k.tc && x.id !== mevcutId);
+        // Aynı TC'ye sahip olsa bile farklı başvuru türü (Kalfalık/Ustalık/İş Pedagojisi)
+        // kayıtları birbirini engellememelidir.
+        const ayni = kayitlar.find(x => x.tc === k.tc && x.id !== mevcutId && basvuruTurunuNormalizeEt(x.basvuruTuru) === basvuruTurunuNormalizeEt(k.basvuruTuru));
         if (ayni) {
-            hatalar.push('Bu TC Kimlik Numarası ile kayıtlı aday zaten var.');
+            hatalar.push('Bu TC Kimlik Numarası ile aynı başvuru türünde kayıtlı aday zaten var.');
             $('tcUyari').textContent = `Mevcut kayıt: ${ayni.ad} ${ayni.soyad} (${ayni.basvuruNo}).`;
             $('tc').classList.add('hatali');
         }
@@ -3030,7 +3032,9 @@ function kayitlariIceAktar(nesneler, kaynak) {
         if (!tam.mezuniyetAciklama) tam.mezuniyetAciklama = mezuniyetAciklamaUret(tam);
 
         const simdi = new Date().toISOString();
-        const mevcut = kayitlar.find(x => x.tc === tc);
+        // Aynı TC'ye sahip olsa bile farklı başvuru türü (Kalfalık/Ustalık/İş Pedagojisi)
+        // kayıtları birbirinin üzerine yazılmamalıdır.
+        const mevcut = kayitlar.find(x => x.tc === tc && basvuruTurunuNormalizeEt(x.basvuruTuru) === tam.basvuruTuru);
         if (mevcut) {
             Object.assign(mevcut, tam);
             mevcut.guncelleme = simdi;
