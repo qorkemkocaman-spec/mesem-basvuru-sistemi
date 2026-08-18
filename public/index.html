@@ -574,7 +574,7 @@
         </div>
         <div class="table-wrapper">
             <table id="basvuruTablosu">
-                <thead><tr><th>Başvuru No</th><th>Öğrenim Yılı</th><th>Kayıt Türü</th><th>TC / Ad Soyad</th><th>Doğum / İletişim</th><th>Alan / Dal Adı</th><th>Kapsam / Mezuniyet</th><th>İşlem</th></tr></thead>
+                <thead><tr><th>Başvuru No</th><th>Öğrenim Yılı</th><th>Kayıt Türü</th><th>TC / Ad Soyad</th><th>Doğum / İletişim</th><th>Alan / Dal Adı</th><th>Kapsam / Mezuniyet</th><th>E-MESEM</th><th>İşlem</th></tr></thead>
                 <tbody id="tabloBody"></tbody>
             </table>
         </div>
@@ -1409,7 +1409,8 @@ function navSekmeDegistir(sekmeAdi) {
         'Kalfalık Sınavı': '🔹 Kalfalık Sınavı Başvuru Listesi',
         'Ustalık Sınavı': '🔹 Ustalık Sınavı Başvuru Listesi',
         'İş Pedagojisi Kursu': '🔹 İş Pedagojisi Kursu Başvuru Listesi',
-        'Tumu': '📚 Tüm Kayıtlar / Arşiv Listesi'
+        'Tumu': '📚 Tüm Kayıtlar / Arşiv Listesi',
+        'Arsiv': '📦 Arşivlenmiş E-MESEM Kayıtları'
     };
     $('tabloBaslikYazi').textContent = baslikMap[sekmeAdi] || '📚 Öğrenci Kayıt ve Başvuru Listesi';
 
@@ -1428,6 +1429,7 @@ function sekmeSayaclariniGuncelle() {
     $('countUstalik').textContent = ustalik;
     $('countPedagoji').textContent = pedagoji;
     $('countTumu').textContent = kayitlar.length;
+    $('countArsiv').textContent = arsivKayitlar.length;
 }
 
 /* ============================================================
@@ -1722,6 +1724,39 @@ function kaydiSil(id) {
 }
 
 /* ============================================================
+   E-MESEM ARŞİVE TAŞIMA
+   Kullanıcı tablodaki "E-MESEM" onay tik'ini işaretlediğinde
+   bu fonksiyon çağrılır. Kayıt ana listeden alınıp arşive taşınır.
+   ============================================================ */
+function kaydiArsiveTasi(id) {
+    const k = kayitlar.find(x => x.id === id);
+    if (!k) return;
+
+    // Arşiv kaydı oluştur
+    const arsivKaydi = Object.assign({}, k, {
+        arsivTarihi: new Date().toISOString(),
+        arsivTC: k.tc,
+        arsivAdSoyad: (k.ad || '') + ' ' + (k.soyad || '')
+    });
+    delete arsivKaydi.durum;
+
+    // Ana listeden çıkar
+    kayitlar = kayitlar.filter(x => x.id !== id);
+    if (duzenlenenId === id) formuTemizle();
+
+    // Arşive ekle
+    arsivKayitlar.push(arsivKaydi);
+
+    // Kaydet ve eşitle
+    yereleYaz();
+    kuyrugaEkle({ tip: 'upsert', id: arsivKaydi.id, kayit: arsivKaydi, ts: new Date().toISOString() });
+    kuyrugaEkle({ tip: 'sil', id: id, ts: new Date().toISOString() });
+
+    tumunuYenile();
+    bildir(`✅ ${k.ad} ${k.soyad} E-MESEM'e kaydedildi ve arşive taşındı.`, 'ok');
+}
+
+/* ============================================================
    FİLTRE VE TABLOLAR
    ============================================================ */
 function filtrelenmisKayitlar() {
@@ -1729,9 +1764,12 @@ function filtrelenmisKayitlar() {
     const metin = aramaAnahtari($('sorgulaMetin').value);
     const dogum = $('sorgulaDogum').value;
 
-    return kayitlar.filter(k => {
+    // Arşiv sekmesinde arşiv kayıtlarını göster
+    const kaynakListe = (aktifNavSekme === 'Arsiv') ? arsivKayitlar : kayitlar;
+
+    return kaynakListe.filter(k => {
         // Sekme filtresi
-        if (aktifNavSekme !== 'Tumu') {
+        if (aktifNavSekme !== 'Tumu' && aktifNavSekme !== 'Arsiv') {
             const tur = basvuruTurunuNormalizeEt(k.basvuruTuru);
             if (tur !== aktifNavSekme) return false;
         }
@@ -1868,6 +1906,28 @@ function tabloYenile() {
         const tdKapsam = document.createElement('td');
         tdKapsam.innerHTML = `<div><strong style="color:var(--primary);">${k.kapsam || '-'}</strong></div><div style="font-size:11.5px; color:#94a3b8;">${k.enSonMezuniyet || '-'} (${k.getirdigiBelge || 'Belge'})</div>`;
         tr.appendChild(tdKapsam);
+
+        // E-MESEM'e Kaydedildi onay tik'i - tıklanınca onay sorar ve arşive taşır
+        const tdEmesem = document.createElement('td');
+        tdEmesem.style.textAlign = 'center';
+        const arsivKutus = document.createElement('input');
+        arsivKutus.type = 'checkbox';
+        arsivKutus.style.width = '18px';
+        arsivKutus.style.height = '18px';
+        arsivKutus.style.cursor = 'pointer';
+        arsivKutus.style.accentColor = 'var(--success)';
+        arsivKutus.title = 'E-MESEM\'e kaydedildi - tıklayınca kişi arşive taşınır';
+        arsivKutus.addEventListener('change', function () {
+            if (this.checked) {
+                if (confirm(k.ad + ' ' + k.soyad + ' adlı aday E-MESEM\'e GERÇEKTEN kaydedildi mi? Onaylarsanız arşive taşınacaktır.')) {
+                    kaydiArsiveTasi(k.id);
+                } else {
+                    this.checked = false;
+                }
+            }
+        });
+        tdEmesem.appendChild(arsivKutus);
+        tr.appendChild(tdEmesem);
 
         const tdIslem = document.createElement('td');
         tdIslem.style.whiteSpace = 'nowrap';
@@ -2954,6 +3014,7 @@ function olaylariBagla() {
     $('tabUstalik').addEventListener('click', () => navSekmeDegistir('Ustalık Sınavı'));
     $('tabPedagoji').addEventListener('click', () => navSekmeDegistir('İş Pedagojisi Kursu'));
     $('tabTumu').addEventListener('click', () => navSekmeDegistir('Tumu'));
+    $('tabArsiv').addEventListener('click', () => navSekmeDegistir('Arsiv'));
 
     $('sorgulaMetin').addEventListener('input', () => { sonucBariniGizle(); tabloYenile(); });
     $('sorgulaDogum').addEventListener('change', () => { sonucBariniGizle(); tabloYenile(); });
