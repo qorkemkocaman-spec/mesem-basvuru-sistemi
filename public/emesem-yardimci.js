@@ -235,12 +235,19 @@
     function kanonikMetin(s) {
         if (!s) return '';
         var t = String(s)
+            // Türkçe büyük/küçük harf normalizasyonu
             .replace(/İ/g, 'i').replace(/I/g, 'i').replace(/ı/g, 'i')
             .replace(/Ğ/g, 'g').replace(/ğ/g, 'g')
             .replace(/Ü/g, 'u').replace(/ü/g, 'u')
             .replace(/Ş/g, 's').replace(/ş/g, 's')
             .replace(/Ö/g, 'o').replace(/ö/g, 'o')
             .replace(/Ç/g, 'c').replace(/ç/g, 'c')
+            // ŞAPKALI (inceltme işaretli) harfler: E-MESEM'de "Mekân" şeklinde geçer.
+            // Bizim veride "Mekan" şeklinde olduğundan eşleşme sağlamak için şapka kaldırılır.
+            .replace(/Â/g, 'a').replace(/â/g, 'a')
+            .replace(/Î/g, 'i').replace(/î/g, 'i')
+            .replace(/Û/g, 'u').replace(/û/g, 'u')
+            .replace(/Ê/g, 'e').replace(/ê/g, 'e')
             .toLowerCase()
             // E-MESEM'de "İç Mekan ve Mobilya Teknolojisi" farklı formlarda görünebilir.
             // "ve"/"ile" bağlaçlarını kelime olarak kaldır: "ic mekan ve mobilya" -> "ic mekan mobilya"
