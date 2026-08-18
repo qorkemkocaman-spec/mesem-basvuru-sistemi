@@ -2799,7 +2799,8 @@
 
         // Açıklama & Hızlı İşlem Barı
         var rehberKutu = el('div', 'padding:10px 14px; background:#0b1120; border-bottom:1px solid #1e293b; line-height:1.45;');
-        rehberKutu.innerHTML = '<div style="color:#e2e8f0; font-size:12px; margin-bottom:6px;">Robot, MEB sisteminin tüm bilinen <strong>Telerik RadComboBox ve RadDatePicker</strong> seçicileriyle donatılmıştır (Sıfır Konfigürasyon). İsterseniz alanları tek tek özelleştirebilir veya profili JSON olarak kaydedebilirsiniz.</div>' +
+        rehberKutu.innerHTML = '<div style="color:#fbbf24; font-size:11.5px; margin-bottom:6px; padding:6px 8px; background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.35); border-radius:6px; line-height:1.5;">⚠️ <strong>Önemli Uyarı:</strong> Yerleşik Telerik seçici haritası MEB güncellemeleri nedeniyle her zaman sağlıklı çalışmayabilir. Bu yüzden alanları robota öğretmek en güvenilir yöntemdir.</div>' +
+            '<div style="color:#e2e8f0; font-size:12px; margin-bottom:6px;">Robot, MEB sisteminin tüm bilinen <strong>Telerik RadComboBox ve RadDatePicker</strong> seçicileriyle donatılmıştır (Sıfır Konfigürasyon). İsterseniz alanları tek tek özelleştirebilir veya profili JSON olarak kaydedebilirsiniz.</div>' +
             '<div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">' +
             '<button id="btnModalYeniPencereAc" style="padding:4px 8px; font-size:11px; font-weight:bold; background:#0284c7; color:#fff; border:0; border-radius:5px; cursor:pointer;">🪟 Yeni Kayıt Penceresini Aç</button>' +
             '<button id="btnModalSiraliOgret" style="padding:4px 8px; font-size:11px; font-weight:bold; background:#10b981; color:#fff; border:0; border-radius:5px; cursor:pointer;">⚡ Sırayla Tümünü Öğret</button>' +
@@ -3254,8 +3255,8 @@
     dugmeCubugu.appendChild(btnTeshis);
 
     // Durum ve Sayaç
-    durumYazi = el('div', 'padding:6px 10px; font-size:11.5px; color:#cbd5e1; border-bottom:1px solid #334155; line-height:1.4; background:#090d16;',
-        'Robot hazır (Yerleşik Telerik Profili & RadDatePicker Motoru Aktif). "📋 Panodan Al"a tıklayın.');
+    durumYazi = el('div', 'padding:6px 10px; font-size:11.5px; color:#fbbf24; border-bottom:1px solid #334155; line-height:1.4; background:#090d16;',
+        '⚠️ Yerleşik Telerik her zaman sağlıklı çalışmayabilir. En iyisi "🎯 Alan Öğret / Profil" ile alanları robota öğretmek.');
 
     sayacKutusu = el('div', 'padding:3px 10px; font-size:10.5px; color:#94a3b8; background:#0b1120; border-bottom:1px solid #1e293b;',
         'Kalfalık: 0 | Ustalık: 0 | Pedagoji: 0 | Aktif: 0');
@@ -3420,6 +3421,12 @@
     ayarSatiri.appendChild(solAyar);
     ayarSatiri.appendChild(sagAyar);
 
+    // Telerik Uyarı Bandı: Yerleşik Telerik seçici haritası MEB güncellemeleri nedeniyle
+    // her zaman sağlıklı çalışmayabilir; kullanıcıya alanları robota öğretmesi önerilir.
+    var telerikUyariBanner = el('div', 'padding:8px 10px; background:rgba(245,158,11,0.12); border-bottom:1px solid rgba(245,158,11,0.35); line-height:1.5; font-size:11px; color:#fbbf24;');
+    telerikUyariBanner.innerHTML = '⚠️ <strong>Önemli:</strong> Yerleşik Telerik seçici haritası MEB güncellemeleri nedeniyle her zaman sağlıklı çalışmayabilir. En güvenilir yöntem, alanları <strong>"🎯 Alan Öğret / Profil"</strong> ile robota öğretmektir.';
+
+    govde.appendChild(telerikUyariBanner);
     govde.appendChild(kategoriBar);
     govde.appendChild(dugmeCubugu);
     govde.appendChild(durumYazi);
