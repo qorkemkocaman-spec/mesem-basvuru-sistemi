@@ -3098,9 +3098,108 @@
     btnGec.title = 'Sıradaki adaya geç';
     btnGec.onclick = siradakiniGec;
 
+    var btnKayitListesi = el('button', 'padding:5px 6px; font-size:11px; font-weight:600; cursor:pointer; background:#0d9488; color:#fff; border:0; border-radius:5px;', '📋 Kayıt Listesini Kopyala');
+    btnKayitListesi.title = 'E-MESEM "Sınav Öğrenci Ön Kayıt" ekranındaki kayıt listesi tablosunu panoya kopyalar (TC/Ad Soyad karşılaştırması için)';
+    btnKayitListesi.onclick = kayitListesiniKopyala;
+
     var btnTeshis = el('button', 'padding:5px 6px; font-size:11px; font-weight:600; cursor:pointer; background:#334155; color:#38bdf8; border:0; border-radius:5px; margin-left:auto;', '🔍 Teşhis');
     btnTeshis.title = 'Sayfadaki form elemanlarını tara & konsola dök';
     btnTeshis.onclick = sayfayiTeshisEt;
+
+    /* ============================================================
+       E-MESEM KAYIT LİSTESİNİ KOPYALA (Arşiv Karşılaştırma İçin)
+       "Sınav Öğrenci Ön Kayıt" ekranındaki kayıt listesi tablosunu
+       seçip panoya kopyalar. Web uygulamasındaki "Arşiv & E-MESEM
+       Karşılaştırma" modülü bu veriyi TC/Ad Soyad eşleştirmesi yaparak
+       başarılı kaydedilenleri arşive taşır.
+       ============================================================ */
+    function kayitListesiniKopyala() {
+        var belgeler = tumBelgeleriGetir();
+        var tabloBulundu = null;
+
+        for (var b = 0; b < belgeler.length; b++) {
+            var doc = belgeler[b];
+            var tablolar = doc.querySelectorAll('table');
+            for (var t = 0; t < tablolar.length; t++) {
+                var tbl = tablolar[t];
+                var metin = tbl.textContent || '';
+                if (/\d{11}/.test(metin)) {
+                    tabloBulundu = tbl;
+                    break;
+                }
+            }
+            if (tabloBulundu) break;
+
+            var gridler = doc.querySelectorAll('.rgMasterTable, .RadGrid table, .k-grid table');
+            for (var g = 0; g < gridler.length; g++) {
+                if (/\d{11}/.test(gridler[g].textContent || '')) {
+                    tabloBulundu = gridler[g];
+                    break;
+                }
+            }
+            if (tabloBulundu) break;
+        }
+
+        if (!tabloBulundu) {
+            durum('❌ Kayıt listesi tablosu bulunamadı. "Sınav Öğrenci Ön Kayıt" ekranında olduğunuzdan emin olun.', '#f87171');
+            logEkle('❌ Kayıt listesi tablosu bulunamadı.', 'hata');
+            sesCal('hata');
+            return;
+        }
+
+        var satirlar = [];
+        var trler = tabloBulundu.querySelectorAll('tr');
+        for (var r = 0; r < trler.length; r++) {
+            var hucreler = trler[r].querySelectorAll('th, td');
+            var satirMetni = [];
+            for (var h = 0; h < hucreler.length; h++) {
+                satirMetni.push((hucreler[h].textContent || '').trim());
+            }
+            if (satirMetni.join('').trim()) {
+                satirlar.push(satirMetni.join('\t'));
+            }
+        }
+
+        var metin = satirlar.join('\n');
+        if (!metin.trim()) {
+            durum('❌ Tablo boş görünüyor.', '#f87171');
+            return;
+        }
+
+        function panoyaAktar() {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(metin).then(function () {
+                    sesCal('basari');
+                    durum('✓ Kayıt listesi panoya kopyalandı (' + satirlar.length + ' satır). Web uygulamasında "Arşiv & E-MESEM Karşılaştırma"ya yapıştırın.', '#4ade80');
+                    logEkle('✓ Kayıt listesi panoya kopyalandı (' + satirlar.length + ' satır).', 'basari');
+                }).catch(function () {
+                    secVeKopyala();
+                });
+            } else {
+                secVeKopyala();
+            }
+        }
+
+        function secVeKopyala() {
+            try {
+                var range = document.createRange();
+                range.selectNodeContents(tabloBulundu);
+                var sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+                document.execCommand('copy');
+                sel.removeAllRanges();
+                sesCal('basari');
+                durum('✓ Kayıt listesi seçilerek kopyalandı (' + satirlar.length + ' satır).', '#4ade80');
+                logEkle('✓ Kayıt listesi seçilerek kopyalandı.', 'basari');
+            } catch (e) {
+                durum('❌ Pano erişimi reddedildi. Manuel seçip Ctrl+C ile kopyalayın.', '#f87171');
+                logEkle('❌ Pano kopyalama hatası: ' + e.message, 'hata');
+            }
+        }
+
+        panoyaAktar();
+    }
 
     function cubukBtnGuncelle() {
         if (!btnToplu) return;
@@ -3118,6 +3217,7 @@
     dugmeCubugu.appendChild(btnTekDoldur);
     dugmeCubugu.appendChild(btnToplu);
     dugmeCubugu.appendChild(btnGec);
+    dugmeCubugu.appendChild(btnKayitListesi);
     dugmeCubugu.appendChild(btnTeshis);
 
     // Durum ve Sayaç

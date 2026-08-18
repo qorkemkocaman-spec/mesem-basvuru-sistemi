@@ -260,8 +260,12 @@
                 <span class="tab-count" id="countPedagoji">0</span>
             </button>
             <button class="nav-tab-btn" id="tabTumu" type="button">
-                <span>📚 Tüm Kayıtlar / Arşiv</span>
+                <span>📚 Tüm Kayıtlar</span>
                 <span class="tab-count" id="countTumu">0</span>
+            </button>
+            <button class="nav-tab-btn" id="tabArsiv" type="button">
+                <span>📦 Arşiv</span>
+                <span class="tab-count" id="countArsiv">0</span>
             </button>
         </div>
 
@@ -906,6 +910,7 @@
 <div id="toast"></div>
 
 <script src="myk-data.js"></script>
+<script src="arsiv.js"></script>
 <script>
 
 /* ============================================================
@@ -1018,6 +1023,7 @@ const ALANLAR = [
    DURUM VE YEREL DEPO
    ============================================================ */
 let kayitlar = [];
+let arsivKayitlar = [];
 let kuyruk = [];
 let aktifKurum = "";
 let oturumAnahtari = "";
@@ -1025,7 +1031,7 @@ let duzenlenenId = null;
 let esitlemeZamanlayici = null;
 let esitlemeCalisiyor = false;
 let aktifRaporTuru = 'sonuc';
-let aktifNavSekme = 'Kalfalık Sınavı'; // 'Kalfalık Sınavı' | 'Ustalık Sınavı' | 'İş Pedagojisi Kursu' | 'Tumu'
+let aktifNavSekme = 'Kalfalık Sınavı'; // 'Kalfalık Sınavı' | 'Ustalık Sınavı' | 'İş Pedagojisi Kursu' | 'Tumu' | 'Arsiv'
 
 const $ = (id) => document.getElementById(id);
 
@@ -1170,12 +1176,14 @@ const yerelDepo = guvenliDepo('localStorage');
 const oturumDepo = guvenliDepo('sessionStorage');
 
 const kayitAnahtari = () => 'mesem_kayitlar_' + aktifKurum;
+const arsivAnahtari = () => 'mesem_arsiv_' + aktifKurum;
 const kuyrukAnahtari = () => 'mesem_kuyruk_' + aktifKurum;
 
 function yereleYaz() {
     if (!aktifKurum) return;
     try {
         yerelDepo.setItem(kayitAnahtari(), JSON.stringify(kayitlar));
+        yerelDepo.setItem(arsivAnahtari(), JSON.stringify(arsivKayitlar));
         yerelDepo.setItem(kuyrukAnahtari(), JSON.stringify(kuyruk));
     } catch (e) {
         bildir('Tarayıcı deposu dolu, veriler yerel olarak saklanamadı.', 'hata');
@@ -1185,13 +1193,15 @@ function yereleYaz() {
 function yeredenOku() {
     try {
         kayitlar = JSON.parse(yerelDepo.getItem(kayitAnahtari()) || '[]');
+        arsivKayitlar = JSON.parse(yerelDepo.getItem(arsivAnahtari()) || '[]');
         kuyruk = JSON.parse(yerelDepo.getItem(kuyrukAnahtari()) || '[]');
-    } catch (e) { kayitlar = []; kuyruk = []; }
+    } catch (e) { kayitlar = []; arsivKayitlar = []; kuyruk = []; }
 }
 
 function yereliTemizle() {
     if (!aktifKurum) return;
     yerelDepo.removeItem(kayitAnahtari());
+    yerelDepo.removeItem(arsivAnahtari());
     yerelDepo.removeItem(kuyrukAnahtari());
 }
 
@@ -1377,12 +1387,19 @@ function basvuruTuruTetikle() {
 function navSekmeDegistir(sekmeAdi) {
     aktifNavSekme = sekmeAdi;
 
+    const arsivAcik = (sekmeAdi === 'Arsiv');
     $('tabKalfalik').classList.toggle('active', sekmeAdi === 'Kalfalık Sınavı');
     $('tabUstalik').classList.toggle('active', sekmeAdi === 'Ustalık Sınavı');
     $('tabPedagoji').classList.toggle('active', sekmeAdi === 'İş Pedagojisi Kursu');
     $('tabTumu').classList.toggle('active', sekmeAdi === 'Tumu');
+    $('tabArsiv').classList.toggle('active', arsivAcik);
 
-    if (sekmeAdi !== 'Tumu' && !duzenlenenId) {
+    const formAlanlari = document.querySelector('#basvuruForm');
+    if (formAlanlari) formAlanlari.style.display = arsivAcik ? 'none' : 'block';
+    const bulGetirBtn = $('btnBulGetir');
+    if (bulGetirBtn) bulGetirBtn.style.display = arsivAcik ? 'none' : 'inline-block';
+
+    if (!arsivAcik && sekmeAdi !== 'Tumu' && !duzenlenenId) {
         $('basvuruTuru').value = sekmeAdi;
         basvuruTuruTetikle();
     }
