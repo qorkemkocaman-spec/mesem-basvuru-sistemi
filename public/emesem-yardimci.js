@@ -366,18 +366,61 @@
     }
 
     /**
+     * E-MESEM sekmeli (Kalfalık / Ustalık / İş Pedagojisi) ekranlarında aynı ID/selector
+     * kalıbına sahip Telerik kontrolleri her sekme için DOM'da AYRI AYRI ve GİZLİ olarak
+     * bulunabilir (örn. cmbAlan hem Kalfalık hem Ustalık hem Pedagoji popup'ında mevcut
+     * olup sadece aktif olan sekmenin kontrolü görünür/etkileşilebilirdir). querySelector
+     * her zaman DOM sırasına göre İLK eşleşen elemanı döndürdüğü için, aktif olmayan bir
+     * sekmenin (örn. daima ilk yüklenen Ustalık) gizli kontrolüne yanlışlıkla değer
+     * yazılabiliyordu. Bu fonksiyon önce GÖRÜNÜR (görüntülenebilir) elemanı tercih eder.
+     */
+    function elemanGorunurMu(el) {
+        if (!el) return false;
+        try {
+            var node = el;
+            while (node && node.nodeType === Node.ELEMENT_NODE) {
+                var win = (node.ownerDocument && node.ownerDocument.defaultView) || window;
+                var style = win.getComputedStyle(node);
+                if (!style) break;
+                if (style.display === 'none' || style.visibility === 'hidden') return false;
+                node = node.parentElement;
+            }
+            if (el.offsetParent === null && el.offsetWidth === 0 && el.offsetHeight === 0) {
+                // Bazı Telerik input'ları fixed/absolute konumlandığı için offsetParent null
+                // olabilir; bu durumda getBoundingClientRect ile ikinci bir kontrol yapılır.
+                var rect = el.getBoundingClientRect();
+                if (rect.width === 0 && rect.height === 0) return false;
+            }
+            return true;
+        } catch (e) {
+            return true;
+        }
+    }
+
+    function ilkGorunenVeyaIlk(liste) {
+        for (var i = 0; i < liste.length; i++) {
+            if (elemanGorunurMu(liste[i])) return liste[i];
+        }
+        return liste.length ? liste[0] : null;
+    }
+
+    /**
      * Akıllı Alan Bulucu (Önce Özel Eşlemeler, Ardından Yerleşik Sabitlenmiş Telerik Profili)
+     * Aynı selector'a uyan BİRDEN FAZLA eleman varsa (sekmeli formlarda olduğu gibi),
+     * aktif/görünür olan tercih edilir; hiçbiri görünür değilse ilk bulunan döndürülür.
      */
     function ogretilmisAlanBul(alanId) {
         var belgeler = tumBelgeleriGetir();
+        var ozelAdaylar = [];
+        var varsayilanAdaylar = [];
 
         // 1. Kullanıcı Tarafından Öğretilmiş Özel Seçici
         if (ozelEslemeler && ozelEslemeler[alanId]) {
             var selector = ozelEslemeler[alanId];
             for (var i = 0; i < belgeler.length; i++) {
                 try {
-                    var bulunan = belgeler[i].querySelector(selector);
-                    if (bulunan) return bulunan;
+                    var bulunanlar = belgeler[i].querySelectorAll(selector);
+                    for (var x = 0; x < bulunanlar.length; x++) ozelAdaylar.push(bulunanlar[x]);
                 } catch (e) { }
             }
         }
@@ -392,15 +435,26 @@
                     var s = seciciListesi[sIdx];
                     if (!s) continue;
                     try {
-                        var elBulunan = doc.querySelector(s);
-                        if (elBulunan) return elBulunan;
+                        var elBulunanlar = doc.querySelectorAll(s);
+                        for (var y = 0; y < elBulunanlar.length; y++) varsayilanAdaylar.push(elBulunanlar[y]);
                     } catch (e) { }
                 }
             }
         }
 
+        if (ozelAdaylar.length) {
+            var ozelGorunur = ilkGorunenVeyaIlk(ozelAdaylar);
+            if (ozelGorunur && elemanGorunurMu(ozelGorunur)) return ozelGorunur;
+        }
+        if (varsayilanAdaylar.length) {
+            var varsayilanGorunur = ilkGorunenVeyaIlk(varsayilanAdaylar);
+            if (varsayilanGorunur) return varsayilanGorunur;
+        }
+        if (ozelAdaylar.length) return ozelAdaylar[0];
+
         return null;
     }
+
 
     /* Evrensel Metinle Eleman Bulucu */
     function evrenselMetinleBul(etiketSecici, metinListesi, sadeceGorunur) {
@@ -1665,12 +1719,17 @@
             
             var baslangicDal = Date.now();
             while (Date.now() - baslangicDal < 3500) {
-                var dalObj = telerikComboNesnesiBul('cmbDal') || telerikComboNesnesiBul('ddlDal') || telerikComboNesnesiBul('dal');
+                // ÖNEMLİ: Aktif sekmenin (Kalfalık/Ustalık/Pedagoji) GÖRÜNÜR dal kontrolünü
+                // kullan; hardcoded 'cmbDal' string araması, aynı sekmeli formda gizli
+                // duran başka bir sekmenin (örn. her zaman dolu olan Ustalık) dal
+                // kontrolünü yanlışlıkla bulup döngüyü erken bitirebiliyordu.
+                var guncelDalEl = ogretilmisAlanBul('dal') || evrenselInputBul(['cmbdal', 'ddldal', 'dal', 'daladi', 'txtdal']);
+                var dalObj = guncelDalEl ? telerikComboNesnesiBul(guncelDalEl) : null;
                 if (dalObj && dalObj.combo && typeof dalObj.combo.get_items === 'function' && dalObj.combo.get_items().get_count() > 1) {
                     logEkle('✓ Dal seçenekleri Telerik API ile yüklendi (' + dalObj.combo.get_items().get_count() + ' seçenek).', 'basari');
                     break;
                 }
-                var dalDd = telerikDropDownBul('cmbDal') || telerikDropDownBul('dal');
+                var dalDd = guncelDalEl ? telerikDropDownBul(guncelDalEl) : null;
                 if (dalDd && dalDd.dropDown) {
                     var liSayisi = dalDd.dropDown.querySelectorAll('li.rcbItem, li').length;
                     if (liSayisi > 1) {
@@ -1678,14 +1737,14 @@
                         break;
                     }
                 }
-                var dalSelect = evrenselInputBul(['cmbdal', 'ddldal', 'dal']);
-                if (dalSelect && dalSelect.options && dalSelect.options.length > 1) {
-                    logEkle('✓ Dal seçenekleri select ile yüklendi (' + dalSelect.options.length + ' seçenek).', 'basari');
+                if (guncelDalEl && guncelDalEl.options && guncelDalEl.options.length > 1) {
+                    logEkle('✓ Dal seçenekleri select ile yüklendi (' + guncelDalEl.options.length + ' seçenek).', 'basari');
                     break;
                 }
                 await bekle(200);
             }
         }
+
 
         // 5.8: KADEMELİ DAL SEÇİMİ (Telerik cmbDal Motoru)
         var dalEl = ogretilmisAlanBul('dal') || evrenselInputBul(['cmbdal', 'ddldal', 'dal', 'daladi', 'txtdal']);
