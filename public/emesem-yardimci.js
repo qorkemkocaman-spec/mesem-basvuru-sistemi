@@ -1557,23 +1557,51 @@
     }
 
     // ADIM 2: Yeni Kayıt Butonuna Bas
+    // NOT: Açılır pencere bazen internet/bilgisayar kaynaklı gecikebilir. Bilgilerin
+    // pencereye açılmadan girilmemesi için pencerenin GERÇEKTEN açıldığı doğrulanır.
+    function yeniKayitFormuAcikMi() {
+        var tcEl = ogretilmisAlanBul('tc') || evrenselInputBul(['tc', 'kimlikno', 'tckimlikno', 'txttc', 'txtkimlikno']);
+        var dogumEl = ogretilmisAlanBul('dogumTarihi') || evrenselInputBul(['dtdogumtarihi', 'dogumtarihi', 'txtdogumtarihi']);
+        return !!((tcEl && elemanGorunurMu(tcEl)) || (dogumEl && elemanGorunurMu(dogumEl)));
+    }
+
     async function adim2_YeniKayitAc(k) {
         logEkle('2. Adım: "Yeni Kayıt" butonu aranıyor...', 'islem');
         var btn = ogretilmisAlanBul('yeniKayitBtn') ||
                   evrenselMetinleBul('button, a, input[type="button"], .btn', ['Yeni Kayıt', 'Yeni Ekle', 'Yeni'], true) ||
                   evrenselMetinleBul('button, a, input[type="button"], .btn', ['Yeni Kayıt', 'Yeni Ekle', 'Yeni'], false);
 
+        var formAcik = false;
+
         if (btn) {
-            vurgula(btn, '#22c55e');
-            btn.click();
-            logEkle('✓ "Yeni Kayıt" butonuna tıklandı, modal açılışı bekleniyor.', 'basari');
-            await postBackBitisiniBekle(4000, 'Yeni Kayıt Modal Yükleme');
-            await bekle(300);
-            return true;
+            for (var pencerDeneme = 1; pencerDeneme <= 3; pencerDeneme++) {
+                vurgula(btn, '#22c55e');
+                btn.click();
+                logEkle('✓ "Yeni Kayıt" butonuna tıklandı, açılır pencere yükleniyor (deneme ' + pencerDeneme + '/3)...', 'basari');
+                await postBackBitisiniBekle(4000, 'Yeni Kayıt Modal Yükleme');
+                await bekle(700);
+
+                if (yeniKayitFormuAcikMi()) {
+                    logEkle('✓ Yeni Kayıt formu başarıyla açıldı.', 'basari');
+                    formAcik = true;
+                    break;
+                }
+                logEkle('⚠️ Yeni Kayıt açılır penceresi henüz görünmedi, tekrar deneniyor...', 'uyari');
+                await bekle(1000);
+            }
         } else {
             logEkle('Uyarı: "Yeni Kayıt" butonu bulunamadı, formun zaten açık olduğu varsayılıyor.', 'uyari');
-            return false;
+            formAcik = yeniKayitFormuAcikMi();
         }
+
+        if (!formAcik) {
+            var pencereHata = '❌ Yeni Kayıt açılır penceresi 3 denemede de açılamadı! İnternet/bilgisayar kaynaklı olabilir. Lütfen bağlantıyı kontrol edip tekrar deneyin.';
+            logEkle(pencereHata, 'hata');
+            durum(pencereHata, '#f87171');
+            sesCal('hata');
+            throw new Error(pencereHata);
+        }
+        return true;
     }
 
     // ADIM 3: Öğrenim Yılı, TC ve Doğum Tarihi Doldur
@@ -1619,13 +1647,31 @@
 
     // ADIM 4: Sorgula'ya Bas ve MERNİS ASP.NET PostBack Bitişini Bekle
     async function adim4_SorgulaVeMernisBekle(k) {
-        logEkle('4. Adım: MERNİS Sorgula butonuna basılıyor...', 'islem');
+        logEkle('4. ADIM: MERNİS Sorgula butonuna basılıyor...', 'islem');
 
+        // TC Kimlik No ve Doğum Tarihi kontrolü: Eksikse adım 3 tekrar çalıştırılır.
         var tcEl = ogretilmisAlanBul('tc') || evrenselInputBul(['tc', 'kimlikno', 'tckimlikno', 'txttc']);
-        if (tcEl && (!tcEl.value || tcEl.value.trim().length < 11) && k.tc) {
-            degerYaz(tcEl, k.tc);
-            await bekle(150);
+        var dogumEl = ogretilmisAlanBul('dogumTarihi') || evrenselInputBul(['dtdogumtarihi', 'dogumtarihi', 'dogum', 'txtdogum', 'txtdogumtarihi']);
+        var tcDoluMu = tcEl && tcEl.value && String(tcEl.value).trim().length === 11;
+        var dogumDoluMu = dogumEl && dogumEl.value && String(dogumEl.value).trim().length >= 8;
+
+        if (!tcDoluMu || !dogumDoluMu) {
+            logEkle('⚠️ TC Kimlik No veya Doğum Tarihi boş/enjeksiz görünüyor. 3. Adım yeniden çalıştırılıyor...', 'uyari');
+            await adim3_TcTarihDoldur(k);
+            tcEl = ogretilmisAlanBul('tc') || evrenselInputBul(['tc', 'kimlikno', 'tckimlikno', 'txttc']);
+            dogumEl = ogretilmisAlanBul('dogumTarihi') || evrenselInputBul(['dtdogumtarihi', 'dogumtarihi', 'dogum', 'txtdogum', 'txtdogumtarihi']);
+            tcDoluMu = tcEl && tcEl.value && String(tcEl.value).trim().length === 11;
+            dogumDoluMu = dogumEl && dogumEl.value && String(dogumEl.value).trim().length > 8;
+
+            if (!tcDoluMu || !dogumDoluMu) {
+                var tcHata = '❌ TC Kimlik No ve Doğum Tarihi doldurulamadı! Sorgula yapılmayacak. Form alanları kontrol edilmedi.';
+                logEkle(tcHata, 'hata');
+                durum(tcHata, '#f87171');
+                sesCal('hata');
+                throw new Error(tcHata);
+            }
         }
+        logEkle('✓ TC Kimlik No ve Doğum Tarihi doğrulandı.');
 
         var sorgulaBtn = ogretilmisAlanBul('sorgulaBtn') ||
                          evrenselMetinleBul('button, a, input[type="button"], .btn', ['Sorgula', 'MERNİS Sorgula', 'Mernis', 'Getir'], false);
@@ -2019,11 +2065,30 @@
 
         var eksikler = formuDogrula(k);
         if (eksikler.length > 0) {
-            var hataMetni = 'Kayıt Güvenlik Kilidi: Eksik alanlar var -> ' + eksikler.join(', ');
-            logEkle('❌ GÜVENLİK KİLİDİ: ' + hataMetni, 'hata');
-            durum('❌ ' + hataMetni, '#f87171');
-            sesCal('hata');
-            throw new Error(hataMetni);
+            // Eksik alanlar varsa: adim5'i 2 kez tekrar çalıştırarak alanları tamamlamaya çalış
+            var tamamlandi = false;
+            for (var onarimDenemesi = 1; onarimDenemesi <= 2; onarimDenemesi++) {
+                logEkle('⚠️ Eksik alanlar tespit edildi (' + eksikler.join(', ') + '). 5. Adım yeniden çalıştırılıyor (' + onarimDenemesi + '/2)...', 'uyari');
+                try {
+                    await adim5_KapsamVeBilgileriDoldur(k);
+                    await bekle(500);
+                } catch (e) {
+                    logEkle('5. Adım onarım denemesi hatası: ' + e.message, 'uyari');
+                }
+                eksikler = formuDogrula(k);
+                if (eksikler.length === 0) {
+                    tamamlandi = true;
+                    logEkle('✓ Tüm eksik alanlar başarıyla tamamlandı.', 'basari');
+                    break;
+                }
+            }
+            if (!tamamlandi) {
+                var hataMetni = 'Kayıt Güvenlik Kilidi: Eksik alanlar var -> ' + eksikler.join(', ');
+                logEkle('❌ GÜVENLİK KİLİDİ: ' + hataMetni, 'hata');
+                durum('❌ ' + hataMetni, '#f87171');
+                sesCal('hata');
+                throw new Error(hataMetni);
+            }
         }
 
         logEkle('✓ Güvenlik doğrulaması başarılı. Kaydet butonuna basılıyor...', 'basari');
