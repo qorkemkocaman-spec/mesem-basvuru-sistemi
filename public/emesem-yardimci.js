@@ -739,9 +739,18 @@
                         }
 
                         var autoPostBack = (typeof combo.get_autoPostBack === 'function' && combo.get_autoPostBack());
-                        if ((tetiklePostBack || autoPostBack) && typeof cWin.__doPostBack === 'function') {
+                        // ÖNEMLİ (Kalfalık "Alan anlık görünüp kayboluyor" hatasının kök nedeni):
+                        // Eğer RadComboBox'ın kendi autoPostBack özelliği AKTİFSE, hemen üstteki
+                        // item.select()/set_value() çağrısı postback'i ZATEN KENDİSİ tetikler.
+                        // Bunun üzerine bir de biz manuel __doPostBack çağırırsak AYNI ANDA İKİ
+                        // POSTBACK yarışa girer; ikinci (bizim manuel) postback, sunucunun henüz
+                        // ilk postback'te işlemediği/serileştirmediği seçimi geçersiz kılıp DOM'u
+                        // eski (seçimsiz) haline döndürebiliyordu. Artık SADECE autoPostBack KAPALI
+                        // ise manuel postback tetikleniyor; autoPostBack açıksa select() zaten yeterli.
+                        if (!autoPostBack && tetiklePostBack && typeof cWin.__doPostBack === 'function') {
                             cWin.__doPostBack(cId, '');
                         }
+
 
                         logEkle('✓ Telerik RadComboBox API ($find) ile seçildi: ' + hedefItem.get_text(), 'basari');
                         return true;
@@ -1347,8 +1356,31 @@
         return true;
     }
 
+    /**
+     * PostBack sonrası bir RadComboBox seçiminin GERÇEKTEN kalıcı olup olmadığını doğrular.
+     * Kalfalık formunda "Alan anlık görünüp kayboluyor" şeklinde gözlemlenen sorun için eklendi:
+     * eskiden kod sadece "seçim tıklandı mı" diye bakıyordu, PostBack SONRASI kutunun boş/
+     * "Seçiniz" durumuna dönüp dönmediğini hiç kontrol etmiyordu.
+     */
+    function secimKaliciMi(alanId, evrenselAnahtarlar, hedefMetin) {
+        var elBul = ogretilmisAlanBul(alanId) || evrenselInputBul(evrenselAnahtarlar);
+        if (!elBul) return false;
+        var kHedef = kanonikMetin(hedefMetin);
+        if (!kHedef) return true;
+        var deger = '';
+        if (elBul.tagName && elBul.tagName.toLowerCase() === 'select' && elBul.options && elBul.selectedIndex >= 0) {
+            deger = elBul.options[elBul.selectedIndex].textContent;
+        } else {
+            deger = elBul.value || '';
+        }
+        var kDeger = kanonikMetin(deger);
+        if (!kDeger || kDeger.indexOf('seciniz') !== -1) return false;
+        return kDeger === kHedef || kDeger.indexOf(kHedef) !== -1 || kHedef.indexOf(kDeger) !== -1;
+    }
+
     /* ---------------- Kategori & Veri Yönetimi ---------------- */
     function kategoriBelirle(k) {
+
         var tur = trTemizle(k.basvuruTuru || '');
         if (tur.indexOf('pedagoji') !== -1 || tur.indexOf('ustaogretici') !== -1) return 'PEDAGOJI';
         if (tur.indexOf('ustalik') !== -1 || k.ustalikSinav || k.dogrudanUstalik) return 'USTALIK';
@@ -1740,8 +1772,33 @@
 
             logEkle('Alan seçimi sonrası Dal RadComboBox listesinin UpdatePanel ile yüklenmesi bekleniyor...', 'islem');
             await postBackBitisiniBekle(3000, 'cmbAlan Seçimi ve Dal PostBack');
-            
+
+            // YENİ: Kalfalık formunda gözlemlenen "Alan anlık görünüp kayboluyor" sorunu için
+            // PostBack SONRASI seçimin GERÇEKTEN kalıcı olup olmadığı doğrulanır. Kalıcı değilse
+            // (ekrana geri "Seçiniz" boş hale dönmüşse) en fazla 2 kez otomatik tekrar denenir.
+            var alanKaliciDenemeSayisi = 0;
+            var alanAnahtarlar = ['cmbalan', 'ddlalan', 'alan', 'alanadi', 'meslek', 'txtalan'];
+            while (!secimKaliciMi('alan', alanAnahtarlar, k.alan) && alanKaliciDenemeSayisi < 2) {
+                alanKaliciDenemeSayisi++;
+                logEkle('⚠️ Alan seçimi PostBack sonrası kaybolmuş görünüyor (Kalfalık formunda bilinen davranış). ' + alanKaliciDenemeSayisi + '. tekrar deneme yapılıyor: "' + k.alan + '"', 'uyari');
+                var guncelAlanElTekrar = ogretilmisAlanBul('alan') || evrenselInputBul(alanAnahtarlar);
+                if (guncelAlanElTekrar) {
+                    await evrenselSecimYap(guncelAlanElTekrar, k.alan, true);
+                    vurgula(guncelAlanElTekrar, '#f59e0b');
+                    await postBackBitisiniBekle(3000, 'cmbAlan Tekrar Deneme PostBack');
+                }
+            }
+            if (!secimKaliciMi('alan', alanAnahtarlar, k.alan)) {
+                var alanKaliciHata = '❌ Mesleki Alan seçimi ' + (alanKaliciDenemeSayisi + 1) + ' denemede de PostBack sonrası kalıcı olmadı: "' + k.alan + '". MEB sunucusu tarafında bu seçim reddediliyor olabilir.';
+                logEkle(alanKaliciHata, 'hata');
+                durum(alanKaliciHata, '#f87171');
+                throw new Error(alanKaliciHata);
+            } else if (alanKaliciDenemeSayisi > 0) {
+                logEkle('✓ Alan seçimi ' + (alanKaliciDenemeSayisi + 1) + '. denemede kalıcı olarak doğrulandı: ' + k.alan, 'basari');
+            }
+
             var baslangicDal = Date.now();
+
             while (Date.now() - baslangicDal < 3500) {
                 // ÖNEMLİ: Aktif sekmenin (Kalfalık/Ustalık/Pedagoji) GÖRÜNÜR dal kontrolünü
                 // kullan; hardcoded 'cmbDal' string araması, aynı sekmeli formda gizli
@@ -1788,8 +1845,33 @@
                 throw new Error(dalHata);
             }
             vurgula(dalEl, '#38bdf8');
+            await postBackBitisiniBekle(2500, 'cmbDal Seçimi PostBack');
+
+            // Alan seçimindeki gibi: Dal seçiminin PostBack sonrası kalıcı olup olmadığı doğrulanır.
+            var dalAnahtarlar = ['cmbdal', 'ddldal', 'dal', 'daladi', 'txtdal'];
+            var dalKaliciDenemeSayisi = 0;
+            while (!secimKaliciMi('dal', dalAnahtarlar, k.dal) && dalKaliciDenemeSayisi < 2) {
+                dalKaliciDenemeSayisi++;
+                logEkle('⚠️ Dal seçimi PostBack sonrası kaybolmuş görünüyor. ' + dalKaliciDenemeSayisi + '. tekrar deneme yapılıyor: "' + k.dal + '"', 'uyari');
+                var guncelDalElTekrar = ogretilmisAlanBul('dal') || evrenselInputBul(dalAnahtarlar);
+                if (guncelDalElTekrar && !guncelDalElTekrar.disabled) {
+                    await evrenselSecimYap(guncelDalElTekrar, k.dal, true);
+                    vurgula(guncelDalElTekrar, '#f59e0b');
+                    await postBackBitisiniBekle(2500, 'cmbDal Tekrar Deneme PostBack');
+                }
+            }
+            if (!secimKaliciMi('dal', dalAnahtarlar, k.dal)) {
+                var dalKaliciHata = '❌ Mesleki Dal seçimi ' + (dalKaliciDenemeSayisi + 1) + ' denemede de PostBack sonrası kalıcı olmadı: "' + k.dal + '".';
+                logEkle(dalKaliciHata, 'hata');
+                durum(dalKaliciHata, '#f87171');
+                throw new Error(dalKaliciHata);
+            } else if (dalKaliciDenemeSayisi > 0) {
+                logEkle('✓ Dal seçimi ' + (dalKaliciDenemeSayisi + 1) + '. denemede kalıcı olarak doğrulandı: ' + k.dal, 'basari');
+            }
+
             await bekle(300);
         }
+
 
         logEkle('✓ Tüm form, RadDatePicker belge tarihi ve mesleki alan/dal bilgileri başarıyla dolduruldu.', 'basari');
         return true;
@@ -3038,6 +3120,7 @@
     var btnLogTemizle = el('button', 'border:0; background:transparent; color:#64748b; font-size:10px; cursor:pointer;', 'Temizle');
     btnLogTemizle.onclick = function () { if (logIcerik) logIcerik.textContent = ''; };
     logBaslikSatir.appendChild(btnLogTemizle);
+
 
     logIcerik = el('div', 'height:95px; overflow-y:auto; font-family:Consolas, Monaco, monospace; font-size:10.5px; line-height:1.35; padding:4px 6px; background:#040711; border:1px solid #1e293b; border-radius:4px; color:#cbd5e1;');
 
