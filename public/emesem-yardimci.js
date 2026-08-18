@@ -50,28 +50,28 @@
         // 3. Öğrenim Yılı (Telerik cmbOgrenimYili)
         ogrenimYili: '#cmbOgrenimYili_Input, #ctl00_cphGovde_cmbOgrenimYili_Input, input[id*="cmbOgrenimYili"], select[id*="OgrenimYili"], select[name*="OgrenimYili"], #cmbOgrenimYili, #ctl00_cphGovde_cmbOgrenimYili',
         
-        // 4. TC Kimlik No
-        tc: '#txtKimlikNo, #txtTCKimlikNo, #txtTC, input[id*="KimlikNo"], input[id*="txtTC"], #ctl00_cphGovde_txtKimlikNo, #ctl00_cphGovde_txtTCKimlikNo',
+        // 4. TC Kimlik No (Gerçek E-MESEM ID: txtTCKimlikNo)
+        tc: '#txtTCKimlikNo, #txtKimlikNo, #txtTC, input[id*="TCKimlikNo"], input[id*="KimlikNo"], input[id*="txtTC"], #ctl00_cphGovde_txtTCKimlikNo, #ctl00_cphGovde_txtKimlikNo',
         
         // 5. Doğum Tarihi (Telerik RadDatePicker dtDogumTarihi)
         dogumTarihi: '#dtDogumTarihi_dateInput, #dtDogumTarihi, #txtDogumTarihi, input[id*="DogumTarih"], input[name*="DogumTarih"], #ctl00_cphGovde_dtDogumTarihi_dateInput, #ctl00_cphGovde_dtDogumTarihi',
         
-        // 6. MERNİS Sorgula Butonu
-        sorgulaBtn: '#btnSorgula, #btnMernis, input[id*="btnSorgula"], button[id*="btnSorgula"], input[value="Sorgula"], #ctl00_cphGovde_btnSorgula, #ctl00_cphGovde_btnMernis',
+        // 6. MERNİS Sorgula Butonu (Gerçek E-MESEM ID: btnSearch)
+        sorgulaBtn: '#btnSearch, #btnSorgula, #btnMernis, input[id*="btnSearch"], input[id*="btnSorgula"], button[id*="btnSorgula"], input[value="Sorgula"], #ctl00_cphGovde_btnSearch, #ctl00_cphGovde_btnSorgula',
         
         // 7. Kapsam Maddesi (Telerik cmbKapsam / Select)
         kapsam: '#cmbKapsam_Input, #ddlKapsam, select[id*="Kapsam"], input[id*="cmbKapsam"], #ctl00_cphGovde_cmbKapsam_Input, #ctl00_cphGovde_cmbKapsam',
         
-        // 8. İletişim Bilgileri (E-posta & Telefon)
-        eposta: '#txtEposta, #txtEmail, input[id*="Eposta"], input[id*="Email"], #ctl00_cphGovde_txtEposta, #ctl00_cphGovde_txtEmail',
-        telefon: '#txtCepTel, #txtTelefon, input[id*="Telefon"], input[id*="CepTel"], #ctl00_cphGovde_txtCepTel, #ctl00_cphGovde_txtTelefon',
+        // 8. İletişim Bilgileri (Gerçek E-MESEM ID'leri: txtEPosta / txtTelefonGSM)
+        eposta: '#txtEPosta, #txtEposta, #txtEmail, input[id*="EPosta"], input[id*="Eposta"], input[id*="Email"], #ctl00_cphGovde_txtEPosta, #ctl00_cphGovde_txtEposta',
+        telefon: '#txtTelefonGSM, #txtCepTel, #txtTelefon, input[id*="TelefonGSM"], input[id*="Telefon"], input[id*="CepTel"], #ctl00_cphGovde_txtTelefonGSM, #ctl00_cphGovde_txtCepTel',
         
-        // 9. Mezuniyet & Belge Bilgileri (Telerik cmbMezuniyet & cmbBelge)
-        enSonMezuniyet: '#cmbMezuniyet_Input, #ddlMezuniyet, select[id*="Mezuniyet"], input[id*="cmbMezuniyet"], #ctl00_cphGovde_cmbMezuniyet_Input, #ctl00_cphGovde_cmbMezuniyet',
-        getirdigiBelge: '#cmbBelge_Input, #ddlBelge, select[id*="Belge"], input[id*="cmbBelge"], #ctl00_cphGovde_cmbBelge_Input, #ctl00_cphGovde_cmbBelge',
+        // 9. Mezuniyet & Belge Bilgileri (Gerçek E-MESEM ID'leri: cmbEgitim / cmbMezuniyetBelgeTuru)
+        enSonMezuniyet: '#cmbEgitim_Input, #cmbMezuniyet_Input, #ddlMezuniyet, select[id*="Egitim"], select[id*="Mezuniyet"], input[id*="cmbEgitim"], #ctl00_cphGovde_cmbEgitim_Input, #ctl00_cphGovde_cmbMezuniyet_Input',
+        getirdigiBelge: '#cmbMezuniyetBelgeTuru_Input, #cmbBelge_Input, #ddlBelge, select[id*="MezuniyetBelgeTuru"], select[id*="Belge"], input[id*="cmbMezuniyetBelgeTuru"], #ctl00_cphGovde_cmbMezuniyetBelgeTuru_Input, #ctl00_cphGovde_cmbBelge_Input',
         
-        // 10. Belge Tarihi (Telerik RadDatePicker dtpBelgeTarihi)
-        belgeTarihi: '#dtpBelgeTarihi_dateInput, #dtpBelgeTarihi, #dtBelgeTarihi_dateInput, input[id*="BelgeTarih"], input[name*="BelgeTarih"], #ctl00_cphGovde_dtpBelgeTarihi_dateInput, #ctl00_cphGovde_dtpBelgeTarihi',
+        // 10. Belge Tarihi (Gerçek E-MESEM ID: dtMezuniyet - Telerik RadDatePicker)
+        belgeTarihi: '#dtMezuniyet_dateInput, #dtMezuniyet, #dtpBelgeTarihi_dateInput, #dtpBelgeTarihi, #dtBelgeTarihi_dateInput, input[id*="dtMezuniyet"], input[id*="BelgeTarih"], input[name*="BelgeTarih"], #ctl00_cphGovde_dtMezuniyet_dateInput, #ctl00_cphGovde_dtpBelgeTarihi_dateInput',
         
         // 11. Mesleki Alan & Dal (Telerik cmbAlan & cmbDal)
         alan: '#cmbAlan_Input, #ctl00_cphGovde_cmbAlan_Input, input[id*="cmbAlan"], select[id*="cmbAlan"], select[id*="ddlAlan"], #cmbAlan, #ctl00_cphGovde_cmbAlan',
@@ -80,6 +80,7 @@
         // 12. Kaydet Butonu
         kaydetBtn: '#btnKaydet, #btnOnKayitKaydet, input[id*="btnKaydet"], button[id*="btnKaydet"], input[value="Kaydet"], #ctl00_cphGovde_btnKaydet, #ctl00_cphGovde_btnOnKayitKaydet'
     };
+
     
     var tumKayitlar = [];          // Sisteme yüklenen tüm adaylar
     var filtreliKayitlar = [];     // Seçili kategoriye göre filtrelenmiş liste
@@ -497,6 +498,13 @@
                 if (inp.type === 'file' || inp.type === 'submit' || inp.type === 'button' || inp.type === 'reset' || inp.type === 'image') {
                     continue;
                 }
+                // Disabled elemanlar (örn. İş Pedagojisi formunda MEB tarafından kilitlenmiş
+                // cmbEgitimProgramiTuru / cmbCerceveOgretimProgrami gibi alanlar) yanlışlıkla
+                // asıl aranan alanla eşleşip robotu şaşırtmasın diye atlanır.
+                if (inp.disabled) {
+                    continue;
+                }
+
 
                 var attrMetin = trTemizle([
                     inp.name, inp.id, inp.placeholder,
@@ -1667,8 +1675,12 @@
             logEkle('Telefon maskeli alana yazıldı: ' + k.telefon, 'islem');
         }
 
-        // 5.4: En Son Mezuniyeti (Telerik cmbMezuniyet / Select)
-        var mezuniyetEl = ogretilmisAlanBul('enSonMezuniyet') || evrenselInputBul(['cmbmezuniyet', 'ensonmezuniyet', 'mezuniyet', 'ogrenimdurumu', 'ddlmezuniyet']);
+        // 5.4: En Son Mezuniyeti (Gerçek E-MESEM ID: cmbEgitim / Telerik Select)
+        // ÖNEMLİ: bare "mezuniyet" kelimesi kasıtlı olarak KULLANILMAZ; çünkü Belge Tarihi
+        // alanının gerçek ID'si "dtMezuniyet" olduğundan bu kelime yanlışlıkla tarih kutusunu
+        // bulup oraya "Lise" gibi bir metin yazılmasına (ve tarih kutusunun bozulmasına) sebep oluyordu.
+        var mezuniyetEl = ogretilmisAlanBul('enSonMezuniyet') || evrenselInputBul(['cmbegitim', 'cmbmezuniyet', 'ensonmezuniyet', 'ogrenimdurumu', 'ddlmezuniyet']);
+
         if (mezuniyetEl) {
             await evrenselSecimYap(mezuniyetEl, k.enSonMezuniyet || 'Lise', true);
             vurgula(mezuniyetEl, '#38bdf8');
@@ -1687,9 +1699,18 @@
             await bekle(250);
         }
 
-        // 5.6: Belge Tarihi (Telerik RadDatePicker dtpBelgeTarihi Desteği)
-        var belgeTarihEl = ogretilmisAlanBul('belgeTarihi') || evrenselInputBul(['dtpbelgetarihi', 'belgetarihi', 'diplomatarihi', 'txtbelgetarihi', 'dtbelgetarihi']);
+        // 5.6: Belge Tarihi (Gerçek E-MESEM ID: dtMezuniyet - Telerik RadDatePicker)
+        // ÖNEMLİ: "dtmezuniyet_dateinput" en spesifik anahtar - gizli/görünmez "dtMezuniyet"
+        // adlı yardımcı input yanlışlıkla bulunup boş kalmasın diye tam ID kullanılıyor.
+        var belgeTarihEl = ogretilmisAlanBul('belgeTarihi') || evrenselInputBul(['dtmezuniyet_dateinput', 'dtpbelgetarihi', 'belgetarihi', 'diplomatarihi', 'txtbelgetarihi', 'dtbelgetarihi']);
+        if (!belgeTarihEl) {
+            logEkle('❌ Belge Tarihi (dtMezuniyet) kutusu bulunamadı! Lütfen "Alan Öğret" ile öğretin.', 'hata');
+        }
+        if (belgeTarihEl && !k.belgeTarihi) {
+            logEkle('⚠️ Aday verisinde "belgeTarihi" alanı boş geldiği için Belge Tarihi kutusu doldurulamadı.', 'uyari');
+        }
         if (belgeTarihEl && k.belgeTarihi) {
+
             var bTStr = k.belgeTarihi;
             if (/^\d{4}-\d{2}-\d{2}$/.test(bTStr)) {
                 var btp = bTStr.split('-');
@@ -1703,7 +1724,10 @@
 
         // 5.7: KADEMELİ ALAN SEÇİMİ (Telerik cmbAlan Motoru)
         var alanEl = ogretilmisAlanBul('alan') || evrenselInputBul(['cmbalan', 'ddlalan', 'alan', 'alanadi', 'meslek', 'txtalan']);
-        if (alanEl && k.alan) {
+        if (alanEl && alanEl.disabled) {
+            logEkle('ℹ️ Alan alanı bu form için MEB tarafından devre dışı bırakılmış (disabled). Adım atlanıyor.', 'uyari');
+        } else if (alanEl && k.alan) {
+
             logEkle('Alan seçiliyor (Telerik cmbAlan / Evrensel Motor): ' + k.alan, 'islem');
             var alanSecildi = await evrenselSecimYap(alanEl, k.alan, true);
             if (!alanSecildi) {
@@ -1747,9 +1771,15 @@
 
 
         // 5.8: KADEMELİ DAL SEÇİMİ (Telerik cmbDal Motoru)
+        // ÖNEMLİ: İş Pedagojisi Kursu formunda MEB tarafından "Dal" alanı bilerek DISABLED
+        // bırakılır (bu form için dal seçimi gerekmez). Eskiden kod bunu bilmediği için
+        // seçim başarısız olup hata fırlatıyor ve zincir Kaydet adımına hiç ulaşamıyordu.
         var dalEl = ogretilmisAlanBul('dal') || evrenselInputBul(['cmbdal', 'ddldal', 'dal', 'daladi', 'txtdal']);
-        if (dalEl && k.dal) {
+        if (dalEl && dalEl.disabled) {
+            logEkle('ℹ️ Dal alanı bu form için MEB tarafından devre dışı bırakılmış (disabled) - örn. İş Pedagojisi Kursu formunda Dal seçimi yoktur. Adım atlanıyor.', 'uyari');
+        } else if (dalEl && k.dal) {
             logEkle('Dal seçiliyor (Telerik cmbDal / Evrensel Motor): ' + k.dal, 'islem');
+
             var dalSecildi = await evrenselSecimYap(dalEl, k.dal, true);
             if (!dalSecildi) {
                 var dalHata = '❌ MESLEKİ DAL BULUNAMADI / SEÇİLEMEDİ: "' + k.dal + '"';
@@ -1808,26 +1838,28 @@
             }
         }
 
-        // 4. Alan
+        // 4. Alan (disabled ise -MEB tarafından kilitlenmiş- kontrol atlanır)
         var alanEl = ogretilmisAlanBul('alan') || evrenselInputBul(['cmbalan', 'ddlalan', 'alan', 'alanadi', 'meslek']);
-        if (alanEl) {
+        if (alanEl && !alanEl.disabled) {
             var aVal = alanEl.value ? alanEl.value.trim() : '';
             if (!aVal || trTemizle(aVal).indexOf('seciniz') !== -1) {
                 eksikler.push('Mesleki Alan');
             }
         }
 
-        // 5. Dal
+        // 5. Dal (Not: İş Pedagojisi Kursu formunda Dal alanı MEB tarafından disabled bırakılır,
+        // bu durumda güvenlik kilidi bu alanı zorunlu tutmaz)
         var dalEl = ogretilmisAlanBul('dal') || evrenselInputBul(['cmbdal', 'ddldal', 'dal', 'daladi']);
-        if (dalEl) {
+        if (dalEl && !dalEl.disabled) {
             var dVal = dalEl.value ? dalEl.value.trim() : '';
             if (!dVal || trTemizle(dVal).indexOf('seciniz') !== -1) {
                 eksikler.push('Mesleki Dal');
             }
         }
 
-        // 6. En Son Mezuniyet
-        var mezuniyetEl = ogretilmisAlanBul('enSonMezuniyet') || evrenselInputBul(['ensonmezuniyet', 'mezuniyet', 'ddlmezuniyet']);
+        // 6. En Son Mezuniyet (Gerçek ID: cmbEgitim - bare "mezuniyet" kelimesi kasıtlı
+        // olarak kullanılmaz, çünkü Belge Tarihi alanı "dtMezuniyet" ID'sine sahiptir)
+        var mezuniyetEl = ogretilmisAlanBul('enSonMezuniyet') || evrenselInputBul(['cmbegitim', 'ensonmezuniyet', 'cmbmezuniyet', 'ddlmezuniyet']);
         if (mezuniyetEl) {
             var mVal = mezuniyetEl.value ? mezuniyetEl.value.trim() : '';
             var mTxt = (mezuniyetEl.options && mezuniyetEl.selectedIndex >= 0) ? trTemizle(mezuniyetEl.options[mezuniyetEl.selectedIndex].textContent) : trTemizle(mVal);
@@ -1846,8 +1878,20 @@
             }
         }
 
+        // 8. Belge Tarihi (Gerçek ID: dtMezuniyet - RadDatePicker). ÖNEMLİ: Bu kontrol
+        // önceden HİÇ YAPILMIYORDU; bu yüzden belge tarihi boş kalsa bile kayıt "başarılı"
+        // görünüyordu. Artık boş/geçersiz ise kayıt güvenlik kilidi tarafından durdurulur.
+        var belgeTarihEl = ogretilmisAlanBul('belgeTarihi') || evrenselInputBul(['dtmezuniyet_dateinput', 'dtpbelgetarihi', 'belgetarihi', 'diplomatarihi', 'txtbelgetarihi', 'dtbelgetarihi']);
+        if (belgeTarihEl) {
+            var btVal = belgeTarihEl.value ? belgeTarihEl.value.trim() : '';
+            if (!btVal || !/\d/.test(btVal)) {
+                eksikler.push('Belge Tarihi');
+            }
+        }
+
         return eksikler;
     }
+
 
     // ADIM 6: Kaydet Butonuna Bas
     async function adim6_Kaydet(k) {
