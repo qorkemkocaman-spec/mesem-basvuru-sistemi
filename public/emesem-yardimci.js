@@ -3102,9 +3102,183 @@
     btnKayitListesi.title = 'E-MESEM "Sınav Öğrenci Ön Kayıt" ekranındaki kayıt listesi tablosunu panoya kopyalar (TC/Ad Soyad karşılaştırması için)';
     btnKayitListesi.onclick = kayitListesiniKopyala;
 
+    var btnKarsilastir = el('button', 'padding:5px 6px; font-size:11px; font-weight:600; cursor:pointer; background:#16a34a; color:#fff; border:0; border-radius:5px;', '🔍 Karşılaştır & Arşive Taşı');
+    btnKarsilastir.title = 'Tüm sekmeleri gezerek E-MESEM kayıt listesini toplar, robot listesiyle TC eşleştirmesi yapar, bulunanları arşive taşır';
+    btnKarsilastir.onclick = karsilastirVeArsiveTasi;
+
     var btnTeshis = el('button', 'padding:5px 6px; font-size:11px; font-weight:600; cursor:pointer; background:#334155; color:#38bdf8; border:0; border-radius:5px; margin-left:auto;', '🔍 Teşhis');
     btnTeshis.title = 'Sayfadaki form elemanlarını tara & konsola dök';
     btnTeshis.onclick = sayfayiTeshisEt;
+
+    /* ============================================================
+       E-MESEM KAYIT KARŞILAŞTIRMA & ARŞİVE TAŞIMA
+       Robotun elindeki tumKayitlar listesini kullanarak tüm sekmeleri
+       gezer. E-MESEM kayıt listesinde TC'si bulunan adayları arşive taşır,
+       bulunmayanları kullanıcıya bildirir.
+       ============================================================ */
+    async function karsilastirVeArsiveTasi() {
+        if (!tumKayitlar.length) {
+            durum('❌ Karşılaştırılacak aday listesi boş. Önce "📋 Panodan Al" ile adayları yükleyin.', '#f87171');
+            sesCal('hata');
+            return;
+        }
+
+        durum('🔄 Tüm sekmeler gezilerek E-MESEM kayıt listesi toplanıyor...', '#38bdf8');
+        logEkle('--- KARŞILAŞTIRMA BAŞLATILDI (' + tumKayitlar.length + ' aday) ---', 'islem');
+
+        // 1. Tüm sekmeleri gezerek kayıt listesini topla
+        var belgeler = tumBelgeleriGetir();
+        var tumSatirlar = [];
+        var kategoriAdlari = ['Kalfalık Sınavı', 'Ustalık Sınavı', 'İş Pedagojisi Kursu'];
+        var kategoriSecicileri = {
+            'Kalfalık Sınavı': ['kalfalikSekme', 'Kalfalık', 'Kalfalik'],
+            'Ustalık Sınavı': ['ustalikSekme', 'Ustalık', 'Ustalik'],
+            'İş Pedagojisi Kursu': ['pedagojiSekme', 'İş Pedagojisi', 'Pedagoji', 'Usta Öğretici']
+        };
+
+        for (var k = 0; k < kategoriAdlari.length; k++) {
+            var kategori = kategoriAdlari[k];
+            var seciciler = kategoriSecicileri[kategori];
+
+            var sekmeBtn = null;
+            for (var s = 0; s < seciciler.length; s++) {
+                sekmeBtn = ogretilmisAlanBul(seciciler[s]) ||
+                           evrenselMetinleBul('button, a, input[type="button"], .tab, span, td, div', [seciciler[s]], false);
+                if (sekmeBtn) break;
+            }
+
+            if (sekmeBtn) {
+                vurgula(sekmeBtn, '#38bdf8');
+                sekmeBtn.click();
+                await bekle(200);
+            }
+
+            var tabloBulundu = null;
+            for (var b = 0; b < belgeler.length; b++) {
+                var doc = belgeler[b];
+                var tablolar = doc.querySelectorAll('table');
+                for (var t = 0; t < tablolar.length; t++) {
+                    var tbl = tablolar[t];
+                    var metin = tbl.textContent || '';
+                    if (/\d{11}/.test(metin)) {
+                        tabloBulundu = tbl;
+                        break;
+                    }
+                }
+                if (tabloBulundu) break;
+
+                var gridler = doc.querySelectorAll('.rgMasterTable, .RadGrid table, .k-grid table');
+                for (var g = 0; g < gridler.length; g++) {
+                    if (/\d{11}/.test(gridler[g].textContent || '')) {
+                        tabloBulundu = gridler[g];
+                        break;
+                    }
+                }
+                if (tabloBulundu) break;
+            }
+
+            if (tabloBulundu) {
+                tumSatirlar.push(kategori);
+                var trler = tabloBulundu.querySelectorAll('tr');
+                for (var r = 0; r < trler.length; r++) {
+                    var hucreler = trler[r].querySelectorAll('th, td');
+                    var satirMetni = [];
+                    for (var h = 0; h < hucreler.length; h++) {
+                        satirMetni.push((hucreler[h].textContent || '').trim());
+                    }
+                    if (satirMetni.join('').trim()) {
+                        tumSatirlar.push(satirMetni.join('\t'));
+                    }
+                }
+            }
+        }
+
+        if (!tumSatirlar.length) {
+            durum('❌ Kayıt listesi tablosu bulunamadı. "Sınav Öğrenci Ön Kayıt" ekranında olduğunuzdan emin olun.', '#f87171');
+            sesCal('hata');
+            return;
+        }
+
+        // 2. Metinden TC'leri çıkar
+        var emesemTcler = new Set();
+        var tumMetin = tumSatirlar.join('\n');
+        var tcRegex = /\b([1-9][0-9]{10})\b/g;
+        var tcMatch;
+        while ((tcMatch = tcRegex.exec(tumMetin))) {
+            emesemTcler.add(tcMatch[1]);
+        }
+
+        if (!emesemTcler.size) {
+            durum('❌ Kayıt listesinde TC Kimlik No bulunamadı.', '#f87171');
+            sesCal('hata');
+            return;
+        }
+
+        logEkle('E-MESEM kayıt listesinde ' + emesemTcler.size + ' farklı TC bulundu.', 'islem');
+
+        // 3. Adayları karşılaştır
+        var arsiveTasinacak = [];
+        var kalanAdaylar = [];
+
+        for (var i = 0; i < tumKayitlar.length; i++) {
+            var aday = tumKayitlar[i];
+            if (aday && aday.tc && emesemTcler.has(String(aday.tc))) {
+                var arsivKaydi = Object.assign({}, aday, {
+                    arsivTarihi: new Date().toISOString(),
+                    arsivTC: String(aday.tc),
+                    arsivAdSoyad: (aday.ad || '') + ' ' + (aday.soyad || '')
+                });
+                delete arsivKaydi.durum;
+                arsiveTasinacak.push(arsivKaydi);
+            } else {
+                kalanAdaylar.push(aday);
+            }
+        }
+
+        // 4. Arşive yaz (localStorage'a)
+        var aktifKurum = localStorage.getItem('mesem_aktif_kurum') || 'MKE_MESEM';
+        var arsivAnahtar = 'mesem_arsiv_' + aktifKurum;
+        var mevcutArsiv = [];
+        try {
+            mevcutArsiv = JSON.parse(localStorage.getItem(arsivAnahtar) || '[]');
+        } catch (e) {
+            mevcutArsiv = [];
+        }
+
+        var yeniArsiv = mevcutArsiv.concat(arsiveTasinacak);
+        try {
+            localStorage.setItem(arsivAnahtar, JSON.stringify(yeniArsiv));
+            // Ana kayıtları güncelle (robot tarafında sadece arşiv yazılır)
+            logEkle('✓ ' + arsiveTasinacak.length + ' aday arşive yazıldı: ' + arsivAnahtar, 'basari');
+        } catch (e) {
+            logEkle('❌ Arşiv localStorage yazma hatası: ' + e.message, 'hata');
+        }
+
+        // 5. Sonuç raporu
+        var kalanTcListesi = kalanAdaylar.map(function (a) { return (a.tc || '-') + ' - ' + (a.ad || '') + ' ' + (a.soyad || ''); }).join('\n');
+        if (arsiveTasinacak.length > 0) {
+            sesCal('basari');
+            logEkle('=== KARŞILAŞTIRMA SONUCU ===', 'basari');
+            logEkle('✓ E-MESEM\'de kayıtlı bulunan ve arşive taşınan: ' + arsiveTasinacak.length + ' aday', 'basari');
+            arsiveTasinacak.forEach(function (a) {
+                logEkle('  ✓ ' + a.ad + ' ' + a.soyad + ' (' + a.tc + ') → Arşive taşındı', 'basari');
+            });
+            durum('✓ ' + arsiveTasinacak.length + ' aday E-MESEM listesinde bulundu ve arşive taşındı.', '#4ade80');
+        }
+
+        if (kalanAdaylar.length > 0) {
+            sesCal('hata');
+            logEkle('❌ E-MESEM listesinde BULUNAMADI: ' + kalanAdaylar.length + ' aday', 'hata');
+            kalanAdaylar.forEach(function (a) {
+                logEkle('  ✗ ' + (a.ad || '') + ' ' + (a.soyad || '') + ' (' + (a.tc || '-') + ') → E-MESEM\'de YOK!', 'hata');
+            });
+            durum('❌ ' + kalanAdaylar.length + ' aday E-MESEM listesinde bulunamadı. Konsola bakın.', '#f87171');
+        }
+
+        if (!arsiveTasinacak.length && !kalanAdaylar.length) {
+            logEkle('Karşılaştırma için aday bulunamadı.', 'uyari');
+        }
+    }
 
     /* ============================================================
        E-MESEM KAYIT LİSTESİNİ KOPYALA (Arşiv Karşılaştırma İçin)
@@ -3251,6 +3425,7 @@
     dugmeCubugu.appendChild(btnToplu);
     dugmeCubugu.appendChild(btnGec);
     dugmeCubugu.appendChild(btnKayitListesi);
+    dugmeCubugu.appendChild(btnKarsilastir);
     dugmeCubugu.appendChild(btnTeshis);
 
     // Durum ve Sayaç
@@ -3480,6 +3655,8 @@
         },
         kayitlariYukle: kayitlariYukle,
         adimiIsle: adimiIsle,
+        karsilastirVeArsiveTasi: karsilastirVeArsiveTasi,
+        kayitListesiniKopyala: kayitListesiniKopyala,
         sayfayiTeshisEt: sayfayiTeshisEt,
         ogretmeModunuBaslat: ogretmeModunuBaslat,
         alanOgretModaliniGoster: alanOgretModaliniGoster,
