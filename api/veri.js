@@ -170,6 +170,16 @@ export default async function handler(req, res) {
             return yanit(res, 200, { status: 'success', yazilan, silinen, atlanan });
         }
 
+        /* ---------------- LOGO GÜNCELLE ---------------- */
+        if (islem === 'logoGuncelle') {
+            const yeniLogo = String((govde.data && govde.data.logo) || '').slice(0, 500000);
+            if (!yeniLogo) return yanit(res, 400, { status: 'error', message: 'Logo verisi boş olamaz.' });
+            const guncel = await sql`SELECT logo FROM kurumlar WHERE kurum = ${kurum}`;
+            if (!guncel.length) return yanit(res, 404, { status: 'error', message: kurum + ' bulunamadı.' });
+            await sql`UPDATE kurumlar SET logo = ${yeniLogo} WHERE kurum = ${kurum}`;
+            return yanit(res, 200, { status: 'success', kurum, mesaj: 'Logo güncellendi.' });
+        }
+
         /* ---------------- TEMİZLE ---------------- */
         if (islem === 'clear') {
             const onay = (govde.data && govde.data.onay) || '';

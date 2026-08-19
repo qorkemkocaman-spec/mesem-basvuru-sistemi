@@ -679,7 +679,25 @@
 
         <form id="komisyonAyarForm" onsubmit="return false;">
             <div style="background:#0f172a; padding:14px 18px; border-radius:8px; border:1px solid var(--border-color); margin-bottom:14px;">
-                <h4 style="color:#38bdf8; margin:0 0 10px 0; font-size:14px;">🏢 Üst Kurum & Dönem Bilgileri</h4>
+                <h4 style="color:#38bdf8; margin:0 0 10px 0; font-size:14px;">🏫 Kurum Logosu</h4>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label>Okul Logosu:</label>
+                            <input type="file" id="kurumLogoDosya" accept="image/*" style="cursor:pointer;">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                            <img id="kurumLogoOnizleme" alt="Kurum Logo" style="width:64px; height:64px; border-radius:8px; object-fit:contain; background:#fff; border:1px solid var(--border-color); padding:2px; display:none;">
+                            <button type="button" class="btn btn-danger btn-sm" id="btnLogoTemizle" style="display:none;">🗑 Logoyu Kaldır</button>
+                            <button type="button" class="btn btn-primary btn-sm" id="btnLogoKaydet">💾 Logo Kaydet</button>
+                            <span style="font-size:11px; color:var(--text-muted);">PNG/JPG, maks 300 KB</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+======+
                 <div class="row">
                     <div class="col">
                         <div class="form-group">
@@ -3266,10 +3284,79 @@ function olaylariBagla() {
     }
 
     // Komisyon Ayarları Modalı
+    function logoOnizlemeGuncelle() {
+        const onizleme = $('kurumLogoOnizleme');
+        const temizleBtn = $('btnLogoTemizle');
+        if (kurumLogo) {
+            onizleme.src = kurumLogo;
+            onizleme.style.display = 'inline-block';
+            temizleBtn.style.display = 'inline-block';
+        } else {
+            onizleme.style.display = 'none';
+            temizleBtn.style.display = 'none';
+        }
+    }
+
+    function logoHeaderGuncelle() {
+        const logoEl = $('kurumLogo');
+        if (logoEl) {
+            if (kurumLogo) {
+                logoEl.src = kurumLogo;
+                logoEl.style.display = 'inline-block';
+            } else {
+                logoEl.style.display = 'none';
+            }
+        }
+    }
+
+    function logoKaydet() {
+        const dosyaEl = $('kurumLogoDosya');
+        const dosya = dosyaEl.files[0];
+        if (!dosya) { bildir('Önce bir logo dosyası seçin.', 'hata'); return; }
+        if (dosya.size > 300 * 1024) { bildir('Logo 300 KB\'den küçük olmalıdır.', 'hata'); return; }
+        const okuyucu = new FileReader();
+        okuyucu.onload = async (e) => {
+            const yeniLogo = e.target.result;
+            try {
+                if (!YEREL_MOD) {
+                    await apiIstegi('logoGuncelle', { logo: yeniLogo });
+                }
+                kurumLogo = yeniLogo;
+                localStorage.setItem('mesem_kurum_logo', kurumLogo);
+                oturumDepo.setItem('mesem_oturum', JSON.stringify({ kurum: aktifKurum, token: oturumAnahtari, ad: kurumAdi, logo: kurumLogo }));
+                logoHeaderGuncelle();
+                logoOnizlemeGuncelle();
+                bildir('Kurum logosu başarıyla kaydedildi.', 'ok');
+                dosyaEl.value = '';
+            } catch (hata) {
+                bildir('Logo kaydedilemedi: ' + hata.message, 'hata');
+            }
+        };
+        okuyucu.readAsDataURL(dosya);
+    }
+
+    function logoKaldir() {
+        if (!kurumLogo || !confirm('Kurum logosu kaldırılsın mı?')) return;
+        try {
+            if (!YEREL_MOD) apiIstegi('logoGuncelle', { logo: '' });
+            kurumLogo = '';
+            localStorage.removeItem('mesem_kurum_logo');
+            oturumDepo.setItem('mesem_oturum', JSON.stringify({ kurum: aktifKurum, token: oturumAnahtari, ad: kurumAdi, logo: kurumLogo }));
+            logoHeaderGuncelle();
+            logoOnizlemeGuncelle();
+            bildir('Logo kaldırıldı.', 'ok');
+        } catch (hata) {
+            bildir('Hata: ' + hata.message, 'hata');
+        }
+    }
+
     function komisyonModaliAc() {
         komisyonFormunuDoldur();
+        logoOnizlemeGuncelle();
         $('komisyonAyarlarModal').classList.add('active');
     }
+    $('btnLogoKaydet').addEventListener('click', logoKaydet);
+    $('btnLogoTemizle').addEventListener('click', logoKaldir);
     $('btnKomisyonAyarlarAc').addEventListener('click', komisyonModaliAc);
     if ($('btnSablonAyarAc')) $('btnSablonAyarAc').addEventListener('click', komisyonModaliAc);
     $('btnKomisyonAyarKapat').addEventListener('click', () => $('komisyonAyarlarModal').classList.remove('active'));
