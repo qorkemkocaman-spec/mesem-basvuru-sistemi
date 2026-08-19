@@ -566,6 +566,8 @@
                         </select>
                     </div>
                     <div class="form-group"><label for="denklikBelgeTarihi">Denklik Belge Tarihi</label><input type="date" id="denklikBelgeTarihi" style="max-width:220px;"></div>
+                    <div class="form-group"><label for="gelenEvrakTarihi">Gelen Evrak Kayıt Tarihi</label><input type="date" id="gelenEvrakTarihi" style="max-width:220px;"></div>
+                    <div class="form-group"><label for="gelenEvrakSayisi">Gelen Evrak Kayıt Sayısı</label><input type="text" id="gelenEvrakSayisi" placeholder="Evrak sayısı / no" style="max-width:220px;"></div>
                     <div class="checkbox-group" style="display:flex; flex-direction:column; gap:8px;">
                         <label title="Başvuru sonucu kabul edildi ise işaretleyin"><input type="checkbox" id="basvuruSonucu"> <strong>0. Başvuru Sonucu (Kabul)</strong></label>
                         <label title="Başvuru sonucu reddedildi ise işaretleyin"><input type="checkbox" id="basvuruRed"> <strong>0.R. Başvuru Sonucu (Red)</strong></label>
@@ -1064,6 +1066,8 @@ const ALANLAR = [
     { id: 'calisma4Aciklama', ad: '4.Çalışma Açıklama', tip: 'metin' },
     { id: 'denklikDonem', ad: 'Alım Dönemi', tip: 'metin' },
     { id: 'denklikBelgeTarihi', ad: 'Denklik Belge Tarihi', tip: 'tarih' },
+    { id: 'gelenEvrakTarihi', ad: 'Gelen Evrak Kayıt Tarihi', tip: 'tarih' },
+    { id: 'gelenEvrakSayisi', ad: 'Gelen Evrak Kayıt Sayısı', tip: 'metin' },
     { id: 'basvuruSonucu', ad: 'Başvuru Sonucu (Kabul)', tip: 'onay' },
     { id: 'basvuruRed', ad: 'Başvuru Sonucu (Red)', tip: 'onay' },
     { id: 'kalfalikSinav', ad: 'Kalfalık Sınavlarına Girmesi', tip: 'onay' },
@@ -2601,8 +2605,8 @@ function denklikDefteriKur() {
                         <div style="font-size:10px; font-weight:normal; color:#333;">TC: ${k.tc || '-'}</div>
                     </td>
                     <td style="border:1px solid #000; padding:5px 4px; text-align:center; font-size:10.5px;">
-                        ${trTarih(formatTarih(k.kayitTarihi)) || '-'}
-                        ${k.ilkogretimBelgeSayisi || k.liseBelgeSayisi ? '<br>Sayı: ' + (k.ilkogretimBelgeSayisi || k.liseBelgeSayisi) : ''}
+                        ${trTarih(formatTarih(k.gelenEvrakTarihi || k.kayitTarihi)) || '-'}
+                        ${k.gelenEvrakSayisi ? '<br>Sayı: ' + k.gelenEvrakSayisi : ''}
                     </td>
                     <td style="border:1px solid #000; padding:5px 6px; font-size:10.5px;">${alinanBelgeler || '-'}</td>
                     <td style="border:1px solid #000; padding:5px 4px; text-align:center; font-weight:bold; font-size:11px;">${denklikNoUret(k) || (idx + 1)}</td>
@@ -2788,7 +2792,10 @@ const BASLIK_ESLESME = (function () {
         '3calisma': 'calisma3Cesit', '3calismacesit': 'calisma3Cesit', '3calismakurum': 'calisma3Kurum', '3calismasayi': 'calisma3Sayi', '3calismabaslangic': 'calisma3Baslangic', '3calismabitis': 'calisma3Bitis', '3calismaaciklama': 'calisma3Aciklama',
         '4calisma': 'calisma4Cesit', '4calismacesit': 'calisma4Cesit', '4calismakurum': 'calisma4Kurum', '4calismasayi': 'calisma4Sayi', '4calismabaslangic': 'calisma4Baslangic', '4calismabitis': 'calisma4Bitis', '4calismaaciklama': 'calisma4Aciklama',
         'belge1': 'calisma1Cesit', 'belge2': 'calisma2Cesit', 'belge3': 'calisma3Cesit', 'belge4': 'calisma4Cesit',
-        '1belge': 'calisma1Cesit', '2belge': 'calisma2Cesit', '3belge': 'calisma3Cesit', '4belge': 'calisma4Cesit'
+        '1belge': 'calisma1Cesit', '2belge': 'calisma2Cesit', '3belge': 'calisma3Cesit', '4belge': 'calisma4Cesit',
+        'gelenevraktarihi': 'gelenEvrakTarihi', 'gelenevrakkayittarihi': 'gelenEvrakTarihi', 'evraktarihi': 'gelenEvrakTarihi', 'evrakkayittarihi': 'gelenEvrakTarihi',
+        'gelenevraksayisi': 'gelenEvrakSayisi', 'gelenevrakkayitsayisi': 'gelenEvrakSayisi', 'evraksayisi': 'gelenEvrakSayisi', 'evrakkayitsayisi': 'gelenEvrakSayisi',
+        'gelenevrak': 'gelenEvrakTarihi', 'gelenevraktarihvesayisi': 'gelenEvrakTarihi'
     };
     Object.keys(ekler).forEach(k => { if (!harita[k]) harita[k] = ekler[k]; });
     return harita;
