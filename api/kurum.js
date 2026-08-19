@@ -2,9 +2,9 @@
    /api/kurum — kurum hesaplarını yönetir (yalnızca yönetici)
    Her istek "x-yonetim-anahtari" başlığında ADMIN_ANAHTARI değerini taşır.
 
-   Gövde: { action, kurum, sifre, ad }
+   Gövde: { action, kurum, sifre, ad, logo }
      listele        → kurum listesi (şifre bilgisi dönmez)
-     ekle           → yeni kurum + şifre
+     ekle           → yeni kurum + şifre + ad + logo
      sifreDegistir  → mevcut kurumun şifresini yeniler
      durum          → kurumu askıya al / geri aç
 ------------------------------------------------------------------- */
@@ -81,6 +81,8 @@ export default async function handler(req, res) {
             }
             const tuz = tuzUret();
             const ozet = sifreOzeti(sifre, tuz);
+            const kurumAdi = String(govde.ad || '').slice(0, 160);
+            const logoMetni = String(govde.logo || '').slice(0, 500); // Yeni: logo verisi
 
             if (islem === 'ekle') {
                 const varMi = await sql`SELECT 1 FROM kurumlar WHERE kurum = ${kurum}`;
@@ -88,14 +90,14 @@ export default async function handler(req, res) {
                     return yanit(res, 409, { status: 'error', message: kurum + ' zaten kayıtlı. Şifre değiştirmek için "sifreDegistir" kullanın.' });
                 }
                 await sql`
-                    INSERT INTO kurumlar (kurum, ad, sifre_ozeti, tuz)
-                    VALUES (${kurum}, ${String(govde.ad || "").slice(0, 160)}, ${ozet}, ${tuz})`;
+                    INSERT INTO kurumlar (kurum, ad, sifre_ozeti, tuz, logo)
+                    VALUES (${kurum}, ${kurumAdi}, ${ozet}, ${tuz}, ${logoMetni})`;
                 return yanit(res, 200, { status: 'success', kurum, mesaj: kurum + ' eklendi.' });
             }
 
             const sonuc = await sql`
-                UPDATE kurumlar SET sifre_ozeti = ${ozet}, tuz = ${tuz}
-                WHERE kurum = ${kurum} RETURNING kurum`;
+                UPDATE kurumlar SET sifre_ozeti = ${ozet}, tuz = ${tuz}, ad = ${kurumAdi}, logo = ${logoMetni}
+                WHERE kurum = ${kurum} RETURNING kurum, ad, logo`;
             if (!sonuc.length) return yanit(res, 404, { status: 'error', message: kurum + ' bulunamadı.' });
             await sql`DELETE FROM giris_denemeleri WHERE kurum = ${kurum}`;
             return yanit(res, 200, { status: 'success', kurum, mesaj: kurum + ' şifresi değiştirildi.' });

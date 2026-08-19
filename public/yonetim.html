@@ -77,6 +77,10 @@
                 <label for="yeniSifre">Şifre (en az 8 karakter)</label>
                 <input type="text" id="yeniSifre" placeholder="Kuruma verilecek şifre">
             </div>
+            <div>
+                <label for="yeniLogo">Kurum Logosu (isteğe bağlı)</label>
+                <input type="file" id="yeniLogo" accept="image/*">
+            </div>
         </div>
         <button class="btn btn-ana" id="btnEkle" type="button">Kurumu Ekle</button>
         <button class="btn btn-ikincil" id="btnSifreUret" type="button">Rastgele Şifre Üret</button>
@@ -189,7 +193,7 @@ async function listele(sessiz) {
 }
 
 function sifreUret() {
-    const harf = 'ABCDEFGHJKLMNPRSTUVYZabcdefghjkmnprstuvyz23456789';
+    const harf = 'ABCDEFGHJKLMNPQRSTUVYZ23456789';
     let s = '';
     const rast = new Uint32Array(12);
     crypto.getRandomValues(rast);
@@ -197,15 +201,28 @@ function sifreUret() {
     return s;
 }
 
+function logoDosyasiniOku() {
+    return new Promise((coz) => {
+        const dosya = $('yeniLogo').files[0];
+        if (!dosya) { coz(''); return; }
+        if (dosya.size > 300 * 1024) { bildir('Logo 300 KB\'den küçük olmalı.', false); coz(null); return; }
+        const okuyucu = new FileReader();
+        okuyucu.onload = (e) => coz(e.target.result);
+        okuyucu.readAsDataURL(dosya);
+    });
+}
+
 async function ekle() {
     const kurum = $('yeniKurum').value.trim();
     const sifre = $('yeniSifre').value.trim();
     if (!kurum) { bildir('Kurum kodu boş olamaz.', false); return; }
     if (sifre.length < 8) { bildir('Şifre en az 8 karakter olmalı.', false); return; }
-    const sonuc = await cagir({ action: 'ekle', kurum: kurum, ad: $('yeniAd').value.trim(), sifre: sifre });
+    const logo = await logoDosyasiniOku();
+    if (logo === null) return;
+    const sonuc = await cagir({ action: 'ekle', kurum: kurum, ad: $('yeniAd').value.trim(), sifre: sifre, logo: logo });
     if (!sonuc) return;
     bildir('"' + sonuc.kurum + '" eklendi. Şifreyi kuruma iletin: ' + sifre, true);
-    $('yeniKurum').value = ''; $('yeniAd').value = ''; $('yeniSifre').value = '';
+    $('yeniKurum').value = ''; $('yeniAd').value = ''; $('yeniSifre').value = ''; $('yeniLogo').value = '';
     listele(true);
 }
 

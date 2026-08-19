@@ -49,6 +49,9 @@
     .header-title-box { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
     .header-title-box h1 { margin: 0; font-size: 22px; color: #fff; font-weight: 700; letter-spacing: -0.5px; }
     .kurum-bilgi { font-weight: 600; color: var(--primary); background: #111827; padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 13px; }
+    .kurum-bilgi-box { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .kurum-okul-ad { font-weight: 700; color: #fbbf24; background: linear-gradient(135deg, #1f2937, #111827); padding: 7px 16px; border-radius: 8px; border: 1px solid var(--primary); font-size: 14.5px; letter-spacing: 0.3px; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.15); }
+    .kurum-logo { width: 42px; height: 42px; border-radius: 8px; object-fit: contain; background: #fff; border: 1px solid var(--border-color); padding: 3px; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
 
     /* Rozetler */
     #syncBadge { font-size: 12px; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-muted); font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
@@ -242,7 +245,11 @@
         <div class="header-bar">
             <div class="header-title-box">
                 <h1>E-MESEM Başvuru & Denklik Sistemi</h1>
-                <span class="kurum-bilgi" id="aktifKurumAdi"></span>
+                <div class="kurum-bilgi-box">
+                    <img class="kurum-logo" id="kurumLogo" alt="Kurum Logosu" style="display:none;">
+                    <span class="kurum-okul-ad" id="kurumAdiRozet"></span>
+                    <span class="kurum-bilgi" id="aktifKurumAdi"></span>
+                </div>
             </div>
             <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
                 <button class="btn btn-emesem btn-glow btn-sm" id="btnHeaderEmesem" style="font-weight:bold;">🤖 E-MESEM Ön Kayıt Robotu</button>
@@ -1044,6 +1051,8 @@ let kayitlar = [];
 let arsivKayitlar = [];
 let kuyruk = [];
 let aktifKurum = "";
+let kurumAdi = ""; // Kurumun (okul) tam adı
+let kurumLogo = ""; // Kurum logosu (base64)
 let oturumAnahtari = "";
 let duzenlenenId = null;
 let esitlemeZamanlayici = null;
@@ -1314,12 +1323,16 @@ async function girisYap(olay) {
         await sunucuyuYokla();
         if (YEREL_MOD) {
             oturumAnahtari = 'yerel';
+            kurumAdi = aktifKurum; // Yerel modda kurum adı, kullanıcı adının kendisi
+            kurumLogo = '';
         } else {
             const sonuc = await apiIstegi('login', { sifre: sifre });
             if (!sonuc.token) throw new Error('Sunucu oturum anahtarı vermedi.');
             oturumAnahtari = sonuc.token;
+            kurumAdi = sonuc.ad || '';
+            kurumLogo = sonuc.logo || '';
         }
-        oturumDepo.setItem('mesem_oturum', JSON.stringify({ kurum: aktifKurum, token: oturumAnahtari }));
+        oturumDepo.setItem('mesem_oturum', JSON.stringify({ kurum: aktifKurum, token: oturumAnahtari, ad: kurumAdi, logo: kurumLogo }));
         $('loginSifre').value = '';
         uygulamayiAc();
         await buluttanYukle();
@@ -1334,7 +1347,24 @@ function uygulamayiAc() {
     $('loginOverlay').style.display = 'none';
     $('mainApp').style.display = 'block';
     $('aktifKurumAdi').textContent = aktifKurum;
+    const kurumAdiRozet = $('kurumAdiRozet');
+    if (kurumAdiRozet) {
+        kurumAdiRozet.textContent = kurumAdi || aktifKurum;
+        kurumAdiRozet.style.display = kurumAdi ? 'inline-block' : 'none';
+    }
+    // Kurum logosu göster
+    const logoEl = $('kurumLogo');
+    if (logoEl) {
+        if (kurumLogo) {
+            logoEl.src = kurumLogo;
+            logoEl.style.display = 'inline-block';
+        } else {
+            logoEl.style.display = 'none';
+        }
+    }
     localStorage.setItem('mesem_aktif_kurum', aktifKurum);
+    localStorage.setItem('mesem_kurum_adi', kurumAdi);
+    localStorage.setItem('mesem_kurum_logo', kurumLogo);
     esitlemeDurumu(YEREL_MOD ? 'yerel' : 'ok', YEREL_MOD ? 'Yerel mod' : 'Bulutla eşit');
     komisyonAyarlariniYukle();
     yeredenOku();
@@ -2613,7 +2643,10 @@ function bosSablonuKur() {
     sBosSatir(tablo, 'Çalışmışlık Belgesi / Kurum / Süre', '45px');
     sBosSatir(tablo, 'Sınav / Belge Talebi', '35px');
 
-    sablonUstYaziGuncelle('MESEM BAŞVURU FORMU', '(Bu formu eksiksiz doldurup fotoğrafınızı ekleyerek başvurunuzu yapabilirsiniz)', komisyonAyarlari.ilIlceMem);
+    // Boş başvuru formunda üst kurum yazısı yerine okulun tam adı yazılır
+    // Kurum adı tanımlı değilse varsayılan üst kurum / MEM adı gösterilir
+    const okulAdi = kurumAdi || komisyonAyarlari.ilIlceMem;
+    sablonUstYaziGuncelle('MESEM BAŞVURU FORMU', '(Bu formu eksiksiz doldurup fotoğrafınızı ekleyerek başvurunuzu yapabilirsiniz)', okulAdi);
     $('sablonFotoYazi').textContent = 'Kişi Fotoğrafı';
     $('sablonAltImza').innerHTML = `
         <div style="display:flex; justify-content:flex-end; gap:40px; margin-top:25px; font-size:14px; padding-right:10px;">
@@ -3362,6 +3395,9 @@ window.addEventListener('DOMContentLoaded', () => {
             if (o.kurum && o.token) {
                 aktifKurum = o.kurum;
                 oturumAnahtari = o.token;
+                // Eski oturumlarda ad alanı olmayabilir; localStorage'dan dene
+                kurumAdi = o.ad || localStorage.getItem('mesem_kurum_adi') || '';
+                kurumLogo = o.logo || localStorage.getItem('mesem_kurum_logo') || '';
                 uygulamayiAc();
                 sunucuyuYokla().then(() => buluttanYukle());
             }

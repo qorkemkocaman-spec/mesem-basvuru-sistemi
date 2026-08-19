@@ -87,7 +87,7 @@ export default async function handler(req, res) {
             }
 
             const satirlar = await sql`
-                SELECT sifre_ozeti, tuz, aktif FROM kurumlar WHERE kurum = ${kurum}`;
+                SELECT sifre_ozeti, tuz, aktif, ad, logo FROM kurumlar WHERE kurum = ${kurum}`;
             const kayitliKurum = satirlar[0];
             const gecerli = kayitliKurum && kayitliKurum.aktif &&
                 sifreDogruMu(sifre, kayitliKurum.tuz, kayitliKurum.sifre_ozeti);
@@ -101,7 +101,13 @@ export default async function handler(req, res) {
             }
 
             await sql`DELETE FROM giris_denemeleri WHERE kurum = ${kurum}`;
-            return yanit(res, 200, { status: 'success', token: anahtarUret(kurum), kurum });
+            return yanit(res, 200, {
+                status: 'success',
+                token: anahtarUret(kurum),
+                kurum,
+                ad: (kayitliKurum && kayitliKurum.ad) || '',
+                logo: (kayitliKurum && kayitliKurum.logo) || ''
+            });
         }
 
         /* ---------------- Bundan sonrası oturum ister ---------------- */
