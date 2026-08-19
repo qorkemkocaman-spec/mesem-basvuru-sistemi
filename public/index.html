@@ -1452,7 +1452,8 @@ function sekmeSayaclariniGuncelle() {
     $('countKalfalik').textContent = kalfalik;
     $('countUstalik').textContent = ustalik;
     $('countPedagoji').textContent = pedagoji;
-    $('countTumu').textContent = kayitlar.length;
+    // Tüm Kayıtlar sekmesi yalnızca Kalfalık ve Ustalık kayıtlarını gösterir (İş Pedagojisi hariç)
+    $('countTumu').textContent = kalfalik + ustalik;
     $('countArsiv').textContent = arsivKayitlar.length;
 }
 
@@ -1832,6 +1833,11 @@ function filtrelenmisKayitlar() {
             const tur = basvuruTurunuNormalizeEt(k.basvuruTuru);
             if (tur !== aktifNavSekme) return false;
         }
+        // Tüm Kayıtlar sekmesinde İş Pedagojisi (Usta Öğreticilik) kayıtları gösterilmez
+        if (aktifNavSekme === 'Tumu') {
+            const tur = basvuruTurunuNormalizeEt(k.basvuruTuru);
+            if (tur === 'İş Pedagojisi Kursu') return false;
+        }
         if (tc && !String(k.tc || '').includes(tc)) return false;
         if (dogum && formatTarih(k.dogumTarihi) !== dogum) return false;
         if (metin) {
@@ -2132,9 +2138,9 @@ function sonucBelgesiHtml(k) {
     const birlestir = (list, ayirac) => list.map(x => String(x || '').trim()).filter(Boolean).join(ayirac || ' / ');
 
     const kalVeUst = !!(k.kalfalikVeUstalik || k.kalfalikVeBasariliUstalik);
-    const kalSinav = !!k.kalfalikSinav || (k.basvuruTuru === 'Kalfalık Sınavı');
+    const kalSinav = !!k.kalfalikSinav;
     const dogKal = !!k.dogrudanKalfalik;
-    const ustSinav = !!k.ustalikSinav || (k.basvuruTuru === 'Ustalık Sınavı');
+    const ustSinav = !!k.ustalikSinav;
     const dogUst = !!k.dogrudanUstalik;
 
     // Belge Listesi - Diploma her zaman 1. sırada, sonra çalışma belgeleri
@@ -2353,9 +2359,9 @@ function komisyonListesiKur() {
     } else {
         liste.forEach((k, idx) => {
             const kalVeUst = !!(k.kalfalikVeUstalik || k.kalfalikVeBasariliUstalik);
-            const kalSinav = !!k.kalfalikSinav || (k.basvuruTuru === 'Kalfalık Sınavı');
+            const kalSinav = !!k.kalfalikSinav;
             const dogKal = !!k.dogrudanKalfalik;
-            const ustSinav = !!k.ustalikSinav || (k.basvuruTuru === 'Ustalık Sınavı');
+            const ustSinav = !!k.ustalikSinav;
             const dogUst = !!k.dogrudanUstalik;
 
             let aciklama = k.kapsam ? `Kapsam: ${k.kapsam}` : '';
@@ -2475,12 +2481,13 @@ function denklikDefteriKur() {
     } else {
         liste.forEach((k, idx) => {
             let hak = '';
-            if (k.kalfalikVeUstalik || k.kalfalikVeBasariliUstalik) hak = 'Kalfalık sınavına girmesi, başarılı olması halinde ustalık sınavlarına alınması';
-            else if (k.dogrudanKalfalik) hak = 'Doğrudan kalfalık belgesi düzenlenmesi';
-            else if (k.dogrudanUstalik) hak = 'Doğrudan Ustalık Belgesi Düzenlenmesi';
-            else if (k.kalfalikSinav || k.basvuruTuru === 'Kalfalık Sınavı') hak = 'Kalfalık sınavlarına girmesi';
-            else if (k.ustalikSinav || k.basvuruTuru === 'Ustalık Sınavı') hak = 'Ustalık Sınavına Girmesi';
-            else hak = k.basvuruTuru || '-';
+            const haklar = [];
+            if (k.kalfalikSinav) haklar.push('Kalfalık sınavlarına girmesi');
+            if (k.dogrudanKalfalik) haklar.push('Doğrudan kalfalık belgesi düzenlenmesi');
+            if (k.kalfalikVeUstalik || k.kalfalikVeBasariliUstalik) haklar.push('Kalfalık sınavına girmesi, başarılı olması halinde ustalık sınavlarına alınması');
+            if (k.ustalikSinav) haklar.push('Ustalık sınavına girmesi');
+            if (k.dogrudanUstalik) haklar.push('Doğrudan ustalık belgesi düzenlenmesi');
+            hak = haklar.length ? haklar.join(', ') : (k.basvuruTuru || '-');
 
             const bulK = (id) => String(k[id] || '').trim();
             // Diploma her zaman ilk sırada, sonra çalışma belgeleri
