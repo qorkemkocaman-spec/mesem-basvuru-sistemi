@@ -406,6 +406,7 @@
                             </select>
                         </div>
                         <div class="form-group"><label for="belgeTarihi">Belge Tarihi</label><input type="date" id="belgeTarihi"></div>
+                        <div class="form-group"><label for="belgeSayisi">Belge Sayısı / No</label><input type="text" id="belgeSayisi" placeholder="Belge no veya sayısı"></div>
                         <div class="form-group"><label for="mezunOlduguOkul">Mezun Olduğu Okul</label><input type="text" id="mezunOlduguOkul" placeholder="En son mezun olunan okul adı"></div>
                     </div>
                     <div class="col">
@@ -975,6 +976,7 @@ const ALANLAR = [
     { id: 'mezunOlduguOkul', ad: 'Mezun Olduğu Okul', tip: 'metin' },
     { id: 'getirdigiBelge', ad: 'Getirdiği Belge', tip: 'metin' },
     { id: 'belgeTarihi', ad: 'Belge Tarihi', tip: 'tarih' },
+    { id: 'belgeSayisi', ad: 'Belge Sayısı', tip: 'metin' },
     { id: 'ilkogretimOkul', ad: 'İlköğretim Okul', tip: 'metin' },
     { id: 'ilkogretimBelgeTarihi', ad: 'İlk. Belge Tarihi', tip: 'tarih' },
     { id: 'ilkogretimBelgeSayisi', ad: 'İlk. Belge Sayısı', tip: 'metin' },
@@ -2132,54 +2134,47 @@ function sonucSablonuKur(k) {
 
     const container = $('sablonIcerikAlani');
     
-    // 4 Tam Satır Belge Listesi
+    // Belge Listesi - Diploma her zaman 1. sırada, sonra çalışma belgeleri
     const belgeler = [];
     
-    // 1. Belge
-    let b1Cesit = bul('calisma1Cesit') || k.getirdigiBelge || k.enSonMezuniyet || 'Diploma';
-    let b1Kurum = bul('calisma1Kurum') || k.mezunOlduguOkul || '-';
+    // 1. Belge: Diploma (her zaman ilk sırada)
+    let b1Cesit = k.getirdigiBelge || 'Diploma';
+    let b1Kurum = k.mezunOlduguOkul || '-';
     let b1TarihSayi = birlestir([
-        (bul('calisma1Baslangic') || bul('calisma1Bitis')) ? `${trTarih(formatTarih(bul('calisma1Baslangic')))} - ${trTarih(formatTarih(bul('calisma1Bitis')))}` : trTarih(formatTarih(k.belgeTarihi)),
-        bul('calisma1Sayi') || bul('ilkogretimBelgeSayisi') || bul('liseBelgeSayisi') || bul('onlisansBelgeSayisi')
+        trTarih(formatTarih(k.belgeTarihi)),
+        k.belgeSayisi || bul('ilkogretimBelgeSayisi') || bul('liseBelgeSayisi') || bul('onlisansBelgeSayisi')
     ]) || '-';
-    let b1Aciklama = bul('calisma1Aciklama') || k.mezuniyetAciklama || (k.kapsam ? 'Kapsam: ' + k.kapsam : '-');
+    let b1Aciklama = k.mezuniyetAciklama || (k.kapsam ? 'Kapsam: ' + k.kapsam : '-');
     belgeler.push({ sira: 1, cesit: b1Cesit, kurum: b1Kurum, tarihSayi: b1TarihSayi, aciklama: b1Aciklama });
 
-    // 2. Belge
-    let b2Cesit = bul('calisma2Cesit');
-    let b2Kurum = bul('calisma2Kurum');
-    let b2TarihSayi = birlestir([
-        (bul('calisma2Baslangic') || bul('calisma2Bitis')) ? `${trTarih(formatTarih(bul('calisma2Baslangic')))} - ${trTarih(formatTarih(bul('calisma2Bitis')))}` : '',
-        bul('calisma2Sayi') ? 'Sayı: ' + bul('calisma2Sayi') : ''
-    ]);
-    let b2Aciklama = bul('calisma2Aciklama');
-    if (k.basvuruTuru === 'İş Pedagojisi Kursu' && (k.ustaDayanakBelge || k.ustaBelgeSayisi)) {
-        b2Cesit = k.ustaDayanakBelge || 'Usta Öğreticilik Dayanak Belgesi';
-        b2Kurum = aktifKurum || '-';
-        b2TarihSayi = birlestir([trTarih(formatTarih(k.ustaBelgeTarihi)), bul('ustaBelgeSayisi')]);
-        b2Aciklama = k.ustaTalepTuru || 'İş Pedagojisi Talebi';
+    // 2-5. Belgeler: Çalışma belgeleri (varsa)
+    for (let i = 1; i <= 4; i++) {
+        const cesit = bul('calisma' + i + 'Cesit');
+        const kurum = bul('calisma' + i + 'Kurum');
+        const sayi = bul('calisma' + i + 'Sayi');
+        const baslangic = bul('calisma' + i + 'Baslangic');
+        const bitis = bul('calisma' + i + 'Bitis');
+        const aciklama = bul('calisma' + i + 'Aciklama');
+        
+        if (cesit || kurum || sayi || baslangic || bitis || aciklama) {
+            const tarihSayi = birlestir([
+                (baslangic || bitis) ? `${trTarih(formatTarih(baslangic))} - ${trTarih(formatTarih(bitis))}` : '',
+                sayi ? 'Sayı: ' + sayi : ''
+            ]);
+            belgeler.push({ sira: belgeler.length + 1, cesit: cesit || '-', kurum: kurum || '-', tarihSayi: tarihSayi || '-', aciklama: aciklama || '-' });
+        }
     }
-    belgeler.push({ sira: 2, cesit: b2Cesit || '', kurum: b2Kurum || '', tarihSayi: b2TarihSayi || '', aciklama: b2Aciklama || '' });
-
-    // 3. Belge
-    let b3Cesit = bul('calisma3Cesit');
-    let b3Kurum = bul('calisma3Kurum');
-    let b3TarihSayi = birlestir([
-        (bul('calisma3Baslangic') || bul('calisma3Bitis')) ? `${trTarih(formatTarih(bul('calisma3Baslangic')))} - ${trTarih(formatTarih(bul('calisma3Bitis')))}` : '',
-        bul('calisma3Sayi') ? 'Sayı: ' + bul('calisma3Sayi') : ''
-    ]);
-    let b3Aciklama = bul('calisma3Aciklama');
-    belgeler.push({ sira: 3, cesit: b3Cesit || '', kurum: b3Kurum || '', tarihSayi: b3TarihSayi || '', aciklama: b3Aciklama || '' });
-
-    // 4. Belge
-    let b4Cesit = bul('calisma4Cesit');
-    let b4Kurum = bul('calisma4Kurum');
-    let b4TarihSayi = birlestir([
-        (bul('calisma4Baslangic') || bul('calisma4Bitis')) ? `${trTarih(formatTarih(bul('calisma4Baslangic')))} - ${trTarih(formatTarih(bul('calisma4Bitis')))}` : '',
-        bul('calisma4Sayi') ? 'Sayı: ' + bul('calisma4Sayi') : ''
-    ]);
-    let b4Aciklama = bul('calisma4Aciklama');
-    belgeler.push({ sira: 4, cesit: b4Cesit || '', kurum: b4Kurum || '', tarihSayi: b4TarihSayi || '', aciklama: b4Aciklama || '' });
+    
+    // İş Pedagojisi için dayanak belge ekle
+    if (k.basvuruTuru === 'İş Pedagojisi Kursu' && (k.ustaDayanakBelge || k.ustaBelgeSayisi)) {
+        belgeler.push({
+            sira: belgeler.length + 1,
+            cesit: k.ustaDayanakBelge || 'Usta Öğreticilik Dayanak Belgesi',
+            kurum: aktifKurum || '-',
+            tarihSayi: birlestir([trTarih(formatTarih(k.ustaBelgeTarihi)), bul('ustaBelgeSayisi')]),
+            aciklama: k.ustaTalepTuru || 'İş Pedagojisi Talebi'
+        });
+    }
 
     let belgeSatirlariHtml = belgeler.map(b => `
         <tr>
@@ -2372,19 +2367,19 @@ function komisyonListesiKur() {
                     <th rowspan="2" style="border:1px solid #000; padding:4px;">Açıklamalar<br><span style="font-size:8.5px; font-weight:normal;">(Başvuru sonucu ret ise nedeni)</span></th>
                     <th rowspan="2" style="border:1px solid #000; padding:4px; width:95px;">Teslim Alan<br><span style="font-size:8.5px; font-weight:normal;">(Ad Soyad - İmza - Tarih)</span></th>
                 </tr>
-                <tr style="background:#f2f2f2; text-align:center; font-weight:bold; font-size:9px;">
-                    <th style="border:1px solid #000; padding:4px;">Adı Soyadı</th>
-                    <th style="border:1px solid #000; padding:4px; width:75px;">T.C. Kimlik No</th>
-                    <th style="border:1px solid #000; padding:4px;">Alan</th>
-                    <th style="border:1px solid #000; padding:4px;">Dal</th>
-                    <th style="border:1px solid #000; padding:2px; font-size:8px; width:48px;" title="Kalfalık sınavlarına girmesi">Kalfalık sınavlarına girmesi</th>
-                    <th style="border:1px solid #000; padding:2px; font-size:8px; width:48px;" title="Doğrudan kalfalık belgesi düzenlenmesi">Doğrudan kalfalık belgesi düzenlenmesi</th>
-                    <th style="border:1px solid #000; padding:2px; font-size:8px; width:68px;" title="Kalfalık sınavına girmesi, başarılı olması halinde ustalık sınavlarına alınması">Kalfalık sınavına girmesi, başarılı olması halinde ustalık sınavlarına alınması</th>
-                    <th style="border:1px solid #000; padding:2px; font-size:8px; width:48px;" title="Ustalık Sınavına Girmesi">Ustalık Sınavına Girmesi</th>
-                    <th style="border:1px solid #000; padding:2px; font-size:8px; width:48px;" title="Doğrudan Ustalık Belgesi Düzenlemesi">Doğrudan Ustalık Belgesi Düzenlemesi</th>
-                    <th style="border:1px solid #000; padding:3px; width:30px;">Kabul</th>
-                    <th style="border:1px solid #000; padding:3px; width:28px;">Red</th>
-                </tr>
+                    <tr style="background:#f2f2f2; text-align:center; font-weight:bold; font-size:9px;">
+                        <th style="border:1px solid #000; padding:4px;">Adı Soyadı</th>
+                        <th style="border:1px solid #000; padding:4px; width:75px;">T.C. Kimlik No</th>
+                        <th style="border:1px solid #000; padding:4px;">Alan</th>
+                        <th style="border:1px solid #000; padding:4px;">Dal</th>
+                        <th style="border:1px solid #000; padding:2px; font-size:7.5px; width:55px; writing-mode:vertical-rl; text-orientation:mixed; height:80px;" title="Kalfalık sınavlarına girmesi">Karfalık sınavlarına girmesi</th>
+                        <th style="border:1px solid #000; padding:2px; font-size:7.5px; width:55px; writing-mode:vertical-rl; text-orientation:mixed; height:80px;" title="Doğrudan karfalık belgesi düzenlenmesi">Doğrudan karfalık belgesi düzenlenmesi</th>
+                        <th style="border:1px solid #000; padding:2px; font-size:7.5px; width:70px; writing-mode:vertical-rl; text-orientation:mixed; height:80px;" title="Karfalık sınavına girmesi, başarılı olması halinde ustalık sınavlarına alınması">Karfalık sınavına girmesi, başarılı olması halinde ustalık sınavlarına alınması</th>
+                        <th style="border:1px solid #000; padding:2px; font-size:7.5px; width:55px; writing-mode:vertical-rl; text-orientation:mixed; height:80px;" title="Ustalık Sınavına Girmesi">Ustalık Sınavına Girmesi</th>
+                        <th style="border:1px solid #000; padding:2px; font-size:7.5px; width:55px; writing-mode:vertical-rl; text-orientation:mixed; height:80px;" title="Doğrudan Ustalık Belgesi Düzenlemesi">Doğrudan Ustalık Belgesi Düzenlemesi</th>
+                        <th style="border:1px solid #000; padding:3px; width:30px;">Kabul</th>
+                        <th style="border:1px solid #000; padding:3px; width:28px;">Red</th>
+                    </tr>
             </thead>
             <tbody>
                 ${satirlarHtml}
@@ -2446,12 +2441,18 @@ function denklikDefteriKur() {
             else hak = k.basvuruTuru || '-';
 
             const bulK = (id) => String(k[id] || '').trim();
-            const alinanBelgeler = [
-                bulK('calisma1Cesit') ? `1.Belge: ${bulK('calisma1Cesit')} (${bulK('calisma1Kurum') || '-'})` : (k.getirdigiBelge || k.enSonMezuniyet ? `${k.getirdigiBelge || 'Diploma'}: ${k.mezunOlduguOkul || '-'}` : ''),
-                bulK('calisma2Cesit') ? `2.Belge: ${bulK('calisma2Cesit')} (${bulK('calisma2Kurum') || '-'})` : (bulK('calisma2Kurum') ? `2.Çalışma: ${bulK('calisma2Kurum')}` : ''),
-                bulK('calisma3Cesit') ? `3.Belge: ${bulK('calisma3Cesit')} (${bulK('calisma3Kurum') || '-'})` : (bulK('calisma3Kurum') ? `3.Çalışma: ${bulK('calisma3Kurum')}` : ''),
-                bulK('calisma4Cesit') ? `4.Belge: ${bulK('calisma4Cesit')} (${bulK('calisma4Kurum') || '-'})` : (bulK('calisma4Kurum') ? `4.Çalışma: ${bulK('calisma4Kurum')}` : '')
-            ].filter(Boolean).join('; ');
+            // Diploma her zaman ilk sırada, sonra çalışma belgeleri
+            const defterBelgeler = [];
+            defterBelgeler.push(`${k.getirdigiBelge || 'Diploma'}: ${k.mezunOlduguOkul || '-'}${k.belgeSayisi ? ' (Sayı: ' + k.belgeSayisi + ')' : ''}`);
+            for (let i = 1; i <= 4; i++) {
+                const cesit = bulK('calisma' + i + 'Cesit');
+                const kurum = bulK('calisma' + i + 'Kurum');
+                const sayi = bulK('calisma' + i + 'Sayi');
+                if (cesit || kurum || sayi) {
+                    defterBelgeler.push(`${cesit || 'Belge'}: ${kurum || '-'}${sayi ? ' (Sayı: ' + sayi + ')' : ''}`);
+                }
+            }
+            const alinanBelgeler = defterBelgeler.filter(Boolean).join('; ');
 
             satirlarHtml += `
                 <tr>
