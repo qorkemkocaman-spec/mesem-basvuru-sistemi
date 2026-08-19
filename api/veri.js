@@ -54,7 +54,7 @@ export default async function handler(req, res) {
     const islem = String(govde.action || '');
 
     if (islem === 'ping') {
-        return yanit(res, 200, { status: 'success', sunucu: 'e-mesem-basvuru', surum: '3.0' });
+        return yanit(res, 200, { status: 'success', sunucu: 'e-mesem-basvuru', surum: '4.0' });
     }
 
     const kurum = kurumAdiniDuzelt(govde.kurum);

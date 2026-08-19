@@ -1,9 +1,9 @@
 {
   "name": "mesem-basvuru-sistemi",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "private": true,
   "type": "module",
-  "description": "MESEM başvuru sistemi - çok kurumlu web uygulaması (Vercel + Neon Postgres)",
+  "description": "E-MESEM Başvuru, Denklik ve Otomasyon Sistemi v4.0 - çok kurumlu web uygulaması (Vercel + Neon Postgres)",
   "engines": {
     "node": ">=20"
   },

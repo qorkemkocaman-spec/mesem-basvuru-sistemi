@@ -172,7 +172,16 @@
         .form-baski table { page-break-inside: auto; border-collapse: collapse !important; }
         .form-baski tr { page-break-inside: avoid; }
         .form-baski th, .form-baski td { border-color: #000 !important; color: #000 !important; }
-        @page { margin: 8mm; size: auto; }
+
+        /* A4 sayfa boyutu ve yönlendirme - JS ile dinamik olarak ayarlanır */
+        @page { size: A4 portrait; margin: 8mm; }
+
+        /* A4'e tam oturma */
+        .form-baski { width: 100% !important; max-width: 100% !important; }
+        .form-baski table { width: 100% !important; }
+        .form-baski th, .form-baski td { word-wrap: break-word; overflow-wrap: break-word; }
+        .form-baski-header { page-break-after: avoid; }
+        .form-baski .sablon-icerik { page-break-inside: auto; }
     }
 
     @media (max-width: 850px) {
@@ -2174,7 +2183,6 @@ function sonucSablonuKur(k) {
 
     let belgeSatirlariHtml = belgeler.map(b => `
         <tr>
-            <td style="text-align:center; padding:6px 4px; border:1px solid #000; font-weight:bold;">${b.sira}</td>
             <td style="padding:6px 8px; border:1px solid #000;">${b.cesit || '&nbsp;'}</td>
             <td style="padding:6px 8px; border:1px solid #000;">${b.kurum || '&nbsp;'}</td>
             <td style="padding:6px 8px; border:1px solid #000; text-align:center;">${b.tarihSayi || '&nbsp;'}</td>
@@ -2221,11 +2229,10 @@ function sonucSablonuKur(k) {
         <table style="width:100%; border-collapse:collapse; font-size:11.5px; margin-bottom:10px; font-family:'Times New Roman', serif;">
             <thead>
                 <tr style="background:#f2f2f2; font-weight:bold; text-align:center;">
-                    <th style="width:7%; border:1px solid #000; padding:6px 4px;">Sıra No</th>
-                    <th style="width:25%; border:1px solid #000; padding:6px 8px;">Belge Çeşidi</th>
+                    <th style="width:25%; border:1px solid #000; padding:6px 8px;">Belge Çeşidi<br><span style="font-size:9px; font-weight:normal;">(Diploma / Kurs Belgesi / Hizmet Belgesi / SGK vb.)</span></th>
                     <th style="width:27%; border:1px solid #000; padding:6px 8px;">Belgeyi Veren Kurum</th>
                     <th style="width:21%; border:1px solid #000; padding:6px 8px;">Belgenin Tarih ve Sayısı</th>
-                    <th style="width:20%; border:1px solid #000; padding:6px 8px;">Belge ile ilgili açıklamalar</th>
+                    <th style="width:27%; border:1px solid #000; padding:6px 8px;">Belge ile ilgili açıklamalar<br><span style="font-size:9px; font-weight:normal;">(süresi, alan/dalı vb.)</span></th>
                 </tr>
             </thead>
             <tbody>
@@ -2348,6 +2355,11 @@ function komisyonListesiKur() {
             </div>
         </div>
 
+        <div style="font-size:9.5px; font-family:'Times New Roman', serif; margin-bottom:6px; line-height:1.5;">
+            <strong>Başvuru Seviyesi</strong> (Başvuruyu alan okul/kurum tarafından doldurulacaktır. İlgili alana X işareti koyunuz.)<br>
+            <strong>Başvuru Sonucu</strong> (Komisyon tarafından doldurulacaktır.)
+        </div>
+
         <table style="width:100%; border-collapse:collapse; font-size:10px; font-family:'Times New Roman', serif; table-layout:auto;">
             <thead>
                 <tr style="background:#f2f2f2; text-align:center; font-weight:bold;">
@@ -2465,7 +2477,7 @@ function denklikDefteriKur() {
 
     container.innerHTML = `
         <div style="position:relative; font-family:'Times New Roman', serif; margin-bottom:12px;">
-            <div style="position:absolute; top:0; right:0; font-size:12px; font-weight:bold;">Sayfa No: ........</div>
+            <div style="position:absolute; top:0; right:0; font-size:12px; font-weight:bold;">Sayfa No: ………</div>
             <div style="text-align:center; font-size:14px; font-weight:bold; line-height:1.4;">
                 ${mem}<br>
                 <span style="font-size:15px; text-decoration:underline;">BELGE DENKLİK DEFTERİ</span>
@@ -3237,7 +3249,18 @@ function olaylariBagla() {
     $('btnSifirla').addEventListener('click', verileriSifirla);
     $('btnSablonKapat').addEventListener('click', sablonKapat);
     $('btnSablonKapat2').addEventListener('click', sablonKapat);
-    $('btnYazdir').addEventListener('click', () => window.print());
+    $('btnYazdir').addEventListener('click', () => {
+        // Aktif rapor türüne göre sayfa yönlendirmesini ayarla
+        // EK-2 ve Defter yatay (landscape), EK-3 ve Boş Form dikey (portrait)
+        const yatay = (aktifRaporTuru === 'komisyon' || aktifRaporTuru === 'defter');
+        const stil = document.createElement('style');
+        stil.id = 'yazdirmaYonu';
+        stil.textContent = `@media print { @page { size: A4 ${yatay ? 'landscape' : 'portrait'}; margin: ${yatay ? '6mm' : '8mm'}; } }`;
+        const eski = document.getElementById('yazdirmaYonu');
+        if (eski) eski.remove();
+        document.head.appendChild(stil);
+        setTimeout(() => window.print(), 50);
+    });
     $('sablonFotoInput').addEventListener('change', sablonFotoYukle);
 
     document.addEventListener('keydown', (e) => {
