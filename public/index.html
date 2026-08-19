@@ -363,7 +363,6 @@
                             <input type="text" id="mykAra" placeholder="Kod/Meslek ara..." autocomplete="off">
                             <div id="mykSuggestions"></div>
                         </div>
-                        <div class="form-group"><label for="kod">KOD</label><input type="text" id="kod" placeholder="MYK Kodu"></div>
                         <div class="form-group"><label for="ogrenciEgitimTuru">Öğrenci Eğitim Türü</label>
                             <select id="ogrenciEgitimTuru">
                                 <option value="">-- Seçiniz --</option>
@@ -976,7 +975,6 @@ const ALANLAR = [
     { id: 'alan', ad: 'Alan', tip: 'metin' },
     { id: 'dal', ad: 'Dal', tip: 'metin' },
     { id: 'mykAra', ad: 'MYK Yeterlilik', tip: 'metin' },
-    { id: 'kod', ad: 'KOD', tip: 'metin' },
     { id: 'ogrenciEgitimTuru', ad: 'Öğrenci Eğitim Türü', tip: 'metin' },
     { id: 'cerceveProgrami', ad: 'Çerçeve Programı', tip: 'metin' },
     { id: 'enSonMezuniyet', ad: 'En Son Mezuniyeti', tip: 'metin' },
@@ -1424,6 +1422,12 @@ function navSekmeDegistir(sekmeAdi) {
         $('basvuruTuru').value = sekmeAdi;
         basvuruTuruTetikle();
     }
+
+    // İş Pedagojisi Kursu (Usta Öğreticilik) sekmesinde sadece Boş Başvuru Formu kullanılabilir
+    const ustaOgreticiModu = (sekmeAdi === 'İş Pedagojisi Kursu');
+    $('btnSekmeSonuc').style.display = ustaOgreticiModu ? 'none' : '';
+    $('btnSekmeKomisyon').style.display = ustaOgreticiModu ? 'none' : '';
+    $('btnSekmeDefter').style.display = ustaOgreticiModu ? 'none' : '';
 
     const baslikMap = {
         'Kalfalık Sınavı': '🔹 Kalfalık Sınavı Başvuru Listesi',
@@ -3277,14 +3281,16 @@ function olaylariBagla() {
     $('btnIletisimKapat2').addEventListener('click', () => $('iletisimModal').classList.remove('active'));
     $('btnMailKopyala').addEventListener('click', () => panoyaYaz('gorkemkocaman.tr@gmail.com', 'E-posta adresi panoya kopyalandı.'));
 
-    // Raporlar Modalı
+    // Raporlar Modalı - İş Pedagojisi (Usta Öğreticilik) modunda sadece Boş Başvuru Formu
     $('btnRaporlarModali').addEventListener('click', () => {
+        if (aktifNavSekme === 'İş Pedagojisi Kursu') { bosSablonuKur(); return; }
         const liste = filtrelenmisKayitlar();
         if (liste.length) sonucSablonlariKur(liste);
         else if (kayitlar.length) sonucSablonlariKur(kayitlar);
         else bosSablonuKur();
     });
     $('btnSekmeSonuc').addEventListener('click', () => {
+        if (aktifNavSekme === 'İş Pedagojisi Kursu') { bosSablonuKur(); return; }
         const liste = filtrelenmisKayitlar();
         if (liste.length) sonucSablonlariKur(liste);
         else if (kayitlar.length) sonucSablonlariKur(kayitlar);
@@ -3294,6 +3300,7 @@ function olaylariBagla() {
     // "Ek-3 Sonuç Belgesi" tab butonunu filtreleyip güncel listeyi başlat
     // Raporlar modalında açıldığında da aynı tab'daki tüm kayıtları göster
     $('btnSekmeSonuc').addEventListener('dblclick', () => {
+        if (aktifNavSekme === 'İş Pedagojisi Kursu') { bosSablonuKur(); return; }
         const liste = filtrelenmisKayitlar();
         if (liste.length) sonucSablonlariKur(liste);
         else bosSablonuKur();

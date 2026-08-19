@@ -1,0 +1,22 @@
+# Yapay zeka okuma / işleme dışı bırakılacak dosya ve dizinler
+
+# Büyük ikili dosyalar (XLS, JSON vb.)
+kaynak-kodlar/
+*.xls
+*.xlsx
+*.json
+
+# Gereksiz / geçici dosyalar
+*.tmp
+*.bak
+*.log
+.DS_Store
+Thumbs.db
+
+# Git ve sistem dosyaları
+.git/
+.gitignore
+*.md
+
+# node bağımlılıkları
+node_modules/
