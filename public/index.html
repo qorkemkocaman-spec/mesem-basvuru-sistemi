@@ -1131,15 +1131,15 @@ function tcGecerliMi(tc) {
     return toplam % 10 === h[10];
 }
 
-function basvuruNoUret(tarihISO, sira) {
-    const sablon = (komisyonAyarlari.noSablon || 'D2026-').trim();
-    if (sablon.includes('{YIL}')) {
-        const d = tarihISO ? new Date(tarihISO) : new Date();
-        const yil = d.getFullYear();
-        const ay = String(d.getMonth() + 1).padStart(2, '0');
-        return sablon.replace('{YIL}', yil).replace('{AY}', ay) + String(sira).padStart(4, '0');
-    }
-    return `${sablon}${String(sira).padStart(4, '0')}`;
+function basvuruNoUret(tarihISO, sira, basvuruTuru) {
+    const d = tarihISO ? new Date(tarihISO) : new Date();
+    const yil = d.getFullYear();
+    const ay = String(d.getMonth() + 1).padStart(2, '0');
+    const turNorm = basvuruTurunuNormalizeEt(basvuruTuru);
+    let onEk = 'K'; // Varsayılan: Kalfalık
+    if (turNorm === 'Ustalık Sınavı') onEk = 'U';
+    else if (turNorm === 'İş Pedagojisi Kursu') onEk = 'I';
+    return `${onEk}${yil}-${ay}/${String(sira).padStart(4, '0')}`;
 }
 
 function sonrakiSira() {
@@ -1464,7 +1464,7 @@ function kaydiNormalize(k) {
     if (k.kalfalikVeBasariliUstalik && !y.kalfalikVeUstalik) y.kalfalikVeUstalik = true;
     if (!y.sira) y.sira = sonrakiSira();
     if (!y.kayitTarihi) y.kayitTarihi = new Date().toISOString();
-    if (!y.basvuruNo) y.basvuruNo = basvuruNoUret(y.kayitTarihi, y.sira);
+    if (!y.basvuruNo) y.basvuruNo = basvuruNoUret(y.kayitTarihi, y.sira, y.basvuruTuru);
     return y;
 }
 
@@ -1648,7 +1648,7 @@ function kayitEkle() {
     const kayit = Object.assign({
         id: yeniId(),
         sira: sira,
-        basvuruNo: basvuruNoUret(simdi, sira),
+        basvuruNo: basvuruNoUret(simdi, sira, veri.basvuruTuru),
         kayitTarihi: simdi,
         guncelleme: simdi
     }, veri);
@@ -2707,7 +2707,7 @@ function kayitlariIceAktar(nesneler, kaynak) {
         } else {
             const sira = sonrakiSira();
             const kayit = Object.assign({
-                id: yeniId(), sira: sira, basvuruNo: basvuruNoUret(simdi, sira),
+                id: yeniId(), sira: sira, basvuruNo: basvuruNoUret(simdi, sira, tam.basvuruTuru),
                 kayitTarihi: simdi, guncelleme: simdi
             }, tam);
             kayitlar.push(kayit);
