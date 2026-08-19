@@ -1209,9 +1209,29 @@ function denklikNoUret(k) {
     return `D${yil}-${donem}[${basvuruNo}]`;
 }
 
-function sonrakiSira() {
-    if (!kayitlar.length) return 1;
-    return Math.max(...kayitlar.map(k => Number(k.sira) || 0)) + 1;
+// Sıra ve ay bazında tutarlı sıralama: önce yıl-ay, sonra sıra
+function kayitKarsilastir(a, b) {
+    const ta = a.kayitTarihi ? new Date(a.kayitTarihi).getTime() : 0;
+    const tb = b.kayitTarihi ? new Date(b.kayitTarihi).getTime() : 0;
+    if (ta !== tb) return ta - tb;
+    return (Number(a.sira) || 0) - (Number(b.sira) || 0);
+}
+
+function sonrakiSira(tur, tarihISO) {
+    // Her ay başında ve her başvuru türü için ayrı ayrı sıra 1'den başlar.
+    // Örn: Ustalık için Eylül ayı 0001, U2026-09/0001 ...
+    const d = tarihISO ? new Date(tarihISO) : new Date();
+    if (isNaN(d.getTime())) return 1;
+    const ayKey = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    const turNorm = basvuruTurunuNormalizeEt(tur || '');
+    const havuz = kayitlar.filter(k => {
+        const kd = k.kayitTarihi ? new Date(k.kayitTarihi) : null;
+        if (!kd || isNaN(kd.getTime())) return false;
+        const kAy = kd.getFullYear() + '-' + String(kd.getMonth() + 1).padStart(2, '0');
+        return kAy === ayKey && basvuruTurunuNormalizeEt(k.basvuruTuru) === turNorm;
+    });
+    if (!havuz.length) return 1;
+    return Math.max(...havuz.map(k => Number(k.sira) || 0)) + 1;
 }
 
 function guvenliDepo(kaynakAdi) {
@@ -1557,8 +1577,8 @@ function kaydiNormalize(k) {
     }
     if (y.kalfalikVeUstalik) y.kalfalikVeBasariliUstalik = true;
     if (k.kalfalikVeBasariliUstalik && !y.kalfalikVeUstalik) y.kalfalikVeUstalik = true;
-    if (!y.sira) y.sira = sonrakiSira();
     if (!y.kayitTarihi) y.kayitTarihi = new Date().toISOString();
+    if (!y.sira) y.sira = sonrakiSira(y.basvuruTuru, y.kayitTarihi);
     if (!y.basvuruNo) y.basvuruNo = basvuruNoUret(y.kayitTarihi, y.sira, y.basvuruTuru);
     return y;
 }
@@ -1574,7 +1594,7 @@ async function buluttanYukle() {
             const harita = new Map(bulut.map(k => [k.id, k]));
             yerelBekleyen.forEach(k => harita.set(k.id, k));
             kuyruk.filter(i => i.tip === 'sil').forEach(i => harita.delete(i.id));
-            kayitlar = Array.from(harita.values()).sort((a, b) => (a.sira || 0) - (b.sira || 0));
+            kayitlar = Array.from(harita.values()).sort(kayitKarsilastir);
             yereleYaz();
             tumunuYenile();
         }
@@ -1739,7 +1759,7 @@ function kayitEkle() {
     if (hatalar.length) { bildir(hatalar[0], 'hata'); return; }
 
     const simdi = new Date().toISOString();
-    const sira = sonrakiSira();
+    const sira = sonrakiSira(veri.basvuruTuru, simdi);
     const kayit = Object.assign({
         id: yeniId(),
         sira: sira,
@@ -1915,7 +1935,7 @@ function filtrelenmisKayitlar() {
             if (!havuz.includes(metin)) return false;
         }
         return true;
-    });
+    }).sort(kayitKarsilastir);
 }
 
 function sonucBariniGizle() {
@@ -2840,7 +2860,7 @@ function kayitlariIceAktar(nesneler, kaynak) {
             kuyrugaEkle({ tip: 'upsert', id: mevcut.id, kayit: mevcut, ts: simdi });
             guncellendi++;
         } else {
-            const sira = sonrakiSira();
+            const sira = sonrakiSira(tam.basvuruTuru, simdi);
             const kayit = Object.assign({
                 id: yeniId(), sira: sira, basvuruNo: basvuruNoUret(simdi, sira, tam.basvuruTuru),
                 kayitTarihi: simdi, guncelleme: simdi

@@ -121,7 +121,7 @@ export default async function handler(req, res) {
             const satirlar = await sql`
                 SELECT id, veri, guncelleme FROM kayitlar
                 WHERE kurum = ${kurum} AND NOT silindi
-                ORDER BY (veri->>'sira')::numeric NULLS LAST, guncelleme`;
+                ORDER BY (veri->>'kayitTarihi')::text NULLS LAST, (veri->>'sira')::numeric NULLS LAST, guncelleme`;
             const kayitlar = satirlar.map((s) => ({
                 ...s.veri,
                 id: s.id,
