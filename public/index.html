@@ -3227,7 +3227,7 @@ async function fotolariBulutaYukle() {
     }
 
     durum.textContent = `0/${secilen.length} yükleniyor...`;
-    let basarili = 0;
+    let eklenen = 0;
     try {
         const paket = [];
         for (let i = 0; i < secilen.length; i++) {
@@ -3237,18 +3237,23 @@ async function fotolariBulutaYukle() {
             paket.push({ tc: s.ad, veri: { medya: dataUrl } });
             // Her 50 dosyada bir gönder
             if (paket.length >= 50 || i === secilen.length - 1) {
-                await apiIstegi('fotoEkle', paket.slice());
-                basarili += paket.length;
-                durum.textContent = `${Math.min(i + 1, secilen.length)}/${secilen.length} yüklendi...`;
+                const sonuc = await apiIstegi('fotoEkle', paket.slice());
+                // Sunucunun bildirdiği gerçek eklenen sayısını kullan (0 olabilir!)
+                eklenen += (sonuc && typeof sonuc.eklenen === 'number') ? sonuc.eklenen : 0;
+                durum.textContent = `${Math.min(i + 1, secilen.length)}/${secilen.length} işlendi (${eklenen} kayıtlı)...`;
                 paket.length = 0;
             }
         }
-        durum.textContent = `✔ ${basarili} fotoğraf yüklendi.`;
-        bildir(`${basarili} fotoğraf buluta yüklendi (maks. 394x512 px).`, 'ok');
+        if (eklenen > 0) {
+            durum.textContent = `✔ ${eklenen} fotoğraf buluta kaydedildi.`;
+            bildir(`${eklenen} fotoğraf buluta kaydedildi (maks. 394x512 px).`, 'ok');
+        } else {
+            durum.textContent = '⚠️ 0 fotoğraf kaydedildi.';
+            bildir('0 fotoğraf kaydedildi. Kurum \'' + aktifKurum + '\' ile girişli misiniz? Diğer ayrıntıyı aşağıda görün.', 'hata');
+        }
         if (gecersizler.length) {
             bildir('Uyarı: Dosya adı 11 haneli TC olmayan veya okunamayanlar atlandı: ' + gecersizler.slice(0, 5).join(', '), 'hata');
         }
-        if (durum) durum.textContent = `✔ ${basarili} fotoğraf yüklendi.`;
     } catch (e) {
         durum.textContent = 'Hata: ' + e.message;
         bildir('Fotoğraf yükleme hatası: ' + e.message, 'hata');
