@@ -3236,7 +3236,7 @@ async function fotolariBulutaYukle() {
             const s = secilen[i];
             const dataUrl = await dosyayiBoyutlandiripCevir(s.dosya);
             if (!dataUrl) { gecersizler.push(s.dosya.name + ' (okunamadı)'); continue; }
-            paket.push({ tc: s.ad, veri: { medya: dataUrl } });
+            paket.push({ tc: s.tc, veri: { medya: dataUrl } });
             // Her 50 dosyada bir gönder (paket BOŞSA gönderme)
             if (paket.length > 0 && (paket.length >= 50 || i === secilen.length - 1)) {
                 const sonuc = await apiIstegi('fotoEkle', paket.slice());
