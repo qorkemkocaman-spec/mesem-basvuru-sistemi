@@ -2193,7 +2193,7 @@
             if (gelen && gelen.status === 'success' && gelen.medya) {
                 medya = gelen.medya;
             } else if (yanitFetch.status === 404) {
-                logEkle('Bu TC (' + k.tc + ') için sunucuda fotoğraf bulunamadı, atlanıyor.', 'uyari');
+                logEkle('Bu TC (' + k.tc + ') için, ["' + fotoKurum + '"] kurumunda fotoğraf bulunamadı. Önce web uygulamasında bu kurumla fotoğrafları "⬆️ Fotoğrafları Buluta Yükle" ile gönderin. Butonlara basılmadı, atlandı.', 'uyari');
                 return;
             } else {
                 throw new Error((gelen && gelen.message) || 'Fotoğraf API yanıtı hatalı');
