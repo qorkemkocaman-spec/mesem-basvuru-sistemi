@@ -3587,7 +3587,8 @@
                     chkFoto.checked = true;
                     kaydetFotoAyari();
                     durum('✓ Fotoğraf API ayarları JSON\'dan yüklendi.', '#c084fc');
-                    logEkle('✓ Fotoğraf API bağlantısı kuruldu: ' + fotoKurum, 'basari');
+                    logEkle('✓ Fotoğraf API bağlantısı kuruldu: [' + fotoKurum + ']', 'basari');
+                    fotoBaglantiTestEt();
                     return;
                 }
                 durum('JSON\'da adres/kurum/token eksik.', '#f87171');
@@ -3611,10 +3612,40 @@
         chkFoto.checked = true;
         kaydetFotoAyari();
         durum('✓ Fotoğraf API ayarları kaydedildi.', '#c084fc');
+        fotoBaglantiTestEt();
     };
     // yardımcı: foto ayarlarını localStorage'a yazar
     function kaydetFotoAyari() {
         try { localStorage.setItem('mesem_foto_api', JSON.stringify({ aktif: true, adres: fotoApiAdresi, kurum: fotoKurum, token: fotoToken })); } catch (e) { }
+    }
+    // Bağlantı testi: listedeki ilk adayın TC'sini sunucuda arar ve kurum/TC/sonuç gösterir
+    async function fotoBaglantiTestEt() {
+        if (!fotoApiAdresi || !fotoKurum || !fotoToken) return;
+        var aday = (filtreliKayitlar && filtreliKayitlar[0]) || (tumKayitlar && tumKayitlar[0]);
+        var tc = aday && aday.tc;
+        logEkle('🔌 Fotoğraf bağlantısı test ediliyor (kurum: [' + fotoKurum + '], TC: ' + (tc || '-') + ')...', 'islem');
+        try {
+            var r = await fetch(fotoApiAdresi.replace(/\/+$/, '') + '/api/veri', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'fotoGetir', kurum: fotoKurum, token: fotoToken, data: { tc: tc || '' } })
+            });
+            var g = await r.json();
+            if (g && g.status === 'success' && g.medya) {
+                logEkle('✅ Fotoğraf bağlantısı ÇALIŞIYOR: ["' + fotoKurum + '"] kurumunda TC ' + tc + ' için fotoğraf bulundu.', 'basari');
+                sesCal('basari');
+            } else if (r.status === 404) {
+                logEkle('❌ Fotoğraf BULUNAMADI: ["' + fotoKurum + '"] kurumunda TC ' + tc + ' için fotoğraf yok. Fotoğrafı bu kurumla web uygulamasına yükleyin.', 'hata');
+                sesCal('hata');
+            } else if (g && g.status === 'unauthorized') {
+                logEkle('❌ Oturum (token) GEÇERSİZ olabilir. Web uygulamasında yeniden giriş yapıp yeni bağlantı bilgisi kopyalayın. Kurum: [' + fotoKurum + ']', 'hata');
+                sesCal('hata');
+            } else {
+                logEkle('⚠️ Belirsiz yanıt: ' + (g && g.message ? g.message : JSON.stringify(g)), 'uyari');
+            }
+        } catch (e) {
+            logEkle('⚠️ Test isteği başarısız: ' + e.message, 'uyari');
+        }
     }
     fotoAyar.appendChild(btnFotoAyarSonrasi);
     solAyar.appendChild(document.createTextNode(' '));
