@@ -25,6 +25,10 @@ export const config = { runtime: 'nodejs' };
 function yanit(res, kod, govde) {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.setHeader('Cache-Control', 'no-store');
+    // Robot, emesem.meb.gov.tr üzerinden fotoğraf API'sine çapraz-orijin istek atar.
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     res.status(kod).json(govde);
 }
 
@@ -45,7 +49,13 @@ async function govdeyiOku(req) {
 }
 
 export default async function handler(req, res) {
-    if (req.method === 'OPTIONS') { res.status(204).end(); return; }
+    if (req.method === 'OPTIONS') {
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+        res.status(204).end();
+        return;
+    }
     if (req.method !== 'POST') {
         return yanit(res, 405, { status: 'error', message: 'Yalnızca POST kabul edilir.' });
     }
@@ -128,6 +138,42 @@ export default async function handler(req, res) {
                 guncelleme: new Date(s.guncelleme).toISOString()
             }));
             return yanit(res, 200, { status: 'success', data: kayitlar });
+        }
+
+        /* ---------------- FOTOĞRAF YÜKLE ---------------- */
+        if (islem === 'fotoEkle') {
+            const liste = Array.isArray(govde.data) ? govde.data : [];
+            const dilimle = 100;
+            let eklenen = 0;
+            for (let i = 0; i < liste.length; i += dilimle) {
+                const parca = liste.slice(i, i + dilimle);
+                for (const f of parca) {
+                    const tc = String(f.tc || '').trim();
+                    if (!tc || !/^\d{11}$/.test(tc)) continue;
+                    const veri = f.veri && typeof f.veri === 'object' ? f.veri : null;
+                    if (!veri || !veri.medya) continue;
+                    const sonuc = await sql`
+                        INSERT INTO fotograflar (kurum, tc, veri, guncelleme)
+                        VALUES (${kurum}, ${tc}, ${JSON.stringify({ medya: String(veri.medya) })}::jsonb, now())
+                        ON CONFLICT (kurum, tc) DO UPDATE
+                            SET veri = EXCLUDED.veri, guncelleme = now()
+                        RETURNING tc`;
+                    if (sonuc.length) eklenen++;
+                }
+            }
+            return yanit(res, 200, { status: 'success', eklenen, toplam: liste.length });
+        }
+
+        /* ---------------- FOTOĞRAF GETİR ---------------- */
+        if (islem === 'fotoGetir') {
+            const tc = String((govde.data && govde.data.tc) || '').trim();
+            if (!tc) return yanit(res, 400, { status: 'error', message: 'TC alanı gerekli.' });
+            const satirlar = await sql`
+                SELECT veri FROM fotograflar WHERE kurum = ${kurum} AND tc = ${tc}`;
+            if (!satirlar.length) {
+                return yanit(res, 404, { status: 'error', message: 'Bu TC için fotoğraf bulunamadı.' });
+            }
+            return yanit(res, 200, { status: 'success', tc, medya: satirlar[0].veri.medya || '' });
         }
 
         /* ---------------- EŞİTLE ---------------- */

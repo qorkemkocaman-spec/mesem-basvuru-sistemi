@@ -81,7 +81,15 @@
         kaydetBtn: '#btnKaydet, #btnOnKayitKaydet, input[id*="btnKaydet"], button[id*="btnKaydet"], input[value="Kaydet"], #ctl00_cphGovde_btnKaydet, #ctl00_cphGovde_btnOnKayitKaydet',
         
         // 13. Ana Ekran Yenile Butonu
-        yenileBtn: 'input[value*="Yenile"], button[id*="Yenile"], a[id*="Yenile"], #btnYenile, #btnRefresh, input[value="Yenile"], #ctl00_cphGovde_btnYenile'
+        yenileBtn: 'input[value*="Yenile"], button[id*="Yenile"], a[id*="Yenile"], #btnYenile, #btnRefresh, input[value="Yenile"], #ctl00_cphGovde_btnYenile',
+
+        // 14. Fotoğraf — 1. Açılır Pencere (Yeni Kayıt içindeki "Dosya" butonu ve X/Kapat)
+        fotoDosyaBtn: '#btnDosya, button[id*="btnDosya"], input[id*="btnDosya"], #ctl00_cphGovde_btnDosya',
+        fotoKapatBtn: '#btnRefresh, input[id*="btnRefresh"], button[id*="btnRefresh"]',
+        
+        // 15. Fotoğraf — 2. Açılır Pencere (Dosya seçim inputu ve "Kaydet" butonu)
+        foto2Dosya: '#uploadLogofile0, input[id*="uploadLogo"], input[type="file"][class*="ruFileInput"]',
+        foto2Kaydet: '#btnSave, button[id*="btnSave"], input[id*="btnSave"]'
     };
 
     
@@ -93,6 +101,10 @@
     var manuelOnayModu = false;    // Kaydetmeden önce duraklayıp kullanıcı onayı bekleme
     var mernisBeklemeSuresi = 3500;// MERNİS sorgu bekleme süresi (ms)
     var genelBeklemeSuresi = 800;  // Adımlar arası bekleme süresi (ms)
+    var fotoApiAktif = false;      // Fotoğraf yükleme modu açık mı
+    var fotoApiAdresi = '';        // Fotoğraf sunucusu API taban adresi (ornek: https://...vercel.app)
+    var fotoKurum = '';            // Fotoğraf API'si için kurum kodu
+    var fotoToken = '';            // Fotoğraf API'si için oturum anahtarı
     var ogretmeModuAktif = false;  // Selector mapper aktif mi
     var ogretmeDuraklatildi = false; // Kullanıcı gezinebilsin diye duraklatıldı mı
     var ogretilenHedefAlan = null; // Sıradaki öğretilen alan kimliği
@@ -109,6 +121,18 @@
                                localStorage.getItem("mesem_ogretilmis_alanlar_v5");
         if (kayitliEslemeler) ozelEslemeler = JSON.parse(kayitliEslemeler);
     } catch (e) { ozelEslemeler = {}; }
+
+    // Fotoğraf API ayarlarını geri yükle
+    try {
+        var kayitliFoto = localStorage.getItem('mesem_foto_api');
+        if (kayitliFoto) {
+            var fAyar = JSON.parse(kayitliFoto);
+            fotoApiAktif = !!fAyar.aktif;
+            fotoApiAdresi = fAyar.adres || '';
+            fotoKurum = fAyar.kurum || '';
+            fotoToken = fAyar.token || '';
+        }
+    } catch (e) { /* yoksay */ }
 
     // Öğretilebilir Alanlar Tanım Listesi (Gruplu)
     var OGRETILEBILIR_ALANLAR = [
@@ -132,6 +156,14 @@
         { id: 'alan', ad: 'Alan Seçimi (Telerik cmbAlan)', tip: 'select', grup: 'POPUP', aciklama: 'Telerik cmbAlan_Input / Mesleki alan seçimi' },
         { id: 'dal', ad: 'Dal Seçimi (Telerik cmbDal)', tip: 'select', grup: 'POPUP', aciklama: 'Telerik cmbDal_Input / Mesleki dal seçimi' },
         { id: 'kaydetBtn', ad: '"Kaydet" Butonu', tip: 'buton', grup: 'POPUP', aciklama: 'Aday kaydını tamamlayan ana buton (btnKaydet)' }
+
+        // D. Fotoğraf — 1. Açılır Pencere Alanları (Yeni Kayıt içindeki Dosya + Kapat)
+        ,{ id: 'fotoDosyaBtn', ad: '1. Pencere "Dosya" Butonu', tip: 'buton', grup: 'POPUP', aciklama: 'Ana pencerede foto (1. pencere) Dosya butonu (btnDosya)' },
+        { id: 'fotoKapatBtn', ad: '1. Pencere "Kapat / X" Butonu', tip: 'buton', grup: 'POPUP', aciklama: '1. pencerenin sağ üst X/kapat butonu (btnRefresh)' },
+
+        // E. Fotoğraf — 2. Açılır Pencere Alanları
+        { id: 'foto2Dosya', ad: '2. Pencere "Dosya / Seç" Butonu', tip: 'buton', grup: 'POPUP2', aciklama: '2. açılan pencerede dosya seçim inputu (uploadLogofile0)' },
+        { id: 'foto2Kaydet', ad: '2. Pencere "Kaydet" Butonu', tip: 'buton', grup: 'POPUP2', aciklama: '2. açılan pencerede onay/Kaydet butonu (btnSave)' }
     ];
 
     // UI Bileşenleri Referansları
@@ -2133,6 +2165,103 @@
         }
     }
 
+    /* ADIM 7 (Opsiyonel): Fotoğraf Yükleme
+       Kullanıcının tanımladığı web sunucusundan (fotoApiAdresi) ilgili TC için
+       depolanan fotoğrafı çeker, 1. açılan penceredeki "Dosya" butonuna basar,
+       2. açılan pencerede dosya seçim inputuna (foto2Dosya) File olarak atar,
+       "Kaydet" (foto2Kaydet) ve "Kapat" (fotoKapatBtn) butonlarına basar. */
+    async function adim7_FotoYukle(k) {
+        if (!fotoApiAdresi || !fotoKurum) {
+            logEkle('⚠️ Fotoğraf API adresi/kurum tanımlı değil, fotoğraf yükleme atlandı.', 'uyari');
+            return;
+        }
+
+        // 1) Fotoğrafı API'den çek (base64 dataURL)
+        var medya = null;
+        try {
+            var yanitFetch = await fetch(fotoApiAdresi.replace(/\/+$/, '') + '/api/veri', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'fotoGetir',
+                    kurum: fotoKurum,
+                    token: fotoToken,
+                    data: { tc: k.tc }
+                })
+            });
+            var gelen = await yanitFetch.json();
+            if (gelen && gelen.status === 'success' && gelen.medya) {
+                medya = gelen.medya;
+            } else if (yanitFetch.status === 404) {
+                logEkle('Bu TC (' + k.tc + ') için sunucuda fotoğraf bulunamadı, atlanıyor.', 'uyari');
+                return;
+            } else {
+                throw new Error((gelen && gelen.message) || 'Fotoğraf API yanıtı hatalı');
+            }
+        } catch (e) {
+            logEkle('Fotoğraf API erişilemedi: ' + e.message, 'hata');
+            sesCal('hata');
+            throw e;
+        }
+
+        // 2) 1. pencere: Dosya butonuna bas (btnDosya)
+        var dosyaBtn = ogretilmisAlanBul('fotoDosyaBtn');
+        if (dosyaBtn) {
+            vurgula(dosyaBtn, '#eab308');
+            dosyaBtn.click();
+            logEkle('📷 1. pencere "Dosya" butonuna basıldı, foto penceresi açılıyor...', 'islem');
+            await postBackBitisiniBekle(4000, 'Foto Penceresi Açılma');
+            await bekle(700);
+        } else {
+            logEkle('⚠️ "Dosya" butonu (fotoDosyaBtn) bulunamadı, akış 2. pencere denemesiyle devam ediyor.', 'uyari');
+        }
+
+        // 3) 2. pencere: dosya seçim inputuna File ata
+        if (typeof File === 'undefined' || typeof DataTransfer === 'undefined') {
+            throw new Error('Bu tarayıcı programatik dosya yüklemeyi desteklemiyor.');
+        }
+        var dosyaEl = ogretilmisAlanBul('foto2Dosya');
+        if (!dosyaEl || dosyaEl.type !== 'file') {
+            logEkle('⚠️ Dosya seçim inputu (foto2Dosya) bulunamadı, fotoğraf yükleme atlandı.', 'uyari');
+            return;
+        }
+        var parcala = medya.split(',');
+        var mime = (parcala[0].match(/data:(.*?);/) || [null, 'image/png'])[1];
+        var base64Veri = parcala[1] || parcala[0];
+        var ikili = atob(base64Veri);
+        var bayt = new Uint8Array(ikili.length);
+        for (var b = 0; b < ikili.length; b++) bayt[b] = ikili.charCodeAt(b);
+        var fDosya = new File([bayt], (k.tc || 'fotograf') + '.png', { type: mime || 'image/png' });
+
+        var dt = new DataTransfer();
+        dt.items.add(fDosya);
+        dosyaEl.files = dt.files;
+        dosyaEl.dispatchEvent(new Event('change', { bubbles: true }));
+        logEkle('✓ Fotoğraf dosyası "' + fDosya.name + '" (' + (Math.round(fDosya.size / 1024)) + ' KB) seçildi, yükleniyor...', 'basari');
+        await bekle(1800);
+
+        // 4) 2. pencere: Kaydet butonuna bas (btnSave)
+        var kaydet2Btn = ogretilmisAlanBul('foto2Kaydet');
+        if (kaydet2Btn) {
+            vurgula(kaydet2Btn, '#22c55e');
+            kaydet2Btn.click();
+            logEkle('📷 2. pencere "Kaydet" butonuna basıldı, yükleme tamamlanıyor...', 'islem');
+            await postBackBitisiniBekle(4000, 'Foto Kaydet PostBack');
+            await bekle(700);
+        } else {
+            logEkle('⚠️ 2. pencere "Kaydet" butonu (foto2Kaydet) bulunamadı.', 'uyari');
+        }
+
+        // 5) 1. pencere: Kapat / X butonuna bas (btnRefresh)
+        var kapatBtn = ogretilmisAlanBul('fotoKapatBtn');
+        if (kapatBtn) {
+            vurgula(kapatBtn, '#f87171');
+            kapatBtn.click();
+            logEkle('📷 1. pencere kapatıldı (X). Fotoğraf işlemi tamam.', 'basari');
+            await bekle(600);
+        }
+    }
+
     /* Tam Otomatik Tekil Aday İşleme */
     async function adimiIsle(k) {
         if (!k) throw new Error('İşlenecek aday kaydı bulunamadı.');
@@ -2155,6 +2284,15 @@
         }
 
         await adim6_Kaydet(k);
+
+        // Fotoğraf yükleme (opsiyonel): fotoApiAktif ve TC varsa ek adımı çalıştır.
+        if (fotoApiAktif && k.tc) {
+            try {
+                await adim7_FotoYukle(k);
+            } catch (fotoHata) {
+                logEkle('⚠️ Fotoğraf yükleme adımı atlandı: ' + fotoHata.message, 'uyari');
+            }
+        }
 
         // Kayıt tamamlandıktan sonra ana ekrandaki "Yenile" butonuna bas ve sayfanın
         // yenilenmesini bekle. Böylece bir sonraki aday için temiz bir form açılır.
@@ -2767,6 +2905,7 @@
     var modalSekmeAnaBtn = null;
     var modalSekmePopupBtn = null;
     var modalSekmeTumuBtn = null;
+    var modalSekmePop2Btn = null;
 
     function alanOgretModaliniOlustur() {
         if (alanOgreticiModal) return;
@@ -2812,16 +2951,19 @@
         // Modal Sekmeleri
         var mSekmeBar = el('div', 'display:flex; gap:4px; padding:6px 14px; background:#1e293b; border-bottom:1px solid #334155;');
         
-        modalSekmePopupBtn = el('button', 'flex:1; padding:6px 6px; font-size:11.5px; font-weight:700; border:0; border-radius:5px; cursor:pointer; color:#fff; background:#0284c7;', '🪟 Açılır Kayıt Penceresi (13)');
+        modalSekmePopupBtn = el('button', 'flex:1; padding:6px 6px; font-size:11.5px; font-weight:700; border:0; border-radius:5px; cursor:pointer; color:#fff; background:#0284c7;', '🪟 Açılır Kayıt Penceresi (15)');
         modalSekmeAnaBtn = el('button', 'flex:1; padding:6px 6px; font-size:11.5px; font-weight:700; border:0; border-radius:5px; cursor:pointer; color:#fff; background:#1e293b;', '🖥️ Ana Ekran Alanları (4)');
+        modalSekmePop2Btn = el('button', 'flex:1; padding:6px 6px; font-size:11.5px; font-weight:700; border:0; border-radius:5px; cursor:pointer; color:#fff; background:#1e293b;', '📷 2. Açılır Pencere (2)');
         modalSekmeTumuBtn = el('button', 'padding:6px 10px; font-size:11.5px; font-weight:700; border:0; border-radius:5px; cursor:pointer; color:#fff; background:#1e293b;', 'Tümü');
 
         modalSekmeAnaBtn.onclick = function () { alanOgretSekmeDegistir('ANA_EKRAN'); };
         modalSekmePopupBtn.onclick = function () { alanOgretSekmeDegistir('POPUP'); };
+        modalSekmePop2Btn.onclick = function () { alanOgretSekmeDegistir('POPUP2'); };
         modalSekmeTumuBtn.onclick = function () { alanOgretSekmeDegistir('TUMU'); };
 
         mSekmeBar.appendChild(modalSekmePopupBtn);
         mSekmeBar.appendChild(modalSekmeAnaBtn);
+        mSekmeBar.appendChild(modalSekmePop2Btn);
         mSekmeBar.appendChild(modalSekmeTumuBtn);
 
         // Liste Gövdesi
@@ -2873,6 +3015,7 @@
         aktifOgreticiSekme = sekme;
         if (modalSekmeAnaBtn) modalSekmeAnaBtn.style.background = sekme === 'ANA_EKRAN' ? '#0284c7' : '#1e293b';
         if (modalSekmePopupBtn) modalSekmePopupBtn.style.background = sekme === 'POPUP' ? '#0284c7' : '#1e293b';
+        if (modalSekmePop2Btn) modalSekmePop2Btn.style.background = sekme === 'POPUP2' ? '#0284c7' : '#1e293b';
         if (modalSekmeTumuBtn) modalSekmeTumuBtn.style.background = sekme === 'TUMU' ? '#0284c7' : '#1e293b';
         alanOgretListesiniCiz();
     }
@@ -3410,6 +3553,37 @@
     });
     selGecikme.onchange = function () { mernisBeklemeSuresi = Number(selGecikme.value) || 3500; };
     solAyar.appendChild(selGecikme);
+
+    // 🔌 Fotoğraf Yükleme Ayarları (web sunucusu API taban adresi + kurum + token)
+    var fotoAyar = el('label', 'display:inline-flex; align-items:center; gap:4px; cursor:pointer; user-select:none; font-size:10.5px; color:#c084fc;');
+    var chkFoto = el('input');
+    chkFoto.type = 'checkbox';
+    chkFoto.checked = fotoApiAktif;
+    chkFoto.onchange = function () {
+        fotoApiAktif = chkFoto.checked;
+        try { localStorage.setItem('mesem_foto_api', JSON.stringify({ aktif: fotoApiAktif, adres: fotoApiAdresi, kurum: fotoKurum, token: fotoToken })); } catch (e) { }
+    };
+    fotoAyar.appendChild(chkFoto);
+    fotoAyar.appendChild(el('span', null, '📷 Fotoğraf Yükle'));
+    var btnFotoAyarSonrasi = el('button', 'margin-left:2px; padding:1px 5px; font-size:9.5px; background:#2d3748; color:#c4b5fd; border:1px solid #6d28d9; border-radius:3px; cursor:pointer;', 'API Ayarları');
+    btnFotoAyarSonrasi.onclick = function () {
+        var adres = prompt('Fotoğraf sunucusu API adresi (örnek: https://mesembasvurusistemi.vercel.app):', fotoApiAdresi || '');
+        if (adres === null) return;
+        var kurum = prompt('Kurum kodu:', fotoKurum || '');
+        if (kurum === null) return;
+        var token = prompt('Oturum anahtarı (token):', fotoToken || '');
+        if (token === null) return;
+        fotoApiAdresi = adres.trim();
+        fotoKurum = kurum.trim();
+        fotoToken = token.trim();
+        fotoApiAktif = true;
+        chkFoto.checked = true;
+        try { localStorage.setItem('mesem_foto_api', JSON.stringify({ aktif: true, adres: fotoApiAdresi, kurum: fotoKurum, token: fotoToken })); } catch (e) { }
+        durum('✓ Fotoğraf API ayarları kaydedildi.', '#c084fc');
+    };
+    fotoAyar.appendChild(btnFotoAyarSonrasi);
+    solAyar.appendChild(document.createTextNode(' '));
+    solAyar.appendChild(fotoAyar);
 
     var sagAyar = el('label', 'display:inline-flex; align-items:center; gap:4px; cursor:pointer; user-select:none; font-size:10.5px;');
     var chkManuel = el('input');

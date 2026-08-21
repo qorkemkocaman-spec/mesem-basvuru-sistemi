@@ -868,6 +868,23 @@
             </div>
         </div>
 
+        <!-- 2.5 ADIM: FOTOĞRAF KLASÖRÜNÜ SUNUCUYA YÜKLE -->
+        <div style="background:#0f172a; border:1px solid #6d28d9; border-radius:8px; padding:16px; margin-bottom:14px;">
+            <div style="font-weight:700; color:#c084fc; font-size:14px; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+                <span>📷 2.5. Adım (Opsiyonel): Fotoğraf Klasörünü Buluta Yükleyin</span>
+            </div>
+            <p style="font-size:12.5px; color:#94a3b8; margin:0 0 12px 0;">
+                Aday fotoğraflarını <strong>kimlik numarasıyla adlandırılmış</strong> dosyalar hâlinde (örn. <code>62263313792.png</code>) seçin.
+                Robot, MEB ekranında T.C. kimlik numarasına göre fotoğrafı otomatik bulup yükler.
+                Fotoğraflar yüklenirken en fazla <strong>394px genişlik ve 512px yüksekliğe</strong> otomatik ölçeklenir (en-boy oranı korunur).
+            </p>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                <input type="file" id="fotoKlasorGirdi" accept="image/*,.png,.jpg,.jpeg,.webp" multiple style="color:#cbd5e1; font-size:12px;">
+                <button class="btn btn-warning btn-sm" id="btnFotoKlasorYukle" type="button" style="font-weight:bold;">⬆️ Fotoğrafları Buluta Yükle</button>
+                <span id="fotoYukleDurum" style="font-size:12px; color:#c084fc;"></span>
+            </div>
+        </div>
+
         <!-- 3. ADIM: MEB İŞ AKIŞI REHBERİ -->
         <div style="background:#0f172a; border:1px solid #334155; border-radius:8px; padding:16px;">
             <div style="font-weight:700; color:#fbbf24; font-size:14px; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
@@ -3184,6 +3201,101 @@ function emesemJsonIndir() {
     bildir(`Toplam ${veriler.length} aday verisi JSON dosyası olarak indirildi.`, 'ok');
 }
 
+/* ------------------------------------------------------------
+   Fotoğraf Klasörünü Buluta Yükleme
+   Seçilen TC-adlı resim dosyalarını base64'e çevirip api /fotoEkle
+   ile sunucuya gönderir. Robot, bu fotoğrafları TC ile çeker.
+   ------------------------------------------------------------ */
+async function fotolariBulutaYukle() {
+    const girdi = $('fotoKlasorGirdi');
+    const durum = $('fotoYukleDurum');
+    const dosyalar = girdi && girdi.files ? Array.from(girdi.files) : [];
+    if (!dosyalar.length) { bildir('Yüklenecek fotoğraf seçilmedi.', 'hata'); return; }
+    if (YEREL_MOD) { bildir('Yerel modda fotoğraf buluta gönderilemez. Bulut moduna geçin.', 'hata'); return; }
+
+    const gecersizler = [];
+    const secilen = [];
+    for (const f of dosyalar) {
+        const ad = String(f.name || '').replace(/\.[^.]+$/, '').trim();
+        if (!/^\d{11}$/.test(ad)) { gecersizler.push(f.name); continue; }
+        secilen.push({ tc: ad, dosya: f });
+    }
+
+    durum.textContent = `0/${secilen.length} yükleniyor...`;
+    let basarili = 0;
+    try {
+        const paket = [];
+        for (let i = 0; i < secilen.length; i++) {
+            const s = secilen[i];
+            const dataUrl = await dosyayiBoyutlandiripCevir(s.dosya);
+            if (!dataUrl) { gecersizler.push(s.dosya.name + ' (okunamadı)'); continue; }
+            paket.push({ tc: s.ad, veri: { medya: dataUrl } });
+            // Her 50 dosyada bir gönder
+            if (paket.length >= 50 || i === secilen.length - 1) {
+                await apiIstegi('fotoEkle', paket.slice());
+                basarili += paket.length;
+                durum.textContent = `${Math.min(i + 1, secilen.length)}/${secilen.length} yüklendi...`;
+                paket.length = 0;
+            }
+        }
+        durum.textContent = `✔ ${basarili} fotoğraf yüklendi.`;
+        bildir(`${basarili} fotoğraf buluta yüklendi (maks. 394x512 px).`, 'ok');
+        if (gecersizler.length) {
+            bildir('Uyarı: Dosya adı 11 haneli TC olmayan veya okunamayanlar atlandı: ' + gecersizler.slice(0, 5).join(', '), 'hata');
+        }
+        if (durum) durum.textContent = `✔ ${basarili} fotoğraf yüklendi.`;
+    } catch (e) {
+        durum.textContent = 'Hata: ' + e.message;
+        bildir('Fotoğraf yükleme hatası: ' + e.message, 'hata');
+    }
+}
+
+/* Fotoğrafı okuyup, maksimum 394x512 px'e ölçekleyerek PNG dataURL döndürür.
+   En-boy oranı korunur; büyük resimler küçültülür, küçükler olduğu gibi bırakılır. */
+const FOTO_MAX_GENISLIK = 394;
+const FOTO_MAX_YUKSEKLIK = 512;
+function dosyayiBoyutlandiripCevir(dosya) {
+    return new Promise((coz, red) => {
+        const okuyucu = new FileReader();
+        okuyucu.onerror = () => coz(null);
+        okuyucu.onload = (evt) => {
+            const img = new Image();
+            img.onerror = () => coz(null);
+            img.onload = () => {
+                try {
+                    let w = img.naturalWidth || img.width;
+                    let h = img.naturalHeight || img.height;
+                    // En-boy oranını koruyarak küçült
+                    if (w > FOTO_MAX_GENISLIK) {
+                        const oran = FOTO_MAX_GENISLIK / w;
+                        w = FOTO_MAX_GENISLIK;
+                        h = Math.round(h * oran);
+                    }
+                    if (h > FOTO_MAX_YUKSEKLIK) {
+                        const oran = FOTO_MAX_YUKSEKLIK / h;
+                        h = FOTO_MAX_YUKSEKLIK;
+                        w = Math.round(w * oran);
+                    }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = Math.max(1, Math.round(w));
+                    canvas.height = Math.max(1, Math.round(h));
+                    const ctx = canvas.getContext('2d');
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    coz(canvas.toDataURL('image/png'));
+                } catch (e) {
+                    coz(null);
+                }
+            };
+            img.src = evt.target.result;
+        };
+        okuyucu.readAsDataURL(dosya);
+    });
+}
+
 function userscriptKoduUret() {
     const betikAdresi = new URL(EMESEM_BETIK_ADRESI, location.href).href;
     return `// ==UserScript==
@@ -3311,6 +3423,9 @@ function olaylariBagla() {
     $('btnEmesemPedagojiKopyala').addEventListener('click', () => kategoriyeGoreKopyala('İş Pedagojisi Kursu'));
     $('btnEmesemTumunuKopyala').addEventListener('click', tumKayitlariEmesemFormatindaKopyala);
     $('btnEmesemJsonIndir').addEventListener('click', emesemJsonIndir);
+
+    // Fotoğraf Klasörünü Buluta Yükle
+    if ($('btnFotoKlasorYukle')) $('btnFotoKlasorYukle').addEventListener('click', fotolariBulutaYukle);
     
     $('btnEmesemBetikKopyala').addEventListener('click', async () => {
         try {
