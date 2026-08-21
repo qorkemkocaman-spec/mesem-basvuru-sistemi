@@ -883,6 +883,11 @@
                 <button class="btn btn-warning btn-sm" id="btnFotoKlasorYukle" type="button" style="font-weight:bold;">⬆️ Fotoğrafları Buluta Yükle</button>
                 <span id="fotoYukleDurum" style="font-size:12px; color:#c084fc;"></span>
             </div>
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:12px; padding:10px; background:#1e293b; border:1px dashed #8b5cf6; border-radius:8px;">
+                <span style="font-size:12px; color:#c4b5fd;">🔑 Robot fotoğrafta bu kurum/token bilgisine ihtiyaç duyar:</span>
+                <button class="btn btn-secondary btn-sm" id="btnRobotBaglantiKopyala" type="button" style="font-weight:bold;">📋 Robot Bağlantı Bilgisini Kopyala</button>
+                <span id="robotBaglantiDurum" style="font-size:12px; color:#a78bfa;"></span>
+            </div>
         </div>
 
         <!-- 3. ADIM: MEB İŞ AKIŞI REHBERİ -->
@@ -3426,6 +3431,16 @@ function olaylariBagla() {
 
     // Fotoğraf Klasörünü Buluta Yükle
     if ($('btnFotoKlasorYukle')) $('btnFotoKlasorYukle').addEventListener('click', fotolariBulutaYukle);
+
+    // Robot bağlantı bilgisini panoya kopyala (kurum + token + sunucu adresi)
+    if ($('btnRobotBaglantiKopyala')) {
+        $('btnRobotBaglantiKopyala').addEventListener('click', async () => {
+            const got = { adres: new URL('.', location.href).href.replace(/\/+$/, ''), kurum: aktifKurum, token: oturumAnahtari };
+            await panoyaYaz(JSON.stringify(got), 'Robot bağlantı bilgisi panoya kopyalandı!');
+            const rd = $('robotBaglantiDurum');
+            if (rd) { rd.textContent = '✔ Kopyalandı — robotta "API Ayarları"na yapıştırın.'; setTimeout(() => { rd.textContent = ''; }, 4000); }
+        });
+    }
     
     $('btnEmesemBetikKopyala').addEventListener('click', async () => {
         try {

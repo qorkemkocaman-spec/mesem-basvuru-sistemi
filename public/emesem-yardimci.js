@@ -2171,8 +2171,8 @@
        2. açılan pencerede dosya seçim inputuna (foto2Dosya) File olarak atar,
        "Kaydet" (foto2Kaydet) ve "Kapat" (fotoKapatBtn) butonlarına basar. */
     async function adim7_FotoYukle(k) {
-        if (!fotoApiAdresi || !fotoKurum) {
-            logEkle('⚠️ Fotoğraf API adresi/kurum tanımlı değil, fotoğraf yükleme atlandı.', 'uyari');
+        if (!fotoApiAdresi || !fotoKurum || !fotoToken) {
+            logEkle('⚠️ Fotoğraf bağlantısı (API adresi/kurum/token) tanımlı değil. Robotun alt bölümündeki "API Ayarları"na, web uygulamasındaki "📋 Robot Bağlantı Bilgisini Kopyala" ile kopyalanan bilgiyi yapıştırın.', 'uyari');
             return;
         }
 
@@ -3567,20 +3567,55 @@
     fotoAyar.appendChild(el('span', null, '📷 Fotoğraf Yükle'));
     var btnFotoAyarSonrasi = el('button', 'margin-left:2px; padding:1px 5px; font-size:9.5px; background:#2d3748; color:#c4b5fd; border:1px solid #6d28d9; border-radius:3px; cursor:pointer;', 'API Ayarları');
     btnFotoAyarSonrasi.onclick = function () {
-        var adres = prompt('Fotoğraf sunucusu API adresi (örnek: https://mesembasvurusistemi.vercel.app):', fotoApiAdresi || '');
-        if (adres === null) return;
-        var kurum = prompt('Kurum kodu:', fotoKurum || '');
+        // Önerilen akış: Web uygulamasından kopyalanan JSON'u buraya yapıştırın.
+        var yapistir = prompt('Yapıştırmak için: Web uygulamasında "📋 Robot Bağlantı Bilgini Kopyala"ya basın, sonra buraya yapıştırın (Ctrl+V).\n\nAlternatif olarak adres/kurum/tokeni sırayla girebilirsiniz.\n\n1/3) Yapıştır veya API adresi (örnek: https://mesembasvurusistemi.vercel.app):', '');
+        if (yapistir === null) return;
+        var yapistirT = String(yapistir || '').trim();
+
+        if (yapistirT.indexOf('{') === 0 || yapistirT.indexOf('[') === 0) {
+            // JSON kopyalandı: adres/kurum/token otomatik çözümlenir
+            try {
+                var gelen = JSON.parse(yapistirT);
+                var gAdres = gelen.adres || gelen.api || gelen.url || '';
+                var gKurum = gelen.kurum || gelen.kurumKodu || '';
+                var gToken = gelen.token || gelen.anahtar || '';
+                if (gAdres && gKurum && gToken) {
+                    fotoApiAdresi = String(gAdres).trim();
+                    fotoKurum = String(gKurum).trim();
+                    fotoToken = String(gToken).trim();
+                    fotoApiAktif = true;
+                    chkFoto.checked = true;
+                    kaydetFotoAyari();
+                    durum('✓ Fotoğraf API ayarları JSON\'dan yüklendi.', '#c084fc');
+                    logEkle('✓ Fotoğraf API bağlantısı kuruldu: ' + fotoKurum, 'basari');
+                    return;
+                }
+                durum('JSON\'da adres/kurum/token eksik.', '#f87171');
+                return;
+            } catch (e) {
+                durum('Yapıştırılan JSON okunamadı.', '#f87171');
+                return;
+            }
+        }
+
+        // Eski yöntem: elle sırayla gir
+        var adres = yapistirT || fotoApiAdresi;
+        var kurum = prompt('2/3) Kurum kodu:', fotoKurum || '');
         if (kurum === null) return;
-        var token = prompt('Oturum anahtarı (token):', fotoToken || '');
+        var token = prompt('3/3) Oturum anahtarı (token):', fotoToken || '');
         if (token === null) return;
-        fotoApiAdresi = adres.trim();
+        fotoApiAdresi = adres.replace(/\/+$/, '');
         fotoKurum = kurum.trim();
         fotoToken = token.trim();
         fotoApiAktif = true;
         chkFoto.checked = true;
-        try { localStorage.setItem('mesem_foto_api', JSON.stringify({ aktif: true, adres: fotoApiAdresi, kurum: fotoKurum, token: fotoToken })); } catch (e) { }
+        kaydetFotoAyari();
         durum('✓ Fotoğraf API ayarları kaydedildi.', '#c084fc');
     };
+    // yardımcı: foto ayarlarını localStorage'a yazar
+    function kaydetFotoAyari() {
+        try { localStorage.setItem('mesem_foto_api', JSON.stringify({ aktif: true, adres: fotoApiAdresi, kurum: fotoKurum, token: fotoToken })); } catch (e) { }
+    }
     fotoAyar.appendChild(btnFotoAyarSonrasi);
     solAyar.appendChild(document.createTextNode(' '));
     solAyar.appendChild(fotoAyar);
