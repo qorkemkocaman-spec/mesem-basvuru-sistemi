@@ -3228,6 +3228,7 @@ async function fotolariBulutaYukle() {
 
     durum.textContent = `0/${secilen.length} yükleniyor...`;
     let eklenen = 0;
+    let gonderilenPaket = 0;
     try {
         const paket = [];
         for (let i = 0; i < secilen.length; i++) {
@@ -3235,14 +3236,21 @@ async function fotolariBulutaYukle() {
             const dataUrl = await dosyayiBoyutlandiripCevir(s.dosya);
             if (!dataUrl) { gecersizler.push(s.dosya.name + ' (okunamadı)'); continue; }
             paket.push({ tc: s.ad, veri: { medya: dataUrl } });
-            // Her 50 dosyada bir gönder
-            if (paket.length >= 50 || i === secilen.length - 1) {
+            // Her 50 dosyada bir gönder (paket BOŞSA gönderme)
+            if (paket.length > 0 && (paket.length >= 50 || i === secilen.length - 1)) {
                 const sonuc = await apiIstegi('fotoEkle', paket.slice());
+                gonderilenPaket++;
                 // Sunucunun bildirdiği gerçek eklenen sayısını kullan (0 olabilir!)
                 eklenen += (sonuc && typeof sonuc.eklenen === 'number') ? sonuc.eklenen : 0;
                 durum.textContent = `${Math.min(i + 1, secilen.length)}/${secilen.length} işlendi (${eklenen} kayıtlı)...`;
                 paket.length = 0;
             }
+        }
+        if (!gonderilenPaket) {
+            // Hiçbir paket gönderilmedi → tüm dosyalar geçersiz
+            durum.textContent = '⚠️ Gönderilecek fotoğraf yok.';
+            bildir('Seçilen dosyalar geçersiz/okunamadı: ' + (gecersizler.slice(0, 5).join(', ') || 'bilinmiyor'), 'hata');
+            return;
         }
         if (eklenen > 0) {
             durum.textContent = `✔ ${eklenen} fotoğraf buluta kaydedildi.`;
@@ -3252,7 +3260,7 @@ async function fotolariBulutaYukle() {
             bildir('0 fotoğraf kaydedildi. Kurum \'' + aktifKurum + '\' ile girişli misiniz? Diğer ayrıntıyı aşağıda görün.', 'hata');
         }
         if (gecersizler.length) {
-            bildir('Uyarı: Dosya adı 11 haneli TC olmayan veya okunamayanlar atlandı: ' + gecersizler.slice(0, 5).join(', '), 'hata');
+            bildir('Not: Şu dosyalar atlandı: ' + gecersizler.slice(0, 5).join(', '), 'hata');
         }
     } catch (e) {
         durum.textContent = 'Hata: ' + e.message;
@@ -3261,7 +3269,9 @@ async function fotolariBulutaYukle() {
 }
 
 /* Fotoğrafı okuyup, maksimum 394x512 px'e ölçekleyerek PNG dataURL döndürür.
-   En-boy oranı korunur; büyük resimler küçültülür, küçükler olduğu gibi bırakılır. */
+   En-boy oranı korunur; büyük resimler küçültülür, küçükler olduğu gibi bırakılır.
+   Dönüştürme başarısız olursa, fotoğrafın asla kaybolmaması için HAM dataURL
+   yedek olarak döndürülür (sunucuya yine ulaşır). */
 const FOTO_MAX_GENISLIK = 394;
 const FOTO_MAX_YUKSEKLIK = 512;
 function dosyayiBoyutlandiripCevir(dosya) {
@@ -3269,8 +3279,10 @@ function dosyayiBoyutlandiripCevir(dosya) {
         const okuyucu = new FileReader();
         okuyucu.onerror = () => coz(null);
         okuyucu.onload = (evt) => {
+            const hamDataUrl = evt.target.result;
             const img = new Image();
-            img.onerror = () => coz(null);
+            // Görüntü çözülemezse ya da canvas başarısız olursa ham dosyayı yolla
+            img.onerror = () => coz(hamDataUrl);
             img.onload = () => {
                 try {
                     let w = img.naturalWidth || img.width;
@@ -3297,10 +3309,10 @@ function dosyayiBoyutlandiripCevir(dosya) {
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     coz(canvas.toDataURL('image/png'));
                 } catch (e) {
-                    coz(null);
+                    coz(hamDataUrl);
                 }
             };
-            img.src = evt.target.result;
+            img.src = hamDataUrl;
         };
         okuyucu.readAsDataURL(dosya);
     });
