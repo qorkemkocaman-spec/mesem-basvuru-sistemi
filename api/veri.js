@@ -143,25 +143,21 @@ export default async function handler(req, res) {
         /* ---------------- FOTOĞRAF YÜKLE ---------------- */
         if (islem === 'fotoEkle') {
             const liste = Array.isArray(govde.data) ? govde.data : [];
-            const dilimle = 100;
-            let eklenen = 0;
-            for (let i = 0; i < liste.length; i += dilimle) {
-                const parca = liste.slice(i, i + dilimle);
-                for (const f of parca) {
-                    const tc = String(f.tc || '').trim();
-                    if (!tc || !/^\d{11}$/.test(tc)) continue;
-                    const veri = f.veri && typeof f.veri === 'object' ? f.veri : null;
-                    if (!veri || !veri.medya) continue;
-                    const sonuc = await sql`
-                        INSERT INTO fotograflar (kurum, tc, veri, guncelleme)
-                        VALUES (${kurum}, ${tc}, ${JSON.stringify({ medya: String(veri.medya) })}::jsonb, now())
-                        ON CONFLICT (kurum, tc) DO UPDATE
-                            SET veri = EXCLUDED.veri, guncelleme = now()
-                        RETURNING tc`;
-                    if (sonuc.length) eklenen++;
-                }
+            let eklenen = 0, atlananTc = 0, atlananMedya = 0;
+            for (const f of liste) {
+                const tc = String(f.tc || '').trim();
+                if (!tc || !/^\d{11}$/.test(tc)) { atlananTc++; continue; }
+                const veri = f.veri && typeof f.veri === 'object' ? f.veri : null;
+                if (!veri || !veri.medya || typeof veri.medya !== 'string' || veri.medya.length < 50) { atlananMedya++; continue; }
+                const sonuc = await sql`
+                    INSERT INTO fotograflar (kurum, tc, veri, guncelleme)
+                    VALUES (${kurum}, ${tc}, ${JSON.stringify({ medya: String(veri.medya) })}::jsonb, now())
+                    ON CONFLICT (kurum, tc) DO UPDATE
+                        SET veri = EXCLUDED.veri, guncelleme = now()
+                    RETURNING tc`;
+                if (sonuc.length) eklenen++;
             }
-            return yanit(res, 200, { status: 'success', eklenen, toplam: liste.length });
+            return yanit(res, 200, { status: 'success', kurum, eklenen, toplam: liste.length, atlananTc, atlananMedya });
         }
 
         /* ---------------- FOTOĞRAF GETİR ---------------- */

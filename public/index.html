@@ -3231,6 +3231,7 @@ async function fotolariBulutaYukle() {
     let gonderilenPaket = 0;
     try {
         const paket = [];
+        let sunucuTcAtlanan = 0, sunucuMedyaAtlanan = 0;
         for (let i = 0; i < secilen.length; i++) {
             const s = secilen[i];
             const dataUrl = await dosyayiBoyutlandiripCevir(s.dosya);
@@ -3242,6 +3243,8 @@ async function fotolariBulutaYukle() {
                 gonderilenPaket++;
                 // Sunucunun bildirdiği gerçek eklenen sayısını kullan (0 olabilir!)
                 eklenen += (sonuc && typeof sonuc.eklenen === 'number') ? sonuc.eklenen : 0;
+                sunucuTcAtlanan += (sonuc && typeof sonuc.atlananTc === 'number') ? sonuc.atlananTc : 0;
+                sunucuMedyaAtlanan += (sonuc && typeof sonuc.atlananMedya === 'number') ? sonuc.atlananMedya : 0;
                 durum.textContent = `${Math.min(i + 1, secilen.length)}/${secilen.length} işlendi (${eklenen} kayıtlı)...`;
                 paket.length = 0;
             }
@@ -3256,7 +3259,7 @@ async function fotolariBulutaYukle() {
             durum.textContent = `✔ ${eklenen} fotoğraf buluta kaydedildi.`;
             bildir(`${eklenen} fotoğraf buluta kaydedildi (maks. 394x512 px).`, 'ok');
         } else {
-            durum.textContent = '⚠️ 0 fotoğraf kaydedildi.';
+            durum.textContent = '⚠️ 0 fotoğraf kaydedildi (Tc hatalı: ' + (typeof sunucuTcAtlanan === 'number' ? sunucuTcAtlanan : '?') + ', medya boş: ' + (typeof sunucuMedyaAtlanan === 'number' ? sunucuMedyaAtlanan : '?') + '). Kurum: ' + aktifKurum;
             bildir('0 fotoğraf kaydedildi. Kurum \'' + aktifKurum + '\' ile girişli misiniz? Diğer ayrıntıyı aşağıda görün.', 'hata');
         }
         if (gecersizler.length) {
