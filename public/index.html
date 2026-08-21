@@ -883,6 +883,10 @@
                 <button class="btn btn-warning btn-sm" id="btnFotoKlasorYukle" type="button" style="font-weight:bold;">⬆️ Fotoğrafları Buluta Yükle</button>
                 <span id="fotoYukleDurum" style="font-size:12px; color:#c084fc;"></span>
             </div>
+            <div style="margin-top:10px; padding:9px 12px; background:#451a03; border:1px solid #b45309; border-left:4px solid #f59e0b; border-radius:6px;">
+                <span style="font-size:12.5px; color:#fbbf24; font-weight:600;">⚠️ Dikkat:</span>
+                <span style="font-size:12.5px; color:#fde68a;"> Yüklenen fotoğraflar sistemde kalıcı olarak saklanmaz; yüklendikleri tarihten itibaren <strong>30 gün sonra otomatik silinir</strong>. Bu süre içinde robot ile ilgili adaya fotoğrafı yüklemeniz gerekir.</span>
+            </div>
             <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:12px; padding:10px; background:#1e293b; border:1px dashed #8b5cf6; border-radius:8px;">
                 <span style="font-size:12px; color:#c4b5fd;">🔑 Robot fotoğrafta bu kurum/token bilgisine ihtiyaç duyar:</span>
                 <button class="btn btn-secondary btn-sm" id="btnRobotBaglantiKopyala" type="button" style="font-weight:bold;">📋 Robot Bağlantı Bilgisini Kopyala</button>
@@ -947,7 +951,7 @@
             <h4 style="color:#60a5fa; margin-bottom:4px;">7. Fotoğraf Ekleme ve Alan Öğretme ⭐</h4>
             <p>Fotoğraf yükleme iki aşamalıdır: önce fotoğraflarınızı buluta yükler, sonra robotu MEB ekranındaki fotoğraf butonlarına <strong>Alan Öğret</strong> ile öğretirsiniz. <strong>Öğretmeden robot fotoğrafı otomatik örükleyemez.</strong></p>
             <ol style="margin:4px 0 4px 18px; padding-left:4px;">
-                <li><strong>Fotoğrafları buluta yükleyin:</strong> Robot sekmesindeki <strong>⬆️ Fotoğrafları Buluta Yükle</strong> alanına, fotoğraflarınızı <strong>T.C. numarasıyla adlandırılmış</strong> dosyalar olarak (örn. <code>62263313792.png</code>) seçin. Fotoğraflar otomatik 394x512 piksele ölçeklenir ve kurumunuzun sunucusuna kaydedilir. (Aynı TC tekrar yüklenirse yeni resim eskinin yerine geçer.)</li>
+                <li><strong>Fotoğrafları buluta yükleyin:</strong> Robot sekmesindeki <strong>⬆️ Fotoğrafları Buluta Yükle</strong> alanına, fotoğraflarınızı <strong>T.C. numarasıyla adlandırılmış</strong> dosyalar olarak (örn. <code>62263313792.png</code>) seçin. Fotoğraflar otomatik 394x512 piksele ölçeklenir ve kurumunuzun sunucusuna kaydedilir. (Aynı TC tekrar yüklenirse yeni resim eskinin yerine geçer.) <strong>⚠️ Fotoğraflar yüklendikten 30 gün sonra otomatik olarak silinir</strong> — robot ile ilgili adaya fotoğrafı bu süre içinde yükleyin.</li>
                 <li><strong>Robotu bağlayın:</strong> Robot panelinizde <strong>📷 Fotoğraf Yükle</strong> yanındaki <strong>API Ayarları</strong> butonuna tıklayıp, webden kopyaladığınız <strong>📋 Robot Bağlantı Bilgisini</strong> yapıştırın. Test sonucunu izleyin: ok ise bağlantı çalışıyor; <code>404</code> ise önce fotoğrafları bu kurumla yükleyin; <code>yetkisiz</code> ise yeniden giriş yapıp yeni bağlantı bilgisi kopyalayın.</li>
                 <li><strong>Alan Öğret — önce kalan bilgiler, sonra fotoğraf:</strong> Robot panelinde <strong>🎯 Alan Öğret / Profil</strong> deyin. <strong>İlk kez öğretirken fotoğraf dışındaki tüm alanları</strong> (tc, doğum, kapsam, iletişim, alan/dal) <strong>"Öğret"</strong> ile tiklayarak robota eşleyin.</li>
                 <li><strong>1. pencere "Dosya" butonu:</strong> Fotoğraf ekleme kısmı aktifleşince <strong>🪟 Açılır Kayıt Penceresi</strong> sekmesindeki <code>Fotoğraf - 1. Pencere "Dosya" Butonu (fotoDosyaBtn)</code> için <strong>🎯 Öğret</strong> deyip MEB ekranındaki gerçek <strong>Dosya</strong> butonuna tıklayın. Ardından <code>fotoKapatBtn</code> (X/kapat) alanını da öğretin.</li>
