@@ -209,7 +209,16 @@ python3 uctan-uca.py      # tarayıcı üzerinden uçtan uca test
 
 ---
 
-## 7. Kaynaklar
+## 7. Dokümanlar
+
+* `KULLANIM_KILAVUZU.md` — Sistemin baştan sona kullanımı, E-MESEM Robotu kurma
+  ve **fotoğraf ekleme alanının (Alan Öğret) detaylı öğretimi** dahil.
+* `KOD_AKIS.md` — Mimari, dosyalar, giriş/eşitleme/fotoğraf/robot akışları ve
+  güvenlik katmanları (geliştiriciler için).
+
+---
+
+## 8. Kaynaklar
 
 * [E-Mesem giriş (MEBBİS / E-Devlet)](https://emesem.meb.gov.tr/)
 * [Vercel Neon Postgres kurulumu](https://vercel.com/docs/storage/vercel-postgres)
