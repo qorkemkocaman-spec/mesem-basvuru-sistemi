@@ -36,7 +36,7 @@ Proje klasörü şu yapıdadır:
 
 ```
 api/                  (veri.js, kurum.js)
-lib/                  (db.js, kimlik.js)
+lib/                  (db.js, kimlik.js, depolama.js)
 public/               (index.html, yonetim.html, emesem-yardimci.js, arsiv.js, myk-data.js)
 package.json
 vercel.json
@@ -79,7 +79,41 @@ javascript:alert(crypto.randomUUID()+crypto.randomUUID())
 Vercel panelinde **Deployments** → en üstteki dağıtımın yanındaki üç nokta →
 **Redeploy**. Ortam değişkenleri ancak yeni bir yayından sonra devreye girer.
 
-### 1.5 Çalıştığını doğrulayın
+### 1.5 (Opsiyonel) Fotoğraf depolama: Cloudflare R2 — ücretsiz bulut çözümü
+
+Aday fotoğrafları varsayılanda Postgres'te base64 metni olarak saklanır. Çok
+kurumlu sistem bu depolamayı hızla doldurabilir. Bu çözüm, fotoğrafları
+**Cloudflare R2**'ye (ücretsiz **10 GB** + **sıfır egress/çıkış ücreti**, S3
+uyumlu API) taşır; Postgres yalnızca `kayitlar` tablosunu tutar.
+
+1. [Cloudflare](https://dash.cloudflare.com/) hesabı açın → **R2** → **Create bucket**.
+   Bölge (Region) olarak **Auto** seçin. Bucket'e uygun bir ad verin (örn.
+   `mesem-basvuru`).
+2. **R2 → Manage API Tokens → Create API Token** seçeneğiyle, yalnızca
+   **Object Read & Write** yetkisine sahip bir token üretin. Çıkan **Access Key ID**
+   ve **Secret Access Key** değerlerini kopyalayın.
+3. Vercel → Settings → Environment Variables ekranından dört ortam değişkeni ekleyin:
+
+   | Ad | Değer |
+   |---|---|
+   | `R2_ACCOUNT_ID` | Cloudflare hesap kimliği (R2 endpoint adresinin ilk kısmı) |
+   | `R2_ACCESS_KEY_ID` | API token'ının Access Key ID'si |
+   | `R2_SECRET_ACCESS_KEY` | API token'ının Secret Access Key'i |
+   | `R2_BUCKET` | R2'de oluşturduğunuz bucket adı |
+
+   Dört değişken de tanımlanmışsa fotoğraflar otomatik R2'ye yazılır. Tanımlı
+   değilse sistem eski davranışına döner (fotoğraflar Postgres'te kalır).
+4. **Redeploy** deyin. Mevcut fotoğraflarınızı taşımanız gerekmez: `fotoGetir`
+   her TC'yi ilk sorgulamada eski Postgres kaydından okuyup R2'ye otomatik kopyalar
+   ("lazy taşınma") — hiçbir fotoğraf kaybolmaz. İsterseniz her kurum için ayrıca
+   `fotoTasi` istemini çağırarak topluca taşıyabilirsiniz.
+
+> **Depolama kotası:** 10 GB ücretsiz kota çok kuruma yetebilir. Kota dolunca R2'de
+> çok küçük bir ücret devreye girer (egress ücreti yine de yoktur); alternatif olarak
+> kendi sunucunuzda MinIO kurabilirsiniz. Depolama hiçbir sağlayıcıda gerçek anlamda
+> "sonsuz ücretsiz" değildir — R2, ücret sürprizi olmayan en uygun dengeyi sunar.
+
+### 1.6 Çalıştığını doğrulayın
 
 Sitenizin ana adresini açın. Giriş ekranının altında:
 

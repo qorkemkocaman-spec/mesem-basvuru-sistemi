@@ -16,6 +16,7 @@
 ------------------------------------------------------------------- */
 import { baglanti, semayiHazirla } from '../lib/db.js';
 import { anahtarUret, anahtariCoz, sifreDogruMu, kurumAdiniDuzelt } from '../lib/kimlik.js';
+import { r2AktifMi, r2FotoYaz, r2FotoGetir } from '../lib/depolama.js';
 
 const DENEME_SINIRI = 5;              // 15 dakikada en fazla 5 hatalı şifre
 const DENEME_PENCERESI_DK = 15;
@@ -144,11 +145,20 @@ export default async function handler(req, res) {
         if (islem === 'fotoEkle') {
             const liste = Array.isArray(govde.data) ? govde.data : [];
             let eklenen = 0, atlananTc = 0, atlananMedya = 0;
+            const r2Aktif = r2AktifMi();
             for (const f of liste) {
                 const tc = String(f.tc || '').trim();
                 if (!tc || !/^\d{11}$/.test(tc)) { atlananTc++; continue; }
                 const veri = f.veri && typeof f.veri === 'object' ? f.veri : null;
                 if (!veri || !veri.medya || typeof veri.medya !== 'string' || veri.medya.length < 50) { atlananMedya++; continue; }
+
+                /* R2 aktifken fotoğraf Postgres yerine R2'ye yazılır (Neon kotasını korur). */
+                if (r2Aktif) {
+                    const ok = await r2FotoYaz(kurum, tc, String(veri.medya));
+                    if (ok) eklenen++; else atlananMedya++;
+                    continue;
+                }
+
                 const sonuc = await sql`
                     INSERT INTO fotograflar (kurum, tc, veri, guncelleme)
                     VALUES (${kurum}, ${tc}, ${JSON.stringify({ medya: String(veri.medya) })}::jsonb, now())
@@ -164,12 +174,51 @@ export default async function handler(req, res) {
         if (islem === 'fotoGetir') {
             const tc = String((govde.data && govde.data.tc) || '').trim();
             if (!tc) return yanit(res, 400, { status: 'error', message: 'TC alanı gerekli.' });
+
+            if (r2AktifMi()) {
+                let medya = await r2FotoGetir(kurum, tc);
+                if (medya) {
+                    return yanit(res, 200, { status: 'success', tc, medya });
+                }
+                /* R2'de yoksa eski Postgres kaydını oku ve otomatik R2'ye taşı (lazy migrasyon). */
+                const eski = await sql`
+                    SELECT veri FROM fotograflar WHERE kurum = ${kurum} AND tc = ${tc}`;
+                if (!eski.length) {
+                    return yanit(res, 404, { status: 'error', message: 'Bu TC için fotoğraf bulunamadı.' });
+                }
+                medya = String(eski[0].veri && eski[0].veri.medya || '');
+                if (medya) await r2FotoYaz(kurum, tc, medya);
+                return yanit(res, 200, { status: 'success', tc, medya });
+            }
+
             const satirlar = await sql`
                 SELECT veri FROM fotograflar WHERE kurum = ${kurum} AND tc = ${tc}`;
             if (!satirlar.length) {
                 return yanit(res, 404, { status: 'error', message: 'Bu TC için fotoğraf bulunamadı.' });
             }
             return yanit(res, 200, { status: 'success', tc, medya: satirlar[0].veri.medya || '' });
+        }
+
+        /* ---------------- FOTOĞRAF TAŞI (yalnızca R2 yapılandırılmışsa) ---------------- */
+        /* Eski Postgres'teki tüm fotoğrafları bu kurum için R2'ye kopyalar. */
+        if (islem === 'fotoTasi') {
+            if (!r2AktifMi()) {
+                return yanit(res, 400, { status: 'error', message: 'R2 yapılandırması yok; taşıma için R2_* ortam değişkenleri gerekli.' });
+            }
+            const satirlar = await sql`
+                SELECT tc, veri FROM fotograflar WHERE kurum = ${kurum}`;
+            let tasinan = 0, hatali = 0;
+            for (const s of satirlar) {
+                const medya = String(s.veri && s.veri.medya || '');
+                if (medya.length < 50) { hatali++; continue; }
+                try {
+                    if (await r2FotoYaz(kurum, s.tc, medya)) tasinan++; else hatali++;
+                } catch (e) { hatali++; }
+            }
+            return yanit(res, 200, {
+                status: 'success', kurum, tasinan, hatali,
+                not: `Postgres kopyaları R2'ye taşındı. Artık fotoEkle yeni kayıtları yalnızca R2'ye yazar.`
+            });
         }
 
         /* ---------------- EŞİTLE ---------------- */

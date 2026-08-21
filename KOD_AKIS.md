@@ -10,6 +10,8 @@ api/veri.js         Ana API ucu. Giris, kayit, esitleme ve FOTOGRAF
                     islemleri. Endpoint: POST /api/veri
 api/kurum.js        Yonetim API'si. Kurum listele/ekle/sifreDegistir/durum.
 lib/db.js           Postgres baglantisi + sema (tablolar) otomatik kurulum.
+lib/depolama.js     Fotograf depolama katmani: R2_* degiskenleri tanimliysa
+                    Cloudflare R2 (S3 uyumlu), degilse Postgres'e yazar.
 lib/kimlik.js       scrypt sifre ozeti, HMAC imzali oturum tokeni, kurum
                     adi normallestirme.
 public/index.html   Ana web uygulamasi (giris, form, liste, Excel, raporlar,
@@ -33,6 +35,7 @@ Veritabani tablolari: `kurumlar`, `kayitlar` (JSONB, (kurum,id) anahtar),
 | DATABASE_URL | lib/db.js | Neon Postgres baglanti adresi (Vercel doldurur) |
 | OTURUM_SIRRI | lib/kimlik.js | Giris tokenini HMAC ile imzalar |
 | ADMIN_ANAHTARI | api/kurum.js | Yonetim paneli (yonetim.html) yetkisi |
+| R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET | lib/depolama.js | (Opsiyonel) Tanimliysa fotograflar Cloudflare R2'ye yazilir; degilse Postgres'e (gercege donuk uyumluluk) |
 
 ## 3. Giris Akisi (login)
 
@@ -126,6 +129,17 @@ maskeli tarih giris motoru (GG.AA.YYYY) kullanilir.
   "API Ayarlari" butonuna webden kopyalanan JSON yapistirilir.
 - `fotoBaglantiTestEt()` ilk adayim TC'si ile `fotoGetir` dener:
   basarili (log ok) / 404 (fotograf yok) / unauthorized (token gecersiz).
+
+### 6c. Cloudflare R2 (opsiyonel, Neon kotaligsina corsa) 
+
+- `lib/depolama.js` `r2AktifMi()` ile secer: `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`,
+  `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` dortlu tanimliysa R2, degilse Postgres.
+- fotoEkle: R2 aktifken fotograf Postgres yerine R2'ye yazilir (anahtar
+  `<kurum>/<TC>`); Neon kotasi korunmus olur.
+- fotoGetir: once R2'den dener; yoksa eski Postgres kaydini okuyup R2'ye kopyalar
+  (lazy tasinma) ve dondurur — mevcut fotograflar kaybolmaz.
+- fotoTasi: R2 aktifken bu kurumun tum Postgres fotograflarini topluca R2'ye kopyalar
+  (admin tarafindan tek seferde gecis icin).
 
 ## 10. Uctan Uca Veri Yolu (Ozet)
 
